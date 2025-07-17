@@ -33,3 +33,7 @@ buildNumber.properties
 # Avoid ignoring Maven wrapper jar file (.jar files are usually ignored)
 !/.mvn/wrapper/maven-wrapper.jar
 src/main/resources/application.properties
+src/test/resources/application.properties
+
+.idea
+.vscode

@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>cloud.compan</groupId>
   <artifactId>ComPan</artifactId>
-  <packaging>jar</packaging>
+  <packaging>war</packaging>
   <version>1.0</version>
   <name>ComPan</name>
 
@@ -16,17 +16,32 @@
     <jakarta.jsp.api.version>3.1.1</jakarta.jsp.api.version>
     <jakarta.el.api.version>5.0.0</jakarta.el.api.version>
     <jakarta.annotation.version>2.1.1</jakarta.annotation.version>
-    <jakarta.persistence.version>3.1.0</jakarta.persistence.version>
     <jakarta.validation.version>3.0.2</jakarta.validation.version>
     <hibernate.core.version>6.5.0.Final</hibernate.core.version>
     <hibernate.validator.version>8.0.1.Final</hibernate.validator.version>
     <mysql.connector.version>8.0.33</mysql.connector.version>
     <lombok.version>1.18.32</lombok.version>
+    <junit.jupiter.version>5.10.2</junit.jupiter.version>
+    <h2.version>2.2.224</h2.version>
 
     <!-- 插件版本管理 -->
     <maven.compiler.plugin.version>3.13.0</maven.compiler.plugin.version>
     <maven.war.plugin.version>3.4.0</maven.war.plugin.version>
   </properties>
+
+  <repositories>
+    <repository>
+      <id>aliyun-maven</id>
+      <url>https://maven.aliyun.com/repository/public</url>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>aliyun-maven</id>
+      <url>https://maven.aliyun.com/repository/public</url>
+    </pluginRepository>
+  </pluginRepositories>
 
   <dependencies>
     <!-- Jakarta Servlet API  -->
@@ -36,6 +51,21 @@
       <artifactId>jakarta.servlet-api</artifactId>
       <version>${jakarta.servlet.version}</version>
       <scope>provided</scope>
+    </dependency>
+
+    <!-- Jackson  -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-core</artifactId>
+      <version>2.19.1</version>
+    </dependency>
+
+    <!-- Jakarta Web API -->
+    <dependency>
+      <groupId>jakarta.platform</groupId>
+      <artifactId>jakarta.jakartaee-web-api</artifactId>
+      <version>10.0.0</version>
+      <scope>provided</scope> <!-- 由Web容器（如Tomcat）提供 -->
     </dependency>
 
     <!-- Jakarta Server Pages API -->
@@ -53,6 +83,13 @@
       <version>${jakarta.el.api.version}</version>
       <scope>provided</scope>
     </dependency>
+    
+    <!-- Dependency Injection  -->
+    <dependency>
+      <groupId>com.google.inject</groupId>
+      <artifactId>guice</artifactId>
+      <version>7.0.0</version>
+    </dependency>
 
     <!-- Jakarta Annotation API  -->
     <dependency>
@@ -60,6 +97,13 @@
       <artifactId>jakarta.annotation-api</artifactId>
       <version>${jakarta.annotation.version}</version>
       <scope>provided</scope>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/com.zaxxer/HikariCP -->
+    <dependency>
+        <groupId>com.zaxxer</groupId>
+        <artifactId>HikariCP</artifactId>
+        <version>6.3.0</version>
     </dependency>
 
     <!-- Hibernate Core  -->
@@ -108,29 +152,74 @@
       <artifactId>commons-io</artifactId>
       <version>2.16.1</version>
     </dependency>
+
+    <!-- Test-scoped dependencies -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-api</artifactId>
+      <version>${junit.jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-engine</artifactId>
+      <version>${junit.jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
+      <version>${junit.jupiter.version}</version>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+        <groupId>com.h2database</groupId>
+        <artifactId>h2</artifactId>
+        <version>${h2.version}</version>
+        <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>5.12.0</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mindrot</groupId>
+      <artifactId>jbcrypt</artifactId>
+      <version>0.4</version>
+    </dependency>
+
   </dependencies>
 
   <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>  
-          <groupId>org.apache.maven.plugins</groupId>  
-          <artifactId>maven-jar-plugin</artifactId>  
-          <version>2.6</version>  
-          <configuration>  
-            <archive>  
-              <manifest>  
-                <addClasspath>true</addClasspath>  
-              </manifest>  
-              <manifestEntries>  
-                <Main-Class>  
-                  MainServlet
-                </Main-Class>  
-              </manifestEntries>  
-            </archive>  
-          </configuration>  
-        </plugin> 
-      </plugins>
-    </pluginManagement>
+    <finalName>ComPan</finalName>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven.compiler.plugin.version}</version>
+        <configuration>
+          <release>${maven.compiler.source}</release>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+              <version>${lombok.version}</version>
+            </path>
+          </annotationProcessorPaths>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <version>${maven.war.plugin.version}</version>
+      </plugin>
+    </plugins>
   </build>
 </project>
