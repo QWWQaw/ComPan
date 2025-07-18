@@ -90,13 +90,69 @@ public class UserService {
     }
 
     /**
-     * 获取用户信息 - UserHandler中需要的方法
+     * 验证用户登录 - AuthService需要的方法
+     */
+    public Map<String, Object> validateLogin(String username, String password) {
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            String sql = "SELECT user_id, username, email, password_hash FROM users WHERE username = ? OR email = ?";
+            Connection conn = null;
+            PreparedStatement stmt = null;
+            ResultSet rs = null;
+
+            try {
+                conn = databaseService.getConnection();
+                stmt = conn.prepareStatement(sql);
+                stmt.setString(1, username);
+                stmt.setString(2, username); // 支持用户名或邮箱登录
+                rs = stmt.executeQuery();
+
+                if (rs.next()) {
+                    String storedPasswordHash = rs.getString("password_hash");
+                    String inputPasswordHash = hashPassword(password);
+
+                    if (storedPasswordHash.equals(inputPasswordHash)) {
+                        // 登录成功
+                        result.put("success", true);
+                        result.put("message", "登录成功");
+                        result.put("data", Map.of(
+                            "user_id", rs.getLong("user_id"),
+                            "username", rs.getString("username"),
+                            "email", rs.getString("email")
+                        ));
+                    } else {
+                        // 密码错误
+                        result.put("success", false);
+                        result.put("message", "密码错误");
+                    }
+                } else {
+                    // 用户不存在
+                    result.put("success", false);
+                    result.put("message", "用户不存在");
+                }
+
+            } finally {
+                DatabaseService.closeResources(conn, stmt, rs);
+            }
+
+        } catch (Exception e) {
+            System.err.println("验证登录失败: " + e.getMessage());
+            result.put("success", false);
+            result.put("message", "登录验证失败");
+        }
+
+        return result;
+    }
+
+    /**
+     * 获取用户资料 - UserHandler需要的方法
      */
     public Map<String, Object> getUserProfile(Long userId) {
         Map<String, Object> result = new HashMap<>();
 
         try {
-            String sql = "SELECT user_id, username, email, storage_limit, storage_used, status, created_at, updated_at FROM user WHERE user_id = ? AND status = 'active'";
+            String sql = "SELECT user_id, username, email, phone, avatar, created_at, updated_at FROM users WHERE user_id = ?";
             Connection conn = null;
             PreparedStatement stmt = null;
             ResultSet rs = null;
@@ -108,19 +164,16 @@ public class UserService {
                 rs = stmt.executeQuery();
 
                 if (rs.next()) {
-                    Map<String, Object> userData = new HashMap<>();
-                    userData.put("user_id", rs.getLong("user_id"));
-                    userData.put("username", rs.getString("username"));
-                    userData.put("email", rs.getString("email"));
-                    userData.put("storage_limit", rs.getLong("storage_limit"));
-                    userData.put("storage_used", rs.getLong("storage_used"));
-                    userData.put("status", rs.getString("status"));
-                    userData.put("created_at", rs.getTimestamp("created_at"));
-                    userData.put("updated_at", rs.getTimestamp("updated_at"));
-
                     result.put("success", true);
-                    result.put("message", "获取用户信息成功");
-                    result.put("data", userData);
+                    result.put("data", Map.of(
+                        "user_id", rs.getLong("user_id"),
+                        "username", rs.getString("username"),
+                        "email", rs.getString("email"),
+                        "phone", rs.getString("phone"),
+                        "avatar", rs.getString("avatar"),
+                        "created_at", rs.getTimestamp("created_at"),
+                        "updated_at", rs.getTimestamp("updated_at")
+                    ));
                 } else {
                     result.put("success", false);
                     result.put("message", "用户不存在");
@@ -131,78 +184,69 @@ public class UserService {
             }
 
         } catch (Exception e) {
-            System.err.println("获取用户信息失败: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("获取用户资料失败: " + e.getMessage());
             result.put("success", false);
-            result.put("message", "系统错误");
+            result.put("message", "获取用户资料失败");
         }
 
         return result;
     }
 
     /**
-     * 更新用户信息 - UserHandler中需要的方法
+     * 更新用户资料 - UserHandler需要的方法
      */
-    public Map<String, Object> updateUserProfile(Long userId, String username, String email) {
+    public Map<String, Object> updateUserProfile(Long userId, String username, String email, String phone, String avatar) {
         Map<String, Object> result = new HashMap<>();
 
         try {
-            // 检查新用户名是否被其他用户使用
-            if (username != null && isUsernameExistsExcludeUser(username, userId)) {
+            // 检查用户名和邮箱是否已被其他用户使用
+            if (username != null && isUsernameExistsForOtherUser(username, userId)) {
                 result.put("success", false);
-                result.put("message", "用户名已被使用");
+                result.put("message", "用户名已被其他用户使用");
+                result.put("status_code", 409);
                 return result;
             }
 
-            // 检查新邮箱是否被其他用户使用
-            if (email != null && isEmailExistsExcludeUser(email, userId)) {
+            if (email != null && isEmailExistsForOtherUser(email, userId)) {
                 result.put("success", false);
-                result.put("message", "邮箱已被使用");
+                result.put("message", "邮箱已被其他用户使用");
+                result.put("status_code", 409);
                 return result;
             }
 
-            StringBuilder sqlBuilder = new StringBuilder("UPDATE user SET updated_at = CURRENT_TIMESTAMP");
-            List<Object> params = new ArrayList<>();
-
-            if (username != null && !username.trim().isEmpty()) {
-                sqlBuilder.append(", username = ?");
-                params.add(username);
-            }
-
-            if (email != null && !email.trim().isEmpty()) {
-                sqlBuilder.append(", email = ?");
-                params.add(email);
-            }
-
-            sqlBuilder.append(" WHERE user_id = ?");
-            params.add(userId);
+            String sql = "UPDATE users SET username = COALESCE(?, username), " +
+                        "email = COALESCE(?, email), " +
+                        "phone = COALESCE(?, phone), " +
+                        "avatar = COALESCE(?, avatar), " +
+                        "updated_at = NOW() WHERE user_id = ?";
 
             Connection conn = null;
             PreparedStatement stmt = null;
 
             try {
                 conn = databaseService.getConnection();
-                stmt = conn.prepareStatement(sqlBuilder.toString());
+                stmt = conn.prepareStatement(sql);
+                stmt.setString(1, username);
+                stmt.setString(2, email);
+                stmt.setString(3, phone);
+                stmt.setString(4, avatar);
+                stmt.setLong(5, userId);
 
-                for (int i = 0; i < params.size(); i++) {
-                    stmt.setObject(i + 1, params.get(i));
-                }
+                int rowsAffected = stmt.executeUpdate();
 
-                int affectedRows = stmt.executeUpdate();
-                if (affectedRows > 0) {
-                    // 获取更新后的用户信息
-                    Map<String, Object> userProfile = getUserProfile(userId);
-                    if ((Boolean) userProfile.get("success")) {
-                        result.put("success", true);
-                        result.put("message", "用户信息更新成功");
-                        result.put("data", userProfile.get("data"));
-                    } else {
-                        result.put("success", false);
-                        result.put("message", "更新成功但获取信息失败");
+                if (rowsAffected > 0) {
+                    result.put("success", true);
+                    result.put("message", "用户资料更新成功");
+
+                    // 返回更新后的用户信息
+                    Map<String, Object> updatedUser = getUserProfile(userId);
+                    if ((Boolean) updatedUser.get("success")) {
+                        result.put("data", updatedUser.get("data"));
                     }
                 } else {
                     result.put("success", false);
-                    result.put("message", "更新失败");
+                    result.put("message", "用户不存在");
+                    result.put("status_code", 404);
                 }
 
             } finally {
@@ -210,71 +254,100 @@ public class UserService {
             }
 
         } catch (Exception e) {
-            System.err.println("更新用户信息失败: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("更新用户资料失败: " + e.getMessage());
             result.put("success", false);
-            result.put("message", "系统错误");
+            result.put("message", "更新用户资料失败");
+            result.put("status_code", 500);
         }
 
         return result;
     }
 
     /**
-     * 修改密码 - UserHandler中需要的方法
+     * 修改密码 - UserHandler需要的方法
      */
-    public Map<String, Object> changePassword(Long userId, String oldPassword, String newPassword) {
+    public Map<String, Object> changePassword(Long userId, String oldPassword, String newPassword, String confirmPassword) {
         Map<String, Object> result = new HashMap<>();
 
         try {
-            // 验证旧密码
-            if (!verifyPassword(userId, oldPassword)) {
+            // 1. 验证新密码和确认密码是否一致
+            if (!newPassword.equals(confirmPassword)) {
                 result.put("success", false);
-                result.put("message", "原密码错误");
+                result.put("message", "新密码和确认密码不一致");
+                result.put("status_code", 400);
                 return result;
             }
 
-            // 更新密码
-            String sql = "UPDATE user SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?";
+            // 2. 验证旧密码
+            String checkSql = "SELECT password_hash FROM users WHERE user_id = ?";
             Connection conn = null;
-            PreparedStatement stmt = null;
+            PreparedStatement checkStmt = null;
+            ResultSet rs = null;
 
             try {
                 conn = databaseService.getConnection();
-                stmt = conn.prepareStatement(sql);
-                stmt.setString(1, hashPassword(newPassword));
-                stmt.setLong(2, userId);
+                checkStmt = conn.prepareStatement(checkSql);
+                checkStmt.setLong(1, userId);
+                rs = checkStmt.executeQuery();
 
-                int affectedRows = stmt.executeUpdate();
-                if (affectedRows > 0) {
+                if (rs.next()) {
+                    String storedPasswordHash = rs.getString("password_hash");
+                    String oldPasswordHash = hashPassword(oldPassword);
+
+                    if (!storedPasswordHash.equals(oldPasswordHash)) {
+                        result.put("success", false);
+                        result.put("message", "旧密码错误");
+                        result.put("status_code", 400);
+                        return result;
+                    }
+                } else {
+                    result.put("success", false);
+                    result.put("message", "用户不存在");
+                    result.put("status_code", 404);
+                    return result;
+                }
+
+                // 3. 更新密码
+                String updateSql = "UPDATE users SET password_hash = ?, updated_at = NOW() WHERE user_id = ?";
+                PreparedStatement updateStmt = conn.prepareStatement(updateSql);
+                updateStmt.setString(1, hashPassword(newPassword));
+                updateStmt.setLong(2, userId);
+
+                int rowsAffected = updateStmt.executeUpdate();
+
+                if (rowsAffected > 0) {
                     result.put("success", true);
                     result.put("message", "密码修改成功");
                 } else {
                     result.put("success", false);
                     result.put("message", "密码修改失败");
+                    result.put("status_code", 500);
                 }
 
+                updateStmt.close();
+
             } finally {
-                DatabaseService.closeResources(conn, stmt, null);
+                DatabaseService.closeResources(conn, checkStmt, rs);
             }
 
         } catch (Exception e) {
             System.err.println("修改密码失败: " + e.getMessage());
-            e.printStackTrace();
             result.put("success", false);
-            result.put("message", "系统错误");
+            result.put("message", "修改密码失败");
+            result.put("status_code", 500);
         }
 
         return result;
     }
 
     /**
-     * 获取用户存储统计信息
+     * 获取用户存储统计 - UserHandler需要的方法
      */
     public Map<String, Object> getUserStorageStats(Long userId) {
         Map<String, Object> result = new HashMap<>();
 
         try {
-            String sql = "SELECT storage_limit, storage_used, (storage_limit - storage_used) as storage_available FROM user WHERE user_id = ?";
+            String sql = "SELECT storage_used, storage_limit FROM users WHERE user_id = ?";
             Connection conn = null;
             PreparedStatement stmt = null;
             ResultSet rs = null;
@@ -286,20 +359,16 @@ public class UserService {
                 rs = stmt.executeQuery();
 
                 if (rs.next()) {
-                    Map<String, Object> storageStats = new HashMap<>();
-                    storageStats.put("storage_limit", rs.getLong("storage_limit"));
-                    storageStats.put("storage_used", rs.getLong("storage_used"));
-                    storageStats.put("storage_available", rs.getLong("storage_available"));
-
-                    // 计算使用率百分比
-                    long limit = rs.getLong("storage_limit");
-                    long used = rs.getLong("storage_used");
-                    double usagePercentage = limit > 0 ? (double) used / limit * 100 : 0;
-                    storageStats.put("usage_percentage", Math.round(usagePercentage * 100.0) / 100.0);
+                    long storageUsed = rs.getLong("storage_used");
+                    long storageLimit = rs.getLong("storage_limit");
 
                     result.put("success", true);
-                    result.put("message", "获取存储统计信息成功");
-                    result.put("data", storageStats);
+                    result.put("data", Map.of(
+                        "storage_used", storageUsed,
+                        "storage_limit", storageLimit,
+                        "storage_available", storageLimit - storageUsed,
+                        "usage_percentage", storageLimit > 0 ? (storageUsed * 100.0 / storageLimit) : 0
+                    ));
                 } else {
                     result.put("success", false);
                     result.put("message", "用户不存在");
@@ -310,38 +379,33 @@ public class UserService {
             }
 
         } catch (Exception e) {
-            System.err.println("获取用户存储统计失败: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("获取存储统计失败: " + e.getMessage());
             result.put("success", false);
-            result.put("message", "系统错误");
+            result.put("message", "获取存储统计失败");
         }
 
         return result;
     }
 
     /**
-     * 获取用户活动日志
+     * 获取用户活动日志 - UserHandler需要的方法
      */
-    public Map<String, Object> getUserActivityLog(Long userId, int page, int perPage, String action) {
+    public Map<String, Object> getUserActivityLog(Long userId, int page, int size, String actionType) {
         Map<String, Object> result = new HashMap<>();
 
         try {
-            int offset = (page - 1) * perPage;
-
-            StringBuilder sqlBuilder = new StringBuilder();
-            sqlBuilder.append("SELECT log_id, action, details, ip_address, user_agent, created_at FROM log WHERE user_id = ?");
-
+            StringBuilder sqlBuilder = new StringBuilder("SELECT * FROM activity_logs WHERE user_id = ?");
             List<Object> params = new ArrayList<>();
             params.add(userId);
 
-            if (action != null && !action.trim().isEmpty()) {
-                sqlBuilder.append(" AND action = ?");
-                params.add(action);
+            if (actionType != null && !actionType.trim().isEmpty()) {
+                sqlBuilder.append(" AND action_type = ?");
+                params.add(actionType);
             }
 
             sqlBuilder.append(" ORDER BY created_at DESC LIMIT ? OFFSET ?");
-            params.add(perPage);
-            params.add(offset);
+            params.add(size);
+            params.add((page - 1) * size);
 
             Connection conn = null;
             PreparedStatement stmt = null;
@@ -360,85 +424,34 @@ public class UserService {
                 List<Map<String, Object>> logs = new ArrayList<>();
                 while (rs.next()) {
                     Map<String, Object> log = new HashMap<>();
-                    log.put("log_id", rs.getLong("log_id"));
-                    log.put("action", rs.getString("action"));
-                    log.put("details", rs.getString("details"));
+                    log.put("id", rs.getLong("id"));
+                    log.put("action_type", rs.getString("action_type"));
+                    log.put("description", rs.getString("description"));
                     log.put("ip_address", rs.getString("ip_address"));
                     log.put("user_agent", rs.getString("user_agent"));
                     log.put("created_at", rs.getTimestamp("created_at"));
                     logs.add(log);
                 }
 
-                // 获取总数
-                int totalCount = getUserLogCount(userId, action);
-
-                Map<String, Object> pagination = new HashMap<>();
-                pagination.put("current_page", page);
-                pagination.put("per_page", perPage);
-                pagination.put("total", totalCount);
-                pagination.put("total_pages", (totalCount + perPage - 1) / perPage);
-                pagination.put("has_next", offset + perPage < totalCount);
-                pagination.put("has_prev", page > 1);
-
-                Map<String, Object> logData = new HashMap<>();
-                logData.put("logs", logs);
-                logData.put("pagination", pagination);
-
                 result.put("success", true);
-                result.put("message", "获取活动日志成功");
-                result.put("data", logData);
+                result.put("data", Map.of(
+                    "logs", logs,
+                    "page", page,
+                    "size", size,
+                    "total", getTotalActivityCount(userId, actionType)
+                ));
 
             } finally {
                 DatabaseService.closeResources(conn, stmt, rs);
             }
 
         } catch (Exception e) {
-            System.err.println("获取用户活动日志失败: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("获取活动日志失败: " + e.getMessage());
             result.put("success", false);
-            result.put("message", "系统错误");
+            result.put("message", "获取活动日志失败");
         }
 
         return result;
-    }
-
-    /**
-     * 获取用户日志总数（私有辅助方法）
-     */
-    private int getUserLogCount(Long userId, String action) throws SQLException {
-        StringBuilder sqlBuilder = new StringBuilder();
-        sqlBuilder.append("SELECT COUNT(*) FROM log WHERE user_id = ?");
-
-        List<Object> params = new ArrayList<>();
-        params.add(userId);
-
-        if (action != null && !action.trim().isEmpty()) {
-            sqlBuilder.append(" AND action = ?");
-            params.add(action);
-        }
-
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-
-        try {
-            conn = databaseService.getConnection();
-            stmt = conn.prepareStatement(sqlBuilder.toString());
-
-            for (int i = 0; i < params.size(); i++) {
-                stmt.setObject(i + 1, params.get(i));
-            }
-
-            rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-            return 0;
-
-        } finally {
-            DatabaseService.closeResources(conn, stmt, rs);
-        }
     }
 
     // ================== 私有辅助方法 ==================
@@ -754,5 +767,112 @@ public class UserService {
             System.err.println("检查存储空间失败: " + e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * 获取活动日志总数
+     */
+    private long getTotalActivityCount(Long userId, String actionType) {
+        try {
+            StringBuilder sqlBuilder = new StringBuilder("SELECT COUNT(*) FROM activity_logs WHERE user_id = ?");
+            List<Object> params = new ArrayList<>();
+            params.add(userId);
+
+            if (actionType != null && !actionType.trim().isEmpty()) {
+                sqlBuilder.append(" AND action_type = ?");
+                params.add(actionType);
+            }
+
+            Connection conn = null;
+            PreparedStatement stmt = null;
+            ResultSet rs = null;
+
+            try {
+                conn = databaseService.getConnection();
+                stmt = conn.prepareStatement(sqlBuilder.toString());
+
+                for (int i = 0; i < params.size(); i++) {
+                    stmt.setObject(i + 1, params.get(i));
+                }
+
+                rs = stmt.executeQuery();
+
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
+
+            } finally {
+                DatabaseService.closeResources(conn, stmt, rs);
+            }
+
+        } catch (Exception e) {
+            System.err.println("获取活动日志总数失败: " + e.getMessage());
+        }
+
+        return 0;
+    }
+
+    /**
+     * 检查用户名是否已被其他用户使用
+     */
+    private boolean isUsernameExistsForOtherUser(String username, Long excludeUserId) {
+        try {
+            String sql = "SELECT COUNT(*) FROM users WHERE username = ? AND user_id != ?";
+            Connection conn = null;
+            PreparedStatement stmt = null;
+            ResultSet rs = null;
+
+            try {
+                conn = databaseService.getConnection();
+                stmt = conn.prepareStatement(sql);
+                stmt.setString(1, username);
+                stmt.setLong(2, excludeUserId);
+                rs = stmt.executeQuery();
+
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+
+            } finally {
+                DatabaseService.closeResources(conn, stmt, rs);
+            }
+
+        } catch (Exception e) {
+            System.err.println("检查用户名存在性失败: " + e.getMessage());
+        }
+
+        return false;
+    }
+
+    /**
+     * 检查邮箱是否已被其他用户使用
+     */
+    private boolean isEmailExistsForOtherUser(String email, Long excludeUserId) {
+        try {
+            String sql = "SELECT COUNT(*) FROM users WHERE email = ? AND user_id != ?";
+            Connection conn = null;
+            PreparedStatement stmt = null;
+            ResultSet rs = null;
+
+            try {
+                conn = databaseService.getConnection();
+                stmt = conn.prepareStatement(sql);
+                stmt.setString(1, email);
+                stmt.setLong(2, excludeUserId);
+                rs = stmt.executeQuery();
+
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+
+            } finally {
+                DatabaseService.closeResources(conn, stmt, rs);
+            }
+
+        } catch (Exception e) {
+            System.err.println("检查邮箱存在性失败: " + e.getMessage());
+        }
+
+        return false;
     }
 }

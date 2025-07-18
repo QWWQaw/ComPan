@@ -1,16 +1,10 @@
 package cloud.compan.servlet.dto.file;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-
 /**
  * 文件重命名请求DTO
  */
-public class FileRenameDTO {
-    @NotNull(message = "文件ID不能为空")
+class FileRenameDTO {
     private Long fileId;
-
-    @NotBlank(message = "新文件名不能为空")
     private String newFileName;
 
     // 构造函数
@@ -32,16 +26,22 @@ public class FileRenameDTO {
     public boolean isValid() {
         return fileId != null && newFileName != null && !newFileName.trim().isEmpty();
     }
+
+    @Override
+    public String toString() {
+        return "FileRenameDTO{" +
+                "fileId=" + fileId +
+                ", newFileName='" + newFileName + '\'' +
+                '}';
+    }
 }
 
 /**
  * 文件移动请求DTO
  */
 class FileMoveDTO {
-    @NotNull(message = "文件ID不能为空")
     private Long fileId;
-
-    private Long targetFolderId; // null表示移动到根目录
+    private Long targetFolderId;
 
     // 构造函数
     public FileMoveDTO() {}

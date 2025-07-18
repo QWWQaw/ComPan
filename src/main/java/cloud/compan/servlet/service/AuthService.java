@@ -87,6 +87,25 @@ public class AuthService {
     }
 
     /**
+     * 检查用户是否已登录
+     */
+    public boolean isUserLoggedIn(HttpSession session) {
+        Object userId = session.getAttribute("user_id");
+        return userId != null;
+    }
+
+    /**
+     * 获取当前登录用户ID
+     */
+    public Long getCurrentUserId(HttpSession session) {
+        Object userId = session.getAttribute("user_id");
+        if (userId != null) {
+            return Long.parseLong(userId.toString());
+        }
+        throw new RuntimeException("用户未登录");
+    }
+
+    /**
      * 用户登录业务逻辑
      */
     public Map<String, Object> login(String username, String password, HttpSession session) {
@@ -94,69 +113,48 @@ public class AuthService {
 
         try {
             // 1. 参数验证
-            Map<String, Object> validationResult = validateLoginInput(username, password);
-            if (!(Boolean) validationResult.get("valid")) {
+            if (username == null || username.trim().isEmpty()) {
                 result.put("success", false);
-                result.put("message", validationResult.get("message"));
+                result.put("message", "用户名不能为空");
                 result.put("status_code", 400);
                 return result;
             }
 
-            // 2. 调用用户服务进行登录验证
-            Map<String, Object> loginResult = userService.loginUser(username, password);
+            if (password == null || password.trim().isEmpty()) {
+                result.put("success", false);
+                result.put("message", "密码不能为空");
+                result.put("status_code", 400);
+                return result;
+            }
+
+            // 2. 调用用户服务验证登录
+            Map<String, Object> loginResult = userService.validateLogin(username, password);
 
             if ((Boolean) loginResult.get("success")) {
-                // 登录成功
+                // 登录成功，设置session
                 Map<String, Object> userData = (Map<String, Object>) loginResult.get("data");
-
-                // 创建会话
-                session.setAttribute("user", userData);
-                session.setAttribute("userId", userData.get("user_id"));
+                session.setAttribute("user_id", userData.get("user_id"));
                 session.setAttribute("username", userData.get("username"));
-
-                // 设置会话超时时间（7天）
-                session.setMaxInactiveInterval(7 * 24 * 60 * 60);
 
                 result.put("success", true);
                 result.put("message", "登录成功");
                 result.put("status_code", 200);
                 result.put("data", Map.of(
-                    "token", "session_based_token", // 基于Session的简化实现
-                    "expires_in", 604800, // 7天
-                    "user", Map.of(
-                        "user_id", userData.get("user_id"),
-                        "username", userData.get("username"),
-                        "email", userData.get("email"),
-                        "storage_limit", userData.get("storage_limit"),
-                        "storage_used", userData.get("storage_used")
-                    )
+                    "user_id", userData.get("user_id"),
+                    "username", userData.get("username"),
+                    "email", userData.get("email"),
+                    "login_time", java.time.Instant.now().toString()
                 ));
             } else {
-                // 登录失败
-                String message = (String) loginResult.get("message");
                 result.put("success", false);
-
-                if (message.contains("用户名或密码错误")) {
-                    result.put("message", "用户名或密码错误");
-                    result.put("status_code", 401);
-                } else if (message.contains("账户已被禁用")) {
-                    result.put("message", "账户已被禁用，请联系管理员");
-                    result.put("status_code", 403);
-                    result.put("data", Map.of(
-                        "status", "banned",
-                        "contact", "support@kepan.com"
-                    ));
-                } else {
-                    result.put("message", message);
-                    result.put("status_code", 400);
-                }
+                result.put("message", loginResult.get("message"));
+                result.put("status_code", 401);
             }
 
         } catch (Exception e) {
-            System.err.println("登录业务逻辑处理失败: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("登录失败: " + e.getMessage());
             result.put("success", false);
-            result.put("message", "系统错误");
+            result.put("message", "登录失败");
             result.put("status_code", 500);
         }
 
@@ -170,50 +168,23 @@ public class AuthService {
         Map<String, Object> result = new HashMap<>();
 
         try {
-            // 检查是否已登录
-            if (session.getAttribute("userId") == null) {
-                result.put("success", false);
-                result.put("message", "用户未登录");
-                result.put("status_code", 401);
-                return result;
-            }
-
-            // 销毁会话
+            // 清除session
+            session.removeAttribute("user_id");
+            session.removeAttribute("username");
             session.invalidate();
 
             result.put("success", true);
-            result.put("message", "成功退出账号");
+            result.put("message", "登出成功");
             result.put("status_code", 200);
-            result.put("data", Map.of(
-                "logged_out_at", System.currentTimeMillis()
-            ));
 
         } catch (Exception e) {
-            System.err.println("登出业务逻辑处理失败: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("登出失败: " + e.getMessage());
             result.put("success", false);
-            result.put("message", "系统错误");
+            result.put("message", "登出失败");
             result.put("status_code", 500);
         }
 
         return result;
-    }
-
-    /**
-     * 检查用户是否已登录
-     */
-    public boolean isUserLoggedIn(HttpSession session) {
-        return session != null && session.getAttribute("userId") != null;
-    }
-
-    /**
-     * 获取当前登录用户ID
-     */
-    public Long getCurrentUserId(HttpSession session) {
-        if (session == null) {
-            return null;
-        }
-        return (Long) session.getAttribute("userId");
     }
 
     /**

@@ -1,27 +1,21 @@
 package cloud.compan.servlet.dto.file;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-
 /**
  * 文件上传请求DTO
- * 用于Handler层接收文件上传请求参数
  */
 public class FileUploadDTO {
-    @NotBlank(message = "文件名不能为空")
     private String fileName;
-
-    private Long folderId; // 可选，上传到指定文件夹
-
-    @NotNull(message = "文件内容不能为空")
-    private Object filePart; // 实际的文件Part对象
+    private Long folderId;
+    private String description;
+    private Long fileSize;
 
     // 构造函数
     public FileUploadDTO() {}
 
-    public FileUploadDTO(String fileName, Long folderId) {
+    public FileUploadDTO(String fileName, Long folderId, String description) {
         this.fileName = fileName;
         this.folderId = folderId;
+        this.description = description;
     }
 
     // Getters and Setters
@@ -31,11 +25,24 @@ public class FileUploadDTO {
     public Long getFolderId() { return folderId; }
     public void setFolderId(Long folderId) { this.folderId = folderId; }
 
-    public Object getFilePart() { return filePart; }
-    public void setFilePart(Object filePart) { this.filePart = filePart; }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
+    public Long getFileSize() { return fileSize; }
+    public void setFileSize(Long fileSize) { this.fileSize = fileSize; }
 
     // 验证方法
     public boolean isValid() {
-        return fileName != null && !fileName.trim().isEmpty() && filePart != null;
+        return fileName != null && !fileName.trim().isEmpty();
+    }
+
+    @Override
+    public String toString() {
+        return "FileUploadDTO{" +
+                "fileName='" + fileName + '\'' +
+                ", folderId=" + folderId +
+                ", description='" + description + '\'' +
+                ", fileSize=" + fileSize +
+                '}';
     }
 }

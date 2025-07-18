@@ -1,19 +1,13 @@
 package cloud.compan.servlet.dto;
 
-import javax.validation.constraints.NotBlank;
-
 /**
  * 用户登录请求DTO
- * 用于Handler层接收登录请求参数
  */
 public class UserLoginDTO {
-    @NotBlank(message = "用户名不能为空")
-    private String username;
 
-    @NotBlank(message = "密码不能为空")
+    private String username;
     private String password;
 
-    // 构造函数
     public UserLoginDTO() {}
 
     public UserLoginDTO(String username, String password) {
@@ -22,23 +16,48 @@ public class UserLoginDTO {
     }
 
     // Getters and Setters
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
+    public String getUsername() {
+        return username;
+    }
 
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-    // 验证方法
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    /**
+     * 验证登录数据
+     */
     public boolean isValid() {
         return username != null && !username.trim().isEmpty() &&
                password != null && !password.trim().isEmpty();
+    }
+
+    /**
+     * 获取验证错误信息
+     */
+    public String getValidationError() {
+        if (username == null || username.trim().isEmpty()) {
+            return "用户名不能为空";
+        }
+        if (password == null || password.trim().isEmpty()) {
+            return "密码不能为空";
+        }
+        return null;
     }
 
     @Override
     public String toString() {
         return "UserLoginDTO{" +
                 "username='" + username + '\'' +
-                ", password='[PROTECTED]'" +
+                ", password='[HIDDEN]'" +
                 '}';
     }
 }

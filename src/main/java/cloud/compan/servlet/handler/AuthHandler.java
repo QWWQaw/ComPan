@@ -121,16 +121,4 @@ public class AuthHandler extends BaseHandler {
             sendInternalServerError(response, "服务器内部错误");
         }
     }
-
-    /**
-     * 从请求体中获取参数（支持JSON和表单数据）
-     */
-    private String getParameterFromRequestBody(HttpServletRequest request, String paramName) {
-        String value = request.getParameter(paramName);
-        if (value != null) {
-            return value;
-        }
-        // TODO: 后续可以添加JSON解析支持
-        return null;
-    }
 }

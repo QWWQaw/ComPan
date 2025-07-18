@@ -128,6 +128,93 @@ public class ShareService {
     }
 
     /**
+     * 创建分享 - ShareHandler需要的方法签名
+     */
+    public Map<String, Object> createShare(Long userId, String resourceType, Long resourceId,
+                                          Integer expiryDays, String password, String description) {
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            // 1. 验证参数
+            if (resourceType == null || (!resourceType.equals("file") && !resourceType.equals("folder"))) {
+                result.put("success", false);
+                result.put("message", "无效的资源类型");
+                result.put("status_code", 400);
+                return result;
+            }
+
+            // 2. 生成分享链接
+            String shareLink = generateShareLink();
+
+            // 3. 计算过期时间
+            java.sql.Timestamp expiryTime = null;
+            if (expiryDays != null && expiryDays > 0) {
+                long expiryMillis = System.currentTimeMillis() + (expiryDays * 24L * 60 * 60 * 1000);
+                expiryTime = new java.sql.Timestamp(expiryMillis);
+            }
+
+            // 4. 保存分享记录
+            String sql = "INSERT INTO share (id, resource_type, resource_id, share_link, password, description, expiry_time, created_at) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+
+            Connection conn = null;
+            PreparedStatement stmt = null;
+            ResultSet rs = null;
+
+            try {
+                conn = databaseService.getConnection();
+                stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+                stmt.setLong(1, userId);
+                stmt.setString(2, resourceType);
+                stmt.setLong(3, resourceId);
+                stmt.setString(4, shareLink);
+                stmt.setString(5, password);
+                stmt.setString(6, description);
+                if (expiryTime != null) {
+                    stmt.setTimestamp(7, expiryTime);
+                } else {
+                    stmt.setNull(7, Types.TIMESTAMP);
+                }
+
+                int rowsAffected = stmt.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    rs = stmt.getGeneratedKeys();
+                    if (rs.next()) {
+                        Long shareId = rs.getLong(1);
+
+                        result.put("success", true);
+                        result.put("message", "分享创建成功");
+                        result.put("data", Map.of(
+                            "share_id", shareId,
+                            "share_link", shareLink,
+                            "resource_type", resourceType,
+                            "resource_id", resourceId,
+                            "expiry_time", expiryTime,
+                            "has_password", password != null && !password.isEmpty()
+                        ));
+                    }
+                } else {
+                    result.put("success", false);
+                    result.put("message", "分享创建失败");
+                    result.put("status_code", 500);
+                }
+
+            } finally {
+                DatabaseService.closeResources(conn, stmt, rs);
+            }
+
+        } catch (Exception e) {
+            System.err.println("创建分享失败: " + e.getMessage());
+            result.put("success", false);
+            result.put("message", "创建分享失败");
+            result.put("status_code", 500);
+        }
+
+        return result;
+    }
+
+    /**
      * 获取我的分享列表
      */
     public Map<String, Object> getMyShares(Long userId, int page, int perPage) {
@@ -178,7 +265,8 @@ public class ShareService {
                 }
 
                 // 获取总数
-                int totalCount = getTotalShareCount(userId, conn);
+                long totalCountLong = getTotalShareCount(userId);
+                int totalCount = (int) totalCountLong;
 
                 Map<String, Object> pagination = new HashMap<>();
                 pagination.put("current_page", page);
@@ -211,15 +299,71 @@ public class ShareService {
     }
 
     /**
+     * 获取用户分享列表 - ShareHandler需要的方法
+     */
+    public Map<String, Object> getUserShares(Long userId, int page, int size) {
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            StringBuilder sqlBuilder = new StringBuilder("SELECT * FROM shares WHERE user_id = ?");
+            sqlBuilder.append(" ORDER BY created_at DESC LIMIT ? OFFSET ?");
+
+            Connection conn = null;
+            PreparedStatement stmt = null;
+            ResultSet rs = null;
+
+            try {
+                conn = databaseService.getConnection();
+                stmt = conn.prepareStatement(sqlBuilder.toString());
+                stmt.setLong(1, userId);
+                stmt.setInt(2, size);
+                stmt.setInt(3, (page - 1) * size);
+
+                rs = stmt.executeQuery();
+
+                List<Map<String, Object>> shares = new ArrayList<>();
+                while (rs.next()) {
+                    Map<String, Object> share = new HashMap<>();
+                    share.put("share_id", rs.getLong("share_id"));
+                    share.put("resource_type", rs.getString("resource_type"));
+                    share.put("resource_id", rs.getLong("resource_id"));
+                    share.put("share_link", rs.getString("share_link"));
+                    share.put("description", rs.getString("description"));
+                    share.put("expiry_time", rs.getTimestamp("expiry_time"));
+                    share.put("created_at", rs.getTimestamp("created_at"));
+                    share.put("has_password", rs.getString("password") != null);
+                    shares.add(share);
+                }
+
+                result.put("success", true);
+                result.put("data", Map.of(
+                    "shares", shares,
+                    "page", page,
+                    "size", size,
+                    "total", getTotalShareCount(userId)
+                ));
+
+            } finally {
+                DatabaseService.closeResources(conn, stmt, rs);
+            }
+
+        } catch (Exception e) {
+            System.err.println("获取分享列表失败: " + e.getMessage());
+            result.put("success", false);
+            result.put("message", "获取分享列表失败");
+        }
+
+        return result;
+    }
+
+    /**
      * 获取分享详情
      */
     public Map<String, Object> getShareDetails(String shareLink) {
         Map<String, Object> result = new HashMap<>();
 
         try {
-            String sql = "SELECT s.id, s.share_link, s.file_id, s.folder_id, s.created_by, s.password, s.expire_at, s.created_at, " +
-                        "u.username FROM share s JOIN user u ON s.created_by = u.user_id WHERE s.share_link = ?";
-
+            String sql = "SELECT * FROM share WHERE share_link = ?";
             Connection conn = null;
             PreparedStatement stmt = null;
             ResultSet rs = null;
@@ -228,45 +372,33 @@ public class ShareService {
                 conn = databaseService.getConnection();
                 stmt = conn.prepareStatement(sql);
                 stmt.setString(1, shareLink);
-
                 rs = stmt.executeQuery();
 
                 if (rs.next()) {
                     // 检查是否过期
-                    Timestamp expireAt = rs.getTimestamp("expire_at");
-                    if (expireAt != null && expireAt.before(new java.util.Date())) {
+                    java.sql.Timestamp expiryTime = rs.getTimestamp("expiry_time");
+                    if (expiryTime != null && expiryTime.before(new java.sql.Timestamp(System.currentTimeMillis()))) {
                         result.put("success", false);
-                        result.put("message", "分享链接已过期");
+                        result.put("message", "分享已过期");
+                        result.put("status_code", 410);
                         return result;
                     }
 
-                    Long fileId = rs.getObject("file_id", Long.class);
-                    Long folderId = rs.getObject("folder_id", Long.class);
-
                     Map<String, Object> shareData = new HashMap<>();
-                    shareData.put("share_link", shareLink);
-                    shareData.put("item_type", fileId != null ? "file" : "folder");
-                    shareData.put("item_info", getShareItemInfo(fileId, folderId, conn));
-
-                    Map<String, Object> sharedBy = new HashMap<>();
-                    sharedBy.put("username", rs.getString("username"));
-                    shareData.put("shared_by", sharedBy);
-
-                    Map<String, Object> settings = new HashMap<>();
-                    settings.put("password_protected", rs.getString("password") != null);
-                    settings.put("expire_at", expireAt);
-                    settings.put("allow_download", true);
-                    settings.put("allow_preview", true);
-                    shareData.put("settings", settings);
-
+                    shareData.put("share_id", rs.getLong("share_id"));
+                    shareData.put("resource_type", rs.getString("resource_type"));
+                    shareData.put("resource_id", rs.getLong("resource_id"));
+                    shareData.put("description", rs.getString("description"));
+                    shareData.put("expiry_time", expiryTime);
                     shareData.put("created_at", rs.getTimestamp("created_at"));
+                    shareData.put("has_password", rs.getString("password") != null);
 
                     result.put("success", true);
-                    result.put("message", "获取分享信息成功");
                     result.put("data", shareData);
                 } else {
                     result.put("success", false);
-                    result.put("message", "分享链接不存在");
+                    result.put("message", "分享不存在");
+                    result.put("status_code", 404);
                 }
 
             } finally {
@@ -275,9 +407,9 @@ public class ShareService {
 
         } catch (Exception e) {
             System.err.println("获取分享详情失败: " + e.getMessage());
-            e.printStackTrace();
             result.put("success", false);
-            result.put("message", "系统错误");
+            result.put("message", "获取分享详情失败");
+            result.put("status_code", 500);
         }
 
         return result;
@@ -290,8 +422,7 @@ public class ShareService {
         Map<String, Object> result = new HashMap<>();
 
         try {
-            String sql = "SELECT s.id, s.file_id, s.folder_id, s.password, s.expire_at FROM share s WHERE s.share_link = ?";
-
+            String sql = "SELECT * FROM share WHERE share_link = ?";
             Connection conn = null;
             PreparedStatement stmt = null;
             ResultSet rs = null;
@@ -300,49 +431,45 @@ public class ShareService {
                 conn = databaseService.getConnection();
                 stmt = conn.prepareStatement(sql);
                 stmt.setString(1, shareLink);
-
                 rs = stmt.executeQuery();
 
                 if (rs.next()) {
                     // 检查是否过期
-                    Timestamp expireAt = rs.getTimestamp("expire_at");
-                    if (expireAt != null && expireAt.before(new Timestamp(System.currentTimeMillis()))) {
+                    java.sql.Timestamp expiryTime = rs.getTimestamp("expiry_time");
+                    if (expiryTime != null && expiryTime.before(new java.sql.Timestamp(System.currentTimeMillis()))) {
                         result.put("success", false);
-                        result.put("message", "分享链接已过期");
+                        result.put("message", "分享已过期");
+                        result.put("status_code", 410);
                         return result;
                     }
 
                     // 检查密码
-                    String sharePassword = rs.getString("password");
-                    if (sharePassword != null && !sharePassword.equals(password)) {
+                    String storedPassword = rs.getString("password");
+                    if (storedPassword != null && !storedPassword.equals(password)) {
                         result.put("success", false);
-                        result.put("message", "访问密码错误");
+                        result.put("message", "密码错误");
+                        result.put("status_code", 401);
                         return result;
                     }
 
-                    Long fileId = rs.getObject("file_id", Long.class);
-                    Long folderId = rs.getObject("folder_id", Long.class);
+                    // 返回资源信息
+                    String resourceType = rs.getString("resource_type");
+                    Long resourceId = rs.getLong("resource_id");
 
-                    // 生成临时访问令牌（简化实现）
-                    String accessToken = "temp_" + UUID.randomUUID().toString().replace("-", "");
-
-                    Map<String, Object> accessData = new HashMap<>();
-                    accessData.put("access_token", accessToken);
-                    accessData.put("expires_in", 3600); // 1小时
-                    accessData.put("item_type", fileId != null ? "file" : "folder");
-                    accessData.put("item_info", getShareItemInfo(fileId, folderId, conn));
-
-                    Map<String, Object> accessUrls = new HashMap<>();
-                    accessUrls.put("download", "/api/v1/shares/" + shareLink + "/download?token=" + accessToken);
-                    accessUrls.put("preview", "/api/v1/shares/" + shareLink + "/preview?token=" + accessToken);
-                    accessData.put("access_urls", accessUrls);
-
-                    result.put("success", true);
-                    result.put("message", "访问验证成功");
-                    result.put("data", accessData);
+                    Map<String, Object> resourceData = getResourceData(resourceType, resourceId);
+                    if (resourceData != null) {
+                        result.put("success", true);
+                        result.put("message", "访问成功");
+                        result.put("data", resourceData);
+                    } else {
+                        result.put("success", false);
+                        result.put("message", "资源不存在");
+                        result.put("status_code", 404);
+                    }
                 } else {
                     result.put("success", false);
-                    result.put("message", "分享链接不存在");
+                    result.put("message", "分享不存在");
+                    result.put("status_code", 404);
                 }
 
             } finally {
@@ -350,10 +477,10 @@ public class ShareService {
             }
 
         } catch (Exception e) {
-            System.err.println("访问分享内容失败: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("访问分享失败: " + e.getMessage());
             result.put("success", false);
-            result.put("message", "系统错误");
+            result.put("message", "访问分享失败");
+            result.put("status_code", 500);
         }
 
         return result;
@@ -399,6 +526,13 @@ public class ShareService {
         }
 
         return result;
+    }
+
+    /**
+     * 生成分享链接
+     */
+    private String generateShareLink() {
+        return java.util.UUID.randomUUID().toString().replace("-", "");
     }
 
     // ==================== 辅助方法 ====================
@@ -523,13 +657,110 @@ public class ShareService {
     /**
      * 获取分享总数
      */
-    private int getTotalShareCount(Long userId, Connection conn) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM share WHERE created_by = ?";
-        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setLong(1, userId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                return rs.next() ? rs.getInt(1) : 0;
+    private long getTotalShareCount(Long userId) {
+        try {
+            String sql = "SELECT COUNT(*) FROM share WHERE user_id = ?";
+            Connection conn = null;
+            PreparedStatement stmt = null;
+            ResultSet rs = null;
+
+            try {
+                conn = databaseService.getConnection();
+                stmt = conn.prepareStatement(sql);
+                stmt.setLong(1, userId);
+                rs = stmt.executeQuery();
+
+                if (rs.next()) {
+                    return rs.getLong(1);
+                }
+
+            } finally {
+                DatabaseService.closeResources(conn, stmt, rs);
             }
+
+        } catch (Exception e) {
+            System.err.println("获取分享总数失败: " + e.getMessage());
         }
+
+        return 0;
+    }
+
+    /**
+     * 获取资源数据
+     */
+    private Map<String, Object> getResourceData(String resourceType, Long resourceId) {
+        try {
+            if ("file".equals(resourceType)) {
+                return getFileData(resourceId);
+            } else if ("folder".equals(resourceType)) {
+                return getFolderData(resourceId);
+            }
+        } catch (Exception e) {
+            System.err.println("获取资源数据失败: " + e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * 获取文件数据
+     */
+    private Map<String, Object> getFileData(Long fileId) throws SQLException {
+        String sql = "SELECT * FROM files WHERE file_id = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = databaseService.getConnection();
+            stmt = conn.prepareStatement(sql);
+            stmt.setLong(1, fileId);
+            rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                Map<String, Object> fileData = new HashMap<>();
+                fileData.put("file_id", rs.getLong("file_id"));
+                fileData.put("filename", rs.getString("filename"));
+                fileData.put("file_size", rs.getLong("file_size"));
+                fileData.put("file_type", rs.getString("file_type"));
+                fileData.put("created_at", rs.getTimestamp("created_at"));
+                return fileData;
+            }
+
+        } finally {
+            DatabaseService.closeResources(conn, stmt, rs);
+        }
+
+        return null;
+    }
+
+    /**
+     * 获取文件夹数据
+     */
+    private Map<String, Object> getFolderData(Long folderId) throws SQLException {
+        String sql = "SELECT * FROM folders WHERE folder_id = ?";
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = databaseService.getConnection();
+            stmt = conn.prepareStatement(sql);
+            stmt.setLong(1, folderId);
+            rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                Map<String, Object> folderData = new HashMap<>();
+                folderData.put("folder_id", rs.getLong("folder_id"));
+                folderData.put("folder_name", rs.getString("folder_name"));
+                folderData.put("description", rs.getString("description"));
+                folderData.put("created_at", rs.getTimestamp("created_at"));
+                return folderData;
+            }
+
+        } finally {
+            DatabaseService.closeResources(conn, stmt, rs);
+        }
+
+        return null;
     }
 }

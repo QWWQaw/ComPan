@@ -15,6 +15,276 @@ public class PermissionService {
     }
 
     /**
+     * 设置权限
+     */
+    public Map<String, Object> setPermission(String resourceType, Long resourceId, Long userId, String permission) {
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            // 1. 验证参数
+            if (resourceType == null || resourceId == null || userId == null || permission == null) {
+                result.put("success", false);
+                result.put("message", "参数不能为空");
+                result.put("status_code", 400);
+                return result;
+            }
+
+            // 2. 验证权限类型
+            if (!isValidPermission(permission)) {
+                result.put("success", false);
+                result.put("message", "无效的权限类型");
+                result.put("status_code", 400);
+                return result;
+            }
+
+            // 3. 检查资源是否存在
+            if (!resourceExists(resourceType, resourceId)) {
+                result.put("success", false);
+                result.put("message", "资源不存在");
+                result.put("status_code", 404);
+                return result;
+            }
+
+            // 4. 插入或更新权限
+            String sql = "INSERT INTO acl (resource_type, resource_id, user_id, permission, created_at) " +
+                        "VALUES (?, ?, ?, ?, NOW()) " +
+                        "ON DUPLICATE KEY UPDATE permission = VALUES(permission), updated_at = NOW()";
+
+            Connection conn = null;
+            PreparedStatement stmt = null;
+
+            try {
+                conn = databaseService.getConnection();
+                stmt = conn.prepareStatement(sql);
+                stmt.setString(1, resourceType);
+                stmt.setLong(2, resourceId);
+                stmt.setLong(3, userId);
+                stmt.setString(4, permission);
+
+                int rowsAffected = stmt.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    result.put("success", true);
+                    result.put("message", "权限设置成功");
+                    result.put("data", Map.of(
+                        "resource_type", resourceType,
+                        "resource_id", resourceId,
+                        "user_id", userId,
+                        "permission", permission
+                    ));
+                } else {
+                    result.put("success", false);
+                    result.put("message", "权限设置失败");
+                    result.put("status_code", 500);
+                }
+
+            } finally {
+                DatabaseService.closeResources(conn, stmt, null);
+            }
+
+        } catch (Exception e) {
+            System.err.println("设置权限失败: " + e.getMessage());
+            result.put("success", false);
+            result.put("message", "服务器内部错误");
+            result.put("status_code", 500);
+        }
+
+        return result;
+    }
+
+    /**
+     * 获取资源的权限列表
+     */
+    public Map<String, Object> getResourcePermissions(String resourceType, Long resourceId) {
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            String sql = "SELECT a.id, a.user_id, u.username, a.permission, a.created_at " +
+                        "FROM acl a JOIN users u ON a.user_id = u.user_id " +
+                        "WHERE a.resource_type = ? AND a.resource_id = ?";
+
+            Connection conn = null;
+            PreparedStatement stmt = null;
+            ResultSet rs = null;
+
+            try {
+                conn = databaseService.getConnection();
+                stmt = conn.prepareStatement(sql);
+                stmt.setString(1, resourceType);
+                stmt.setLong(2, resourceId);
+                rs = stmt.executeQuery();
+
+                List<Map<String, Object>> permissions = new ArrayList<>();
+                while (rs.next()) {
+                    Map<String, Object> permission = new HashMap<>();
+                    permission.put("id", rs.getLong("id"));
+                    permission.put("user_id", rs.getLong("user_id"));
+                    permission.put("username", rs.getString("username"));
+                    permission.put("permission", rs.getString("permission"));
+                    permission.put("created_at", rs.getTimestamp("created_at"));
+                    permissions.add(permission);
+                }
+
+                result.put("success", true);
+                result.put("data", permissions);
+
+            } finally {
+                DatabaseService.closeResources(conn, stmt, rs);
+            }
+
+        } catch (Exception e) {
+            System.err.println("获取资源权限失败: " + e.getMessage());
+            result.put("success", false);
+            result.put("message", "服务器内部错误");
+            result.put("status_code", 500);
+        }
+
+        return result;
+    }
+
+    /**
+     * 获取用户的权限列表
+     */
+    public Map<String, Object> getUserPermissions(Long userId) {
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            String sql = "SELECT a.id, a.resource_type, a.resource_id, a.permission, a.created_at " +
+                        "FROM acl a WHERE a.user_id = ?";
+
+            Connection conn = null;
+            PreparedStatement stmt = null;
+            ResultSet rs = null;
+
+            try {
+                conn = databaseService.getConnection();
+                stmt = conn.prepareStatement(sql);
+                stmt.setLong(1, userId);
+                rs = stmt.executeQuery();
+
+                List<Map<String, Object>> permissions = new ArrayList<>();
+                while (rs.next()) {
+                    Map<String, Object> permission = new HashMap<>();
+                    permission.put("id", rs.getLong("id"));
+                    permission.put("resource_type", rs.getString("resource_type"));
+                    permission.put("resource_id", rs.getLong("resource_id"));
+                    permission.put("permission", rs.getString("permission"));
+                    permission.put("created_at", rs.getTimestamp("created_at"));
+                    permissions.add(permission);
+                }
+
+                result.put("success", true);
+                result.put("data", permissions);
+
+            } finally {
+                DatabaseService.closeResources(conn, stmt, rs);
+            }
+
+        } catch (Exception e) {
+            System.err.println("获取用户权限失败: " + e.getMessage());
+            result.put("success", false);
+            result.put("message", "服务器内部错误");
+            result.put("status_code", 500);
+        }
+
+        return result;
+    }
+
+    /**
+     * 更新权限
+     */
+    public Map<String, Object> updatePermission(Long permissionId, String permission) {
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            // 1. 验证权限类型
+            if (!isValidPermission(permission)) {
+                result.put("success", false);
+                result.put("message", "无效的权限类型");
+                result.put("status_code", 400);
+                return result;
+            }
+
+            String sql = "UPDATE acl SET permission = ?, updated_at = NOW() WHERE id = ?";
+
+            Connection conn = null;
+            PreparedStatement stmt = null;
+
+            try {
+                conn = databaseService.getConnection();
+                stmt = conn.prepareStatement(sql);
+                stmt.setString(1, permission);
+                stmt.setLong(2, permissionId);
+
+                int rowsAffected = stmt.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    result.put("success", true);
+                    result.put("message", "权限更新成功");
+                    result.put("data", Map.of("permission_id", permissionId, "permission", permission));
+                } else {
+                    result.put("success", false);
+                    result.put("message", "权限不存在");
+                    result.put("status_code", 404);
+                }
+
+            } finally {
+                DatabaseService.closeResources(conn, stmt, null);
+            }
+
+        } catch (Exception e) {
+            System.err.println("更新权限失败: " + e.getMessage());
+            result.put("success", false);
+            result.put("message", "服务器内部错误");
+            result.put("status_code", 500);
+        }
+
+        return result;
+    }
+
+    /**
+     * 删除权限
+     */
+    public Map<String, Object> deletePermission(Long permissionId) {
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            String sql = "DELETE FROM acl WHERE id = ?";
+
+            Connection conn = null;
+            PreparedStatement stmt = null;
+
+            try {
+                conn = databaseService.getConnection();
+                stmt = conn.prepareStatement(sql);
+                stmt.setLong(1, permissionId);
+
+                int rowsAffected = stmt.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    result.put("success", true);
+                    result.put("message", "权限删除成功");
+                } else {
+                    result.put("success", false);
+                    result.put("message", "权限不存在");
+                    result.put("status_code", 404);
+                }
+
+            } finally {
+                DatabaseService.closeResources(conn, stmt, null);
+            }
+
+        } catch (Exception e) {
+            System.err.println("删除权限失败: " + e.getMessage());
+            result.put("success", false);
+            result.put("message", "服务器内部错误");
+            result.put("status_code", 500);
+        }
+
+        return result;
+    }
+
+    /**
      * 检查用户是否有权限访问文件
      */
     public boolean hasFilePermission(Long fileId, Long userId, String permission) {
@@ -305,30 +575,11 @@ public class PermissionService {
     }
 
     /**
-     * 获取资源的权限列表
+     * 检查用户是否为文件所有者
      */
-    public Map<String, Object> getResourcePermissions(String resourceType, Long resourceId, Long userId) {
-        Map<String, Object> result = new HashMap<>();
-
+    private boolean isFileOwner(Long fileId, Long userId) {
         try {
-            // 验证用户是否有权限查看权限列表
-            boolean hasAccess = false;
-            if ("file".equals(resourceType)) {
-                hasAccess = isFileOwner(resourceId, userId) || hasFilePermission(resourceId, userId, "admin");
-            } else if ("folder".equals(resourceType)) {
-                hasAccess = isFolderOwner(resourceId, userId) || hasFolderPermission(resourceId, userId, "admin");
-            }
-
-            if (!hasAccess) {
-                result.put("success", false);
-                result.put("message", "无权限查看权限列表");
-                return result;
-            }
-
-            String sql = "SELECT a.acl_id, a.user_id, a.permission, a.created_at, u.username " +
-                        "FROM acl a LEFT JOIN user u ON a.user_id = u.user_id " +
-                        "WHERE a.resource_type = ? AND a.resource_id = ? ORDER BY a.created_at";
-
+            String sql = "SELECT COUNT(*) FROM files WHERE file_id = ? AND user_id = ?";
             Connection conn = null;
             PreparedStatement stmt = null;
             ResultSet rs = null;
@@ -336,64 +587,22 @@ public class PermissionService {
             try {
                 conn = databaseService.getConnection();
                 stmt = conn.prepareStatement(sql);
-                stmt.setString(1, resourceType);
-                stmt.setLong(2, resourceId);
+                stmt.setLong(1, fileId);
+                stmt.setLong(2, userId);
                 rs = stmt.executeQuery();
 
-                List<Map<String, Object>> permissions = new ArrayList<>();
-                while (rs.next()) {
-                    Map<String, Object> permission = new HashMap<>();
-                    permission.put("acl_id", rs.getLong("acl_id"));
-                    permission.put("user_id", rs.getLong("user_id"));
-                    permission.put("username", rs.getString("username"));
-                    permission.put("permission", rs.getString("permission"));
-                    permission.put("created_at", rs.getTimestamp("created_at"));
-                    permissions.add(permission);
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
                 }
-
-                result.put("success", true);
-                result.put("message", "获取权限列表成功");
-                result.put("data", permissions);
+                return false;
 
             } finally {
                 DatabaseService.closeResources(conn, stmt, rs);
             }
 
         } catch (Exception e) {
-            System.err.println("获取资源权限列表失败: " + e.getMessage());
-            e.printStackTrace();
-            result.put("success", false);
-            result.put("message", "获取权限列表失败");
-        }
-
-        return result;
-    }
-
-    // ================== 私有辅助方法 ==================
-
-    /**
-     * 检查用户是否为文件所有者
-     */
-    private boolean isFileOwner(Long fileId, Long userId) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM file_entity WHERE file_id = ? AND user_id = ?";
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-
-        try {
-            conn = databaseService.getConnection();
-            stmt = conn.prepareStatement(sql);
-            stmt.setLong(1, fileId);
-            stmt.setLong(2, userId);
-            rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
-            }
+            System.err.println("检查文件所有者失败: " + e.getMessage());
             return false;
-
-        } finally {
-            DatabaseService.closeResources(conn, stmt, rs);
         }
     }
 
@@ -421,5 +630,46 @@ public class PermissionService {
         } finally {
             DatabaseService.closeResources(conn, stmt, rs);
         }
+    }
+
+    /**
+     * 检查资源是否存在
+     */
+    private boolean resourceExists(String resourceType, Long resourceId) {
+        try {
+            String tableName = "file".equals(resourceType) ? "files" : "folders";
+            String idColumn = "file".equals(resourceType) ? "file_id" : "folder_id";
+
+            String sql = "SELECT COUNT(*) FROM " + tableName + " WHERE " + idColumn + " = ?";
+            Connection conn = null;
+            PreparedStatement stmt = null;
+            ResultSet rs = null;
+
+            try {
+                conn = databaseService.getConnection();
+                stmt = conn.prepareStatement(sql);
+                stmt.setLong(1, resourceId);
+                rs = stmt.executeQuery();
+
+                if (rs.next()) {
+                    return rs.getInt(1) > 0;
+                }
+                return false;
+
+            } finally {
+                DatabaseService.closeResources(conn, stmt, rs);
+            }
+
+        } catch (Exception e) {
+            System.err.println("检查资源存在性失败: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * 验证权限类型是否有效
+     */
+    private boolean isValidPermission(String permission) {
+        return Arrays.asList("read", "write", "delete", "admin").contains(permission);
     }
 }

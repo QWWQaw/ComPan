@@ -113,8 +113,12 @@ public class DTOConverter {
         dto.setStorageUsed((Long) statsMap.get("storage_used"));
         dto.setStorageAvailable((Long) statsMap.get("storage_available"));
         dto.setUsagePercentage((Double) statsMap.get("usage_percentage"));
-        dto.setFileCount((Long) statsMap.get("file_count"));
-        dto.setFolderCount((Long) statsMap.get("folder_count"));
+
+        // 修复类型转换问题：Long转Integer
+        Long fileCount = (Long) statsMap.get("file_count");
+        Long folderCount = (Long) statsMap.get("folder_count");
+        dto.setFileCount(fileCount != null ? fileCount.intValue() : 0);
+        dto.setFolderCount(folderCount != null ? folderCount.intValue() : 0);
 
         return dto;
     }

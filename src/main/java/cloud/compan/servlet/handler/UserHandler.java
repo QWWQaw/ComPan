@@ -1,6 +1,7 @@
 package cloud.compan.servlet.handler;
 
 import cloud.compan.servlet.service.UserService;
+import cloud.compan.servlet.service.AuthService;
 import cloud.compan.servlet.annotations.component.Service;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -20,9 +21,11 @@ import java.util.Map;
 public class UserHandler extends BaseHandler {
 
     private final UserService userService;
+    private final AuthService authService;
 
     public UserHandler() {
         this.userService = new UserService();
+        this.authService = new AuthService();
     }
 
     @Override
@@ -31,39 +34,39 @@ public class UserHandler extends BaseHandler {
         String method = request.getMethod().toUpperCase();
 
         // 检查用户是否已登录
-        if (!isUserLoggedIn(request)) {
-            sendErrorResponse(response, 401, "请先登录", null);
+        if (!authService.isUserLoggedIn(request.getSession())) {
+            sendError(response, "请先登录", HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
-        Long userId = (Long) request.getSession().getAttribute("userId");
+        Long userId = authService.getCurrentUserId(request.getSession());
 
         // 根据HTTP方法和路径分发请求
         switch (method) {
             case "GET":
                 if (requestURI.endsWith("/profile")) {
-                    getUserProfile(request, response, userId);
+                    handleGetUserProfile(request, response, userId);
                 } else if (requestURI.endsWith("/storage-stats")) {
-                    getUserStorageStats(request, response, userId);
+                    handleGetStorageStats(request, response, userId);
                 } else if (requestURI.endsWith("/activity-log")) {
-                    getUserActivityLog(request, response, userId);
+                    handleGetActivityLog(request, response, userId);
                 } else {
-                    sendErrorResponse(response, 404, "未找到对应的用户接口", null);
+                    sendNotFound(response, "未找到对应的用户接口");
                 }
                 break;
 
             case "PUT":
                 if (requestURI.endsWith("/update-profile")) {
-                    updateUserProfile(request, response, userId);
-                } else if (requestURI.endsWith("/password")) {
-                    changePassword(request, response, userId);
+                    handleUpdateProfile(request, response, userId);
+                } else if (requestURI.endsWith("/me/password")) {
+                    handleChangePassword(request, response, userId);
                 } else {
-                    sendErrorResponse(response, 404, "未找到对应的用户接口", null);
+                    sendNotFound(response, "未找到对应的用户接口");
                 }
                 break;
 
             default:
-                sendErrorResponse(response, 405, "不支持的HTTP方法: " + method, null);
+                sendError(response, "不支持的HTTP方法: " + method, HttpServletResponse.SC_METHOD_NOT_ALLOWED);
         }
     }
 
@@ -78,139 +81,118 @@ public class UserHandler extends BaseHandler {
     }
 
     /**
-     * 获取用户信息
-     * GET /api/v1/users/profile
+     * 处理获取用户资料请求
      */
-    private void getUserProfile(HttpServletRequest request, HttpServletResponse response, Long userId) throws Exception {
+    private void handleGetUserProfile(HttpServletRequest request, HttpServletResponse response, Long userId) throws Exception {
         try {
+            // 1. 调用service层获取用户资料
             Map<String, Object> result = userService.getUserProfile(userId);
 
-            if ((Boolean) result.get("success")) {
-                sendSuccessResponse(response, 200, "获取用户信息成功", result.get("data"));
-            } else {
-                sendErrorResponse(response, 404, (String) result.get("message"), null);
-            }
+            // 2. 返回响应
+            sendJsonResponse(response, result, HttpServletResponse.SC_OK);
 
         } catch (Exception e) {
-            System.err.println("获取用户信息失败: " + e.getMessage());
-            e.printStackTrace();
-            sendErrorResponse(response, 500, "获取用户信息失败", null);
+            System.err.println("获取用户资料失败: " + e.getMessage());
+            sendInternalServerError(response, "服务器内部错误");
         }
     }
 
     /**
-     * 更新用户信息
-     * PUT /api/v1/users/update-profile
+     * 处理更新用户资料请求
      */
-    private void updateUserProfile(HttpServletRequest request, HttpServletResponse response, Long userId) throws Exception {
+    private void handleUpdateProfile(HttpServletRequest request, HttpServletResponse response, Long userId) throws Exception {
         try {
-            String username = request.getParameter("username");
-            String email = request.getParameter("email");
+            // 1. 提取更新参数
+            String username = getParameterFromRequestBody(request, "username");
+            String email = getParameterFromRequestBody(request, "email");
+            String phone = getParameterFromRequestBody(request, "phone");
+            String avatar = getParameterFromRequestBody(request, "avatar");
 
-            Map<String, Object> result = userService.updateUserProfile(userId, username, email);
+            // 2. 调用service层处理更新
+            Map<String, Object> result = userService.updateUserProfile(userId, username, email, phone, avatar);
 
+            // 3. 返回响应
             if ((Boolean) result.get("success")) {
-                sendSuccessResponse(response, 200, "用户信息更新成功", result.get("data"));
+                sendJsonResponse(response, result, HttpServletResponse.SC_OK);
             } else {
-                sendErrorResponse(response, 400, (String) result.get("message"), null);
+                int statusCode = (Integer) result.getOrDefault("status_code", 400);
+                sendJsonResponse(response, result, statusCode);
             }
 
         } catch (Exception e) {
-            System.err.println("更新用户信息失败: " + e.getMessage());
-            e.printStackTrace();
-            sendErrorResponse(response, 500, "更新用户信息失败", null);
+            System.err.println("更新用户资料失败: " + e.getMessage());
+            sendInternalServerError(response, "服务器内部错误");
         }
     }
 
     /**
-     * 修改密码
-     * PUT /api/v1/users/me/password
+     * 处理修改密码请求
      */
-    private void changePassword(HttpServletRequest request, HttpServletResponse response, Long userId) throws Exception {
+    private void handleChangePassword(HttpServletRequest request, HttpServletResponse response, Long userId) throws Exception {
         try {
-            String oldPassword = request.getParameter("old_password");
-            String newPassword = request.getParameter("new_password");
+            // 1. 提取密码参数
+            String oldPassword = getParameterFromRequestBody(request, "old_password");
+            String newPassword = getParameterFromRequestBody(request, "new_password");
+            String confirmPassword = getParameterFromRequestBody(request, "confirm_password");
 
-            if (oldPassword == null || newPassword == null) {
-                sendErrorResponse(response, 400, "旧密码和新密码不能为空", null);
-                return;
-            }
+            // 2. 调用service层处理密码修改
+            Map<String, Object> result = userService.changePassword(userId, oldPassword, newPassword, confirmPassword);
 
-            Map<String, Object> result = userService.changePassword(userId, oldPassword, newPassword);
-
+            // 3. 返回响应
             if ((Boolean) result.get("success")) {
-                sendSuccessResponse(response, 200, "密码修改成功", null);
+                sendJsonResponse(response, result, HttpServletResponse.SC_OK);
             } else {
-                String message = (String) result.get("message");
-                if (message.contains("当前密码错误")) {
-                    sendErrorResponse(response, 400, "当前密码错误", null);
-                } else {
-                    sendErrorResponse(response, 400, message, null);
-                }
+                int statusCode = (Integer) result.getOrDefault("status_code", 400);
+                sendJsonResponse(response, result, statusCode);
             }
 
         } catch (Exception e) {
             System.err.println("修改密码失败: " + e.getMessage());
-            e.printStackTrace();
-            sendErrorResponse(response, 500, "修改密码失败", null);
+            sendInternalServerError(response, "服务器内部错误");
         }
     }
 
     /**
-     * 获取用户存储统计
-     * GET /api/v1/users/storage-stats
+     * 处理获取存储统计请求
      */
-    private void getUserStorageStats(HttpServletRequest request, HttpServletResponse response, Long userId) throws Exception {
+    private void handleGetStorageStats(HttpServletRequest request, HttpServletResponse response, Long userId) throws Exception {
         try {
+            // 1. 调用service层获取存储统计
             Map<String, Object> result = userService.getUserStorageStats(userId);
 
-            if ((Boolean) result.get("success")) {
-                sendSuccessResponse(response, 200, "获取存储统计成功", result.get("data"));
-            } else {
-                sendErrorResponse(response, 500, (String) result.get("message"), null);
-            }
+            // 2. 返回响应
+            sendJsonResponse(response, result, HttpServletResponse.SC_OK);
 
         } catch (Exception e) {
             System.err.println("获取存储统计失败: " + e.getMessage());
-            e.printStackTrace();
-            sendErrorResponse(response, 500, "获取存储统计失败", null);
+            sendInternalServerError(response, "服务器内部错误");
         }
     }
 
     /**
-     * 获取用户活动日志
-     * GET /api/v1/users/activity-log
+     * 处理获取活动日志请求
      */
-    private void getUserActivityLog(HttpServletRequest request, HttpServletResponse response, Long userId) throws Exception {
+    private void handleGetActivityLog(HttpServletRequest request, HttpServletResponse response, Long userId) throws Exception {
         try {
-            String pageStr = request.getParameter("page");
-            String perPageStr = request.getParameter("per_page");
-            String operation = request.getParameter("operation");
+            // 1. 提取查询参数
+            String page = request.getParameter("page");
+            String size = request.getParameter("size");
+            String actionType = request.getParameter("action_type");
 
-            int page = pageStr != null ? Integer.parseInt(pageStr) : 1;
-            int perPage = perPageStr != null ? Integer.parseInt(perPageStr) : 20;
+            int pageNum = page != null ? Integer.parseInt(page) : 1;
+            int pageSize = size != null ? Integer.parseInt(size) : 20;
 
-            Map<String, Object> result = userService.getUserActivityLog(userId, page, perPage, operation);
+            // 2. 调用service层获取活动日志
+            Map<String, Object> result = userService.getUserActivityLog(userId, pageNum, pageSize, actionType);
 
-            if ((Boolean) result.get("success")) {
-                sendSuccessResponse(response, 200, "获取活动日志成功", result.get("data"));
-            } else {
-                sendErrorResponse(response, 500, (String) result.get("message"), null);
-            }
+            // 3. 返回响应
+            sendJsonResponse(response, result, HttpServletResponse.SC_OK);
 
         } catch (NumberFormatException e) {
-            sendErrorResponse(response, 400, "无效的页码参数", null);
+            sendError(response, "无效的参数格式", HttpServletResponse.SC_BAD_REQUEST);
         } catch (Exception e) {
             System.err.println("获取活动日志失败: " + e.getMessage());
-            e.printStackTrace();
-            sendErrorResponse(response, 500, "获取活动日志失败", null);
+            sendInternalServerError(response, "服务器内部错误");
         }
-    }
-
-    /**
-     * 检查用户是否已登录
-     */
-    private boolean isUserLoggedIn(HttpServletRequest request) {
-        return request.getSession().getAttribute("userId") != null;
     }
 }

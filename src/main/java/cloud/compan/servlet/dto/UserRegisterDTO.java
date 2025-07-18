@@ -1,27 +1,14 @@
 package cloud.compan.servlet.dto;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
-
 /**
  * 用户注册请求DTO
- * 用于Handler层接收注册请求参数
  */
 public class UserRegisterDTO {
-    @NotBlank(message = "用户名不能为空")
-    @Size(min = 3, max = 20, message = "用户名长度必须在3-20个字符之间")
+
     private String username;
-
-    @NotBlank(message = "邮箱不能为空")
-    @Email(message = "邮箱格式不正确")
     private String email;
-
-    @NotBlank(message = "密码不能为空")
-    @Size(min = 6, max = 50, message = "密码长度必须在6-50个字符之间")
     private String password;
 
-    // 构造函数
     public UserRegisterDTO() {}
 
     public UserRegisterDTO(String username, String email, String password) {
@@ -31,20 +18,87 @@ public class UserRegisterDTO {
     }
 
     // Getters and Setters
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
+    public String getUsername() {
+        return username;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
+    public String getEmail() {
+        return email;
+    }
 
-    // 验证方法
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    /**
+     * 验证注册数据
+     */
     public boolean isValid() {
-        return username != null && !username.trim().isEmpty() &&
-               email != null && !email.trim().isEmpty() &&
-               password != null && !password.trim().isEmpty();
+        return isValidUsername() && isValidEmail() && isValidPassword();
+    }
+
+    /**
+     * 验证用户名
+     */
+    public boolean isValidUsername() {
+        return username != null &&
+               username.trim().length() >= 3 &&
+               username.trim().length() <= 20 &&
+               username.matches("^[a-zA-Z0-9_]+$");
+    }
+
+    /**
+     * 验证邮箱
+     */
+    public boolean isValidEmail() {
+        return email != null &&
+               email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    /**
+     * 验证密码
+     */
+    public boolean isValidPassword() {
+        return password != null &&
+               password.length() >= 6 &&
+               password.length() <= 50;
+    }
+
+    /**
+     * 获取验证错误信息
+     */
+    public String getValidationError() {
+        if (username == null || username.trim().isEmpty()) {
+            return "用户名不能为空";
+        }
+        if (!isValidUsername()) {
+            return "用户名必须是3-20位字母、数字或下划线";
+        }
+        if (email == null || email.trim().isEmpty()) {
+            return "邮箱不能为空";
+        }
+        if (!isValidEmail()) {
+            return "邮箱格式不正确";
+        }
+        if (password == null || password.trim().isEmpty()) {
+            return "密码不能为空";
+        }
+        if (!isValidPassword()) {
+            return "密码长度必须在6-50位之间";
+        }
+        return null;
     }
 
     @Override
@@ -52,7 +106,7 @@ public class UserRegisterDTO {
         return "UserRegisterDTO{" +
                 "username='" + username + '\'' +
                 ", email='" + email + '\'' +
-                ", password='[PROTECTED]'" +
+                ", password='[HIDDEN]'" +
                 '}';
     }
 }
