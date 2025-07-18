@@ -202,16 +202,6 @@
         <version>${maven.war.plugin.version}</version>
       </plugin>
 
-      <!-- Exec Maven Plugin for running Java classes -->
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>3.1.0</version>
-        <configuration>
-          <mainClass>cloud.compan.servlet.test.LoginApiTester</mainClass>
-          <classpathScope>test</classpathScope>
-        </configuration>
-      </plugin>
 
 <!--    <plugin>-->
 <!--      <groupId>org.apache.tomcat.maven</groupId>-->

@@ -234,7 +234,7 @@ public class ShareService {
                 if (rs.next()) {
                     // 检查是否过期
                     Timestamp expireAt = rs.getTimestamp("expire_at");
-                    if (expireAt != null && expireAt.before(new Timestamp(System.currentTimeMillis()))) {
+                    if (expireAt != null && expireAt.before(new java.util.Date())) {
                         result.put("success", false);
                         result.put("message", "分享链接已过期");
                         return result;

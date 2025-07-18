@@ -1,27 +1,22 @@
 package cloud.compan.servlet.handler;
 
-import cloud.compan.servlet.service.UserService;
+import cloud.compan.servlet.service.AuthService;
 import cloud.compan.servlet.annotations.component.Service;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
-import java.util.HashMap;
 
 /**
- * 用户认证处理器 - 完整版本
- *
- * 根据RESTFUL API文档实现：
- * POST /api/v1/auth/register - 用户注册
- * POST /api/v1/auth/login - 用户登录
- * POST /api/v1/auth/logout - 用户登出
+ * 用户认证处理器 - 重构版本
+ * 只负责HTTP请求解析和响应，具体业务逻辑在AuthService中实现
  */
 @Service
 public class AuthHandler extends BaseHandler {
 
-    private final UserService userService;
+    private final AuthService authService;
 
     public AuthHandler() {
-        this.userService = new UserService();
+        this.authService = new AuthService();
     }
 
     @Override
@@ -29,7 +24,6 @@ public class AuthHandler extends BaseHandler {
         String requestURI = request.getRequestURI();
         String method = request.getMethod().toUpperCase();
 
-        // 根据路径和方法分发到具体的处理方法
         if ("POST".equals(method)) {
             if (requestURI.endsWith("/register")) {
                 handleRegister(request, response);
@@ -57,135 +51,74 @@ public class AuthHandler extends BaseHandler {
 
     /**
      * 处理用户注册
-     * POST /api/v1/auth/register
      */
     private void handleRegister(HttpServletRequest request, HttpServletResponse response) throws Exception {
         try {
-            // 读取JSON数据或表单数据
+            // 1. 提取请求参数
             String username = getParameterFromRequestBody(request, "username");
             String email = getParameterFromRequestBody(request, "email");
             String password = getParameterFromRequestBody(request, "password");
 
-            // 验证输入数据
-            if (username == null || username.trim().isEmpty()) {
-                sendErrorResponse(response, 400, "用户名不能为空", null);
-                return;
-            }
+            // 2. 调用service层处理注册逻辑
+            Map<String, Object> result = authService.register(username, email, password);
 
-            if (email == null || email.trim().isEmpty()) {
-                sendErrorResponse(response, 400, "邮箱不能为空", null);
-                return;
-            }
-
-            if (password == null || password.trim().isEmpty()) {
-                sendErrorResponse(response, 400, "密码不能为空", null);
-                return;
-            }
-
-            // 调用服务层处理注册逻辑
-            Map<String, Object> result = userService.registerUser(username, email, password);
-
+            // 3. 根据结果返回响应
             if ((Boolean) result.get("success")) {
-                sendSuccessResponse(response, 201, "注册成功", result.get("data"));
+                sendJsonResponse(response, result, HttpServletResponse.SC_CREATED);
             } else {
-                String message = (String) result.get("message");
-                if (message.contains("用户名已存在")) {
-                    sendErrorResponse(response, 409, "注册失败", Map.of(
-                        "errors", new Object[]{
-                            Map.of("field", "username", "message", "用户名已存在")
-                        }
-                    ));
-                } else if (message.contains("邮箱已存在")) {
-                    sendErrorResponse(response, 409, "注册失败", Map.of(
-                        "errors", new Object[]{
-                            Map.of("field", "email", "message", "邮箱已存在")
-                        }
-                    ));
-                } else {
-                    sendErrorResponse(response, 400, message, null);
-                }
+                int statusCode = (Integer) result.getOrDefault("status_code", 400);
+                sendJsonResponse(response, result, statusCode);
             }
 
         } catch (Exception e) {
-            System.err.println("注册失败: " + e.getMessage());
+            System.err.println("注册请求处理失败: " + e.getMessage());
             e.printStackTrace();
-            sendErrorResponse(response, 500, "服务器内部错误", null);
+            sendInternalServerError(response, "服务器内部错误");
         }
     }
 
     /**
      * 处理用户登录
-     * POST /api/v1/auth/login
      */
     private void handleLogin(HttpServletRequest request, HttpServletResponse response) throws Exception {
         try {
+            // 1. 提取请求参数
             String username = getParameterFromRequestBody(request, "username");
             String password = getParameterFromRequestBody(request, "password");
 
-            // 验证输入数据
-            if (username == null || username.trim().isEmpty()) {
-                sendErrorResponse(response, 400, "用户名不能为空", null);
-                return;
-            }
+            // 2. 调用service层处理登录逻辑
+            Map<String, Object> result = authService.login(username, password, request.getSession());
 
-            if (password == null || password.trim().isEmpty()) {
-                sendErrorResponse(response, 400, "密码不能为空", null);
-                return;
-            }
-
-            // 调用服务层处理登录逻辑
-            Map<String, Object> result = userService.loginUser(username, password);
-
+            // 3. 根据结果返回响应
             if ((Boolean) result.get("success")) {
-                Map<String, Object> userData = (Map<String, Object>) result.get("data");
-
-                // 创建会话
-                request.getSession().setAttribute("user", userData);
-                request.getSession().setAttribute("userId", userData.get("user_id"));
-
-                // 构造登录成功响应
-                Map<String, Object> loginData = new HashMap<>();
-                loginData.put("token", "session_based_token"); // 基于Session的简化实现
-                loginData.put("expires_in", 604800); // 7天
-                loginData.put("user", userData);
-
-                sendSuccessResponse(response, 200, "登录成功", loginData);
+                sendJsonResponse(response, result, HttpServletResponse.SC_OK);
             } else {
-                String message = (String) result.get("message");
-                if (message.contains("用户名或密码错误")) {
-                    sendErrorResponse(response, 401, "用户名或密码错误", null);
-                } else if (message.contains("账户已被禁用")) {
-                    sendErrorResponse(response, 403, "账户已被禁用，请联系管理员", Map.of(
-                        "status", "banned",
-                        "contact", "support@kepan.com"
-                    ));
-                } else {
-                    sendErrorResponse(response, 400, message, null);
-                }
+                int statusCode = (Integer) result.getOrDefault("status_code", 401);
+                sendJsonResponse(response, result, statusCode);
             }
 
         } catch (Exception e) {
-            System.err.println("登录失败: " + e.getMessage());
+            System.err.println("登录请求处理失败: " + e.getMessage());
             e.printStackTrace();
-            sendErrorResponse(response, 500, "服务器内部错误", null);
+            sendInternalServerError(response, "服务器内部错误");
         }
     }
 
     /**
      * 处理用户登出
-     * POST /api/v1/auth/logout
      */
     private void handleLogout(HttpServletRequest request, HttpServletResponse response) throws Exception {
         try {
-            // 销毁会话
-            request.getSession().invalidate();
+            // 1. 调用service层处理登出逻辑
+            Map<String, Object> result = authService.logout(request.getSession());
 
-            sendSuccessResponse(response, 200, "成功退出账号", null);
+            // 2. 返回响应
+            sendJsonResponse(response, result, HttpServletResponse.SC_OK);
 
         } catch (Exception e) {
-            System.err.println("登出失败: " + e.getMessage());
+            System.err.println("登出请求处理失败: " + e.getMessage());
             e.printStackTrace();
-            sendErrorResponse(response, 500, "服务器内部错误", null);
+            sendInternalServerError(response, "服务器内部错误");
         }
     }
 
@@ -193,12 +126,10 @@ public class AuthHandler extends BaseHandler {
      * 从请求体中获取参数（支持JSON和表单数据）
      */
     private String getParameterFromRequestBody(HttpServletRequest request, String paramName) {
-        // 先尝试从表单参数获取
         String value = request.getParameter(paramName);
         if (value != null) {
             return value;
         }
-
         // TODO: 后续可以添加JSON解析支持
         return null;
     }
