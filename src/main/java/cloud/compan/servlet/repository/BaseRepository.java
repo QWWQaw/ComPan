@@ -20,15 +20,19 @@ import java.util.stream.Collectors;
  */
 public abstract class BaseRepository<T, ID extends Serializable> {
 
-    @Inject
-    protected JdbcExecutor executor;
+    protected final JdbcExecutor executor;
 
-    protected final Class<T> entityClass;
+    //类T的元数据
+    protected final Class<T> entityClass; 
+
+    //实体的元数据
     protected final EntityMetadata entityMetadata;
     protected final JdbcExecutor.RowMapper<T> rowMapper;
 
+    @Inject
     @SuppressWarnings("unchecked")
-    public BaseRepository() {
+    public BaseRepository(JdbcExecutor executor) {
+        this.executor = executor;
         this.entityClass = (Class<T>) ((ParameterizedType) getClass()
                 .getGenericSuperclass()).getActualTypeArguments()[0];
         this.entityMetadata = EntityMetadata.getMetadata(entityClass);

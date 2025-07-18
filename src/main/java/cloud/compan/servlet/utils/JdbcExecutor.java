@@ -135,7 +135,7 @@ public class JdbcExecutor {
      * @param entityClass 用于定位数据源  
      * @param sql 要执行的 INSERT 语句  
      * @param params SQL 参数  
-     * @return 生成的主键 (通常是 Long 类型)  
+     * @return 生成的主键 (通常是 Long)  
      * @throws SQLException 如果没有生成主键  
      */  
     public long updateAndGetKey(Class<?> entityClass, String sql, Object... params) {  

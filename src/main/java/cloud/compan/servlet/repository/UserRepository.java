@@ -2,6 +2,8 @@ package cloud.compan.servlet.repository;
 
 import cloud.compan.servlet.model.User;
 import cloud.compan.servlet.utils.HashUtil;
+import cloud.compan.servlet.utils.JdbcExecutor;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -18,8 +20,8 @@ public class UserRepository extends BaseRepository<User, Long> {
     private final HashUtil hashUtil;
 
     @Inject
-    public UserRepository(HashUtil hashUtil) {
-        super();
+    public UserRepository(JdbcExecutor executor, HashUtil hashUtil) {
+        super(executor);
         this.hashUtil = hashUtil;
     }
 
