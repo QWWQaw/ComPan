@@ -2,8 +2,8 @@ package cloud.compan.servlet.web;
 
 
 import cloud.compan.servlet.annotations.component.*;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.File;
 import java.lang.reflect.Method;

@@ -3,8 +3,8 @@ package cloud.compan.servlet.web;
 import cloud.compan.servlet.annotations.component.Controller;
 import cloud.compan.servlet.annotations.component.GetMapping;
 import cloud.compan.servlet.annotations.component.PostMapping;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 import cloud.compan.servlet.annotations.component.PathVariable;

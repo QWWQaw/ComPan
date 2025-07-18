@@ -1,11 +1,13 @@
 package cloud.compan.servlet;
 
-import jakarta.servlet.*;
-import jakarta.servlet.http.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
 import cloud.compan.servlet.web.Dispatcher;
-import jakarta.servlet.annotation.WebServlet;
+import javax.servlet.annotation.WebServlet;
 
-@WebServlet(urlPatterns = "/")
+import java.io.IOException;
+
+@WebServlet(urlPatterns = "/api", loadOnStartup = 1)
 public class MainServlet extends HttpServlet{
     private Dispatcher dispatcher;
 
@@ -18,7 +20,8 @@ public class MainServlet extends HttpServlet{
     }
 
     @Override
-    protected void service(HttpServletRequest req, HttpServletResponse resp) {
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        // 使用dispatcher来处理请求
         dispatcher.dispatch(req, resp);
     }
 }
