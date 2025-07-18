@@ -13,7 +13,7 @@ import java.util.List;
  * 文件夹管理控制器 - 处理文件夹创建、管理等操作
  */
 @Controller
-@RequestMapping(path = "/folders")
+@RequestMapping(path = "/api/v1/folders")
 public class FolderController extends BaseController {
 
     /**

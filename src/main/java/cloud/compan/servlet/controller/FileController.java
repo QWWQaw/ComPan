@@ -13,7 +13,7 @@ import java.util.List;
  * 文件管理控制器 - 处理文件上传、下载、管理等操作
  */
 @Controller
-@RequestMapping(path = "/files")
+@RequestMapping(path = "/api/v1/files")
 public class FileController extends BaseController {
 
     /**

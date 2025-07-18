@@ -13,7 +13,7 @@ import java.util.List;
  * 存储统计控制器 - 处理存储空间统计相关操作
  */
 @Controller
-@RequestMapping(path = "/storage")
+@RequestMapping(path = "/api/v1/storage")
 public class StorageController extends BaseController {
 
     /**

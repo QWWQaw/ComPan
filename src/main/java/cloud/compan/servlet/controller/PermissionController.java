@@ -13,7 +13,7 @@ import java.util.List;
  * 权限管理控制器 - 处理文件/文件夹权限管理相关操作
  */
 @Controller
-@RequestMapping(path = "/permissions")
+@RequestMapping(path = "/api/v1/permissions")
 public class PermissionController extends BaseController {
 
     /**

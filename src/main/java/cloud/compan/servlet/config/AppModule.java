@@ -33,7 +33,7 @@ public class AppModule extends AbstractModule {
         bind(GuiceDataSourceProvider.class);  
         bind(JdbcExecutor.class);  
         bind(HashUtil.class);
-        bind(cloud.compan.servlet.repository.UserRepository.class);
+        // bind(cloud.compan.servlet.repository.UserRepository.class); // 已注释掉，UserRepository不存在
     }
 
     public String getDefaultDataSourceName() {  

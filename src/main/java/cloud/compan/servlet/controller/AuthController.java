@@ -1,20 +1,28 @@
 package cloud.compan.servlet.controller;
 
 import cloud.compan.servlet.annotations.component.*;
+import cloud.compan.servlet.controller.BaseController;
+import cloud.compan.servlet.service.UserService;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
- * 认证控制器 - 处理用户注册、登录、登出等认证相关操作
+ * 认证控制器 - 处理用户注册、登录、登出等认证相关操作，这里用到了UserService
  */
 @Controller
-@RequestMapping(path = "/auth")
+@RequestMapping(path = "/api/v1/auth")
 public class AuthController extends BaseController {
+
+    private UserService userService;
+
+    public AuthController() {
+        this.userService = new UserService();
+    }
 
     /**
      * 用户注册
@@ -33,8 +41,8 @@ public class AuthController extends BaseController {
                 return;
             }
 
-            // 模拟检查用户名是否已存在
-            if ("admin".equals(username)) {
+            // 检查用户名是否已存在 - 使用真实数据库查询
+            if (userService.isUsernameExists(username)) {
                 Map<String, Object> errorData = new HashMap<>();
                 List<Map<String, String>> errors = new ArrayList<>();
                 Map<String, String> error = new HashMap<>();
@@ -47,19 +55,33 @@ public class AuthController extends BaseController {
                 return;
             }
 
-            // 模拟用户注册成功
-            Map<String, Object> userData = new HashMap<>();
-            userData.put("user_id", System.currentTimeMillis());
-            userData.put("username", username);
-            userData.put("email", email);
-            userData.put("storage_limit", 10737418240L); // 10GB
-            userData.put("storage_used", 0);
-            userData.put("status", "active");
-            userData.put("created_at", java.time.ZonedDateTime.now().format(java.time.format.DateTimeFormatter.ISO_INSTANT));
+            // 检查邮箱是否已存在
+            if (userService.isEmailExists(email)) {
+                Map<String, Object> errorData = new HashMap<>();
+                List<Map<String, String>> errors = new ArrayList<>();
+                Map<String, String> error = new HashMap<>();
+                error.put("field", "email");
+                error.put("message", "邮箱已存在");
+                errors.add(error);
+                errorData.put("errors", errors);
 
-            sendCreatedResponse(response, userData, "注册成功");
+                sendErrorResponse(response, 409, "注册失败", errorData);
+                return;
+            }
+
+            // 创建新用户 - 使用真实数据库操作
+            String passwordHash = userService.hashPassword(password);
+            Map<String, Object> userData = userService.createUser(username, email, passwordHash);
+
+            if (userData != null) {
+                sendCreatedResponse(response, userData, "注册成功");
+            } else {
+                sendErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "注册失败，请稍后重试");
+            }
 
         } catch (Exception e) {
+            System.err.println("注册过程中发生错误: " + e.getMessage());
+            e.printStackTrace();
             sendErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "注册失败: " + e.getMessage());
         }
     }
@@ -79,14 +101,17 @@ public class AuthController extends BaseController {
                 return;
             }
 
-            // 模拟验证用户凭据
-            if (!"admin".equals(username) || !"password".equals(password)) {
+            // 使用真实数据库验证用户凭据
+            Map<String, Object> userData = userService.authenticateUser(username, password);
+
+            if (userData == null) {
                 sendErrorResponse(response, HttpServletResponse.SC_UNAUTHORIZED, "用户名或密码错误");
                 return;
             }
 
-            // 模拟检查账户状态
-            if ("banned_user".equals(username)) {
+            // 检查账户状态
+            String status = (String) userData.get("status");
+            if ("banned".equals(status)) {
                 Map<String, Object> errorData = new HashMap<>();
                 errorData.put("status", "banned");
                 errorData.put("contact", "support@example.com");
@@ -94,26 +119,19 @@ public class AuthController extends BaseController {
                 return;
             }
 
-            // 模拟生成JWT Token
-            String token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxLCJ1c2VybmFtZSI6ImFkbWluIn0.token_signature";
-
-            Map<String, Object> user = new HashMap<>();
-            user.put("user_id", 1);
-            user.put("username", username);
-            user.put("email", "admin@example.com");
-            user.put("storage_limit", 10737418240L);
-            user.put("storage_used", 1024000);
-            user.put("status", "active");
-            user.put("created_at", "2025-07-10T10:30:00Z");
+            // 生成JWT Token（这里使用简单的token生成，实际项目中应该使用JWT库）
+            String token = generateToken(userData);
 
             Map<String, Object> loginData = new HashMap<>();
             loginData.put("token", token);
             loginData.put("expires_in", 604800); // 7天
-            loginData.put("user", user);
+            loginData.put("user", userData);
 
             sendSuccessResponse(response, loginData, "登录成功");
 
         } catch (Exception e) {
+            System.err.println("登录过程中发生错误: " + e.getMessage());
+            e.printStackTrace();
             sendErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "登录失败: " + e.getMessage());
         }
     }
@@ -132,11 +150,23 @@ public class AuthController extends BaseController {
                 return;
             }
 
-            // 模拟token失效处理
+            // 模拟token失效处理（实际项目中应该将token加入黑名单）
             sendSuccessResponse(response, null, "成功退出账号");
 
         } catch (Exception e) {
             sendErrorResponse(response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "登出失败: " + e.getMessage());
         }
+    }
+
+    /**
+     * 生成简单的token（实际项目中应该使用JWT库）
+     */
+    private String generateToken(Map<String, Object> userData) {
+        Long userId = (Long) userData.get("user_id");
+        String username = (String) userData.get("username");
+        long timestamp = System.currentTimeMillis();
+
+        // 简单的token生成（实际项目中应该使用JWT）
+        return "token_" + userId + "_" + username + "_" + timestamp;
     }
 }

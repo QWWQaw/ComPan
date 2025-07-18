@@ -13,7 +13,7 @@ import java.util.List;
  * 回收站管理控制器 - 处理回收站相关操作
  */
 @Controller
-@RequestMapping(path = "/recycle-bin")
+@RequestMapping(path = "/api/v1/recycle-bin")
 public class RecycleBinController extends BaseController {
 
     /**

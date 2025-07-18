@@ -7,7 +7,7 @@ import javax.servlet.annotation.WebServlet;
 
 import java.io.IOException;
 
-@WebServlet(urlPatterns = "/api", loadOnStartup = 1)
+@WebServlet(urlPatterns = "/api/*", loadOnStartup = 1)
 public class MainServlet extends HttpServlet{
     private Dispatcher dispatcher;
 

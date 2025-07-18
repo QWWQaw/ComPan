@@ -13,7 +13,7 @@ import java.util.List;
  * 用户管理控制器 - 处理用户信息管理相关操作
  */
 @Controller
-@RequestMapping(path = "/users")
+@RequestMapping(path = "/api/v1/users")
 public class UserController extends BaseController {
 
     /**
@@ -30,7 +30,7 @@ public class UserController extends BaseController {
                 return;
             }
 
-            // 模拟用户信息
+            // 模拟用户信息，这个
             Map<String, Object> userData = new HashMap<>();
             userData.put("user_id", 123);
             userData.put("username", "john_doe");

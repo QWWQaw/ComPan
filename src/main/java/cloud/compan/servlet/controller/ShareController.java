@@ -13,7 +13,7 @@ import java.util.List;
  * 分享管理控制器 - 处理文件/文件夹分享相关操作
  */
 @Controller
-@RequestMapping(path = "/shares")
+@RequestMapping(path = "/api/v1/shares")
 public class ShareController extends BaseController {
 
     /**

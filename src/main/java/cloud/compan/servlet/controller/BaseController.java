@@ -7,13 +7,14 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
- * 基础控制器类，提供通用的响应处理方法
+ * 基础控制器类，提供通用的响应处理方法, 主要包括api响应格式（成功响应，失败响应），分页响应格式，json的构建发送， 以及参数相关方法
  */
 public abstract class BaseController {
 
     /**
      * 统一的API响应格式
-     */
+     *
+    */
     public static class ApiResponse<T> {
         private boolean success;
         private int code;
@@ -206,7 +207,7 @@ public abstract class BaseController {
      */
     protected Integer getIntParameter(HttpServletRequest request, String paramName) {
         String value = request.getParameter(paramName);
-        if (value != null && !value.trim().isEmpty()) {
+        if (value != null && !value.trim().isEmpty()) { // 检查是否为null或空字符串
             try {
                 return Integer.parseInt(value);
             } catch (NumberFormatException e) {
@@ -229,7 +230,7 @@ public abstract class BaseController {
      */
     protected Long getLongParameter(HttpServletRequest request, String paramName) {
         String value = request.getParameter(paramName);
-        if (value != null && !value.trim().isEmpty()) {
+        if (value != null && !value.trim().isEmpty()) { // 检查是否为null或空字符串
             try {
                 return Long.parseLong(value);
             } catch (NumberFormatException e) {
@@ -242,7 +243,7 @@ public abstract class BaseController {
     /**
      * 验证必需参数
      */
-    protected boolean isParameterMissing(String... params) {
+    protected boolean isParameterMissing(String... params) { // 接受可变参数， 如果参数为null或空字符串，则返回true，否则返回false
         for (String param : params) {
             if (param == null || param.trim().isEmpty()) {
                 return true;
