@@ -1,8 +1,9 @@
 package cloud.compan.servlet.model;
 
-import cloud.compan.servlet.annotations.type.Table;
-import cloud.compan.servlet.annotations.field.Id;
-import cloud.compan.servlet.annotations.field.*;
+import cloud.compan.servlet.annotations.data.field.Column;
+import cloud.compan.servlet.annotations.data.type.Entity;
+import cloud.compan.servlet.annotations.data.type.Table;
+import cloud.compan.servlet.annotations.data.field.Id;
 
 import java.lang.reflect.Field;
 import java.sql.ResultSet;
@@ -36,11 +37,11 @@ public class EntityMetadata {
      * 为给定的实体类创建元数据。
      * 该构造函数是私有的，通过 {@link #getMetadata(Class)} 方法进行调用和缓存。
      * @param clazz 需要解析的实体类，必须被 @Entity 注解。
-     * @throws IllegalArgumentException 如果该类没有被 {@link cloud.compan.servlet.annotations.type.Entity} 或 {@link Table} 注解。
+     * @throws IllegalArgumentException 如果该类没有被 {@link Entity} 或 {@link Table} 注解。
      * @throws IllegalStateException 如果在类中找不到被 {@link Id} 注解的字段。
      */
     private EntityMetadata(Class<?> clazz){
-        if (!clazz.isAnnotationPresent(cloud.compan.servlet.annotations.type.Entity.class)){
+        if (!clazz.isAnnotationPresent(Entity.class)){
             throw new IllegalArgumentException(
                 "Class " + clazz.getName() + " must be annotated with @Entity");
         }

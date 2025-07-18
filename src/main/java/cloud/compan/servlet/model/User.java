@@ -1,9 +1,9 @@
 package cloud.compan.servlet.model;
 
-import cloud.compan.servlet.annotations.type.Entity;
-import cloud.compan.servlet.annotations.type.Table;
-import cloud.compan.servlet.annotations.field.Column;
-import cloud.compan.servlet.annotations.field.Id;
+import cloud.compan.servlet.annotations.data.type.Entity;
+import cloud.compan.servlet.annotations.data.type.Table;
+import cloud.compan.servlet.annotations.data.field.Column;
+import cloud.compan.servlet.annotations.data.field.Id;
 import lombok.Getter;
 import lombok.Setter;
 

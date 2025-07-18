@@ -33,6 +33,7 @@ public class GuiceDataSourceProvider {
     public DataSource get(Class<?> entityClass) {
         // 1. 获取元数据
         EntityMetadata metadata = EntityMetadata.of(entityClass);
+        
         // 2. 从元数据中获取数据源的逻辑名称 (e.g., "default")
         String dataSourceName = metadata.getDataSourceName();
         

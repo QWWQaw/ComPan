@@ -1,4 +1,4 @@
-package cloud.compan.servlet.annotations.type;
+package cloud.compan.servlet.annotations.component;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,5 +7,6 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface Entity {
+public @interface Controller {
+    
 }

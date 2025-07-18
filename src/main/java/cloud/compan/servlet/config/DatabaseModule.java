@@ -1,8 +1,5 @@
 package cloud.compan.servlet.config;
 
-import cloud.compan.servlet.utils.HashUtil;
-import cloud.compan.servlet.utils.JdbcExecutor;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provider;

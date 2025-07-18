@@ -1,4 +1,4 @@
-package cloud.compan.servlet.annotations.field;
+package cloud.compan.servlet.annotations.data.field;
 
 import java.lang.annotation.*;
 

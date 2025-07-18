@@ -5,7 +5,7 @@ import cloud.compan.servlet.utils.JdbcExecutor;
 
 
 import com.google.inject.AbstractModule;
-import cloud.compan.servlet.annotations.field.Value;
+import cloud.compan.servlet.annotations.data.field.Value;
 import com.google.inject.Singleton;
 
 public class AppModule extends AbstractModule {
