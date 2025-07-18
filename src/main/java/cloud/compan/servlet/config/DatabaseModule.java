@@ -25,12 +25,16 @@ public class DatabaseModule extends AbstractModule {
     static class DefaultDataSourceProvider implements Provider<DataSource> {  
         private final AppModule config;  
 
-        // Guice 会自动注入 AppConfig  
+        // Guice 会自动注入 AppModule  
         @Inject  
         public DefaultDataSourceProvider(AppModule config) {  
             this.config = config;  
         }  
 
+        /**
+         * 获取数据源
+         * @return 数据源
+         */
         @Override  
         public DataSource get() {  
             HikariConfig hikariConfig = new HikariConfig();  

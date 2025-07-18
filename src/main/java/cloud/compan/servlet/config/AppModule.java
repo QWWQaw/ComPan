@@ -41,14 +41,26 @@ public class AppModule extends AbstractModule {
         return defaultDataSourceName != null ? defaultDataSourceName : "No data source provided";  
     }  
 
+    /**
+     * 获取数据库URL
+     * @return 数据库URL
+     */
     public String getDatabaseUrl() {  
         return db_url;  
     }  
 
+    /**
+     * 获取数据库用户名
+     * @return 数据库用户名
+     */
     public String getUsername() {  
         return db_username;  
     }  
 
+    /**
+     * 获取数据库密码
+     * @return 数据库密码
+     */
     public String getPassword() {  
         return db_password;  
     }  

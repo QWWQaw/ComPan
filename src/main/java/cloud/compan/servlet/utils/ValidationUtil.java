@@ -13,6 +13,7 @@ public class ValidationUtil {
     private final Validator validator;
 
     public ValidationUtil() {
+        // 使用工厂模式创建验证器
         try(var factory = Validation.buildDefaultValidatorFactory()) {
             validator = factory.getValidator();
         }
@@ -39,7 +40,5 @@ public class ValidationUtil {
             .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
             .collect(Collectors.joining("\n"));
     }
-
-
 
 }
