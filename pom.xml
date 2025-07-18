@@ -198,6 +198,7 @@
   </dependencies>
 
   <build>
+
     <finalName>ComPan</finalName>
     <plugins>
       <plugin>
@@ -220,6 +221,18 @@
         <artifactId>maven-war-plugin</artifactId>
         <version>${maven.war.plugin.version}</version>
       </plugin>
+
+    <plugin>
+      <groupId>org.apache.tomcat.maven</groupId>
+      <artifactId>tomcat7-maven-plugin</artifactId>
+      <version>2.2</version>
+      <configuration>
+        <server>tomcat9</server>
+        <port>8080</port>
+        <path>/</path>
+      </configuration>
+    </plugin>
+
     </plugins>
   </build>
 </project>
