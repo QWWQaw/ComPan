@@ -43,7 +43,7 @@ public class Dispatcher {
         String requestURI = req.getRequestURI();
         String contextPath = req.getContextPath();
         String path = requestURI.substring(contextPath.length()); // 去除部署在服务器时的上下文路径，得到实际请求路径
-
+        System.out.println("Handling request: " + req.getMethod() + " " + path);
         for (Map.Entry<Pattern, Method> entry : handlerMap.entrySet()) {
             Pattern pattern = entry.getKey();
             Matcher matcher = pattern.matcher(req.getMethod().toUpperCase() + ":" + path);
