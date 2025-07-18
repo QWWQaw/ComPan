@@ -14,6 +14,8 @@ import java.security.NoSuchAlgorithmException;
  */  
 @Singleton  
 public class HashUtil {  
+    
+    private static final int WORK_FACTOR = 10;
 
     // --- 密码哈希部分 (使用 BCrypt) ---  
 
@@ -23,9 +25,8 @@ public class HashUtil {
      * @param plainTextPassword 用户输入的明文密码  
      * @return 一个安全的、加盐的哈希字符串   
      */  
-    public String hashPassword(String plainTextPassword) {  
-        // BCrypt.gensalt() 的参数是工作因子 (work factor)，数值越大越慢，越安全。  
-        return BCrypt.hashpw(plainTextPassword, BCrypt.gensalt(10));  
+    public String hashPassword(String plainTextPassword) {    
+        return BCrypt.hashpw(plainTextPassword, BCrypt.gensalt(WORK_FACTOR));  
     }  
 
     /**  
@@ -87,4 +88,15 @@ public class HashUtil {
         }  
         return hexString.toString();  
     }  
+
+    public static void main(String[] args) {
+        HashUtil hashUtil = new HashUtil();
+        String password = "123456";
+        String hashedPassword = hashUtil.hashPassword(password);
+        System.out.println(hashedPassword);
+    }
+
+    public static int getWorkFactor() {
+        return WORK_FACTOR;
+    }
 }

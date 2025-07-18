@@ -7,7 +7,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-import com.google.inject.name.Names;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -22,21 +21,7 @@ public class DatabaseModule extends AbstractModule {
 
     @Override  
     protected void configure() {  
-        // 1. 绑定 AppConfig 的 Provider，并设为单例  
-        bind(AppModule.class).toProvider(AppConfigProvider.class).in(Singleton.class);  
-        
-        // 2. 绑定 DataSource 的 Provider，并设为单例  
-        // 这个 Provider 将会依赖 AppConfig  
-        bind(DataSource.class)  
-            .annotatedWith(Names.named("default")) // 我们给这个绑定一个逻辑名称  
-            .toProvider(DefaultDataSourceProvider.class)  
-            .in(Singleton.class);  
-        
-        // 3. 绑定其他服务  
-        bind(GuiceDataSourceProvider.class);  
-        bind(JdbcExecutor.class);  
-        bind(HashUtil.class);
-        bind(cloud.compan.servlet.repository.UserRepository.class);
+
     }  
 
     @Singleton  

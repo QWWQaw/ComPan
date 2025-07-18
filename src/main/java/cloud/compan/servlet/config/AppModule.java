@@ -1,8 +1,12 @@
 package cloud.compan.servlet.config;
 
+import cloud.compan.servlet.utils.HashUtil;
+import cloud.compan.servlet.utils.JdbcExecutor;
+
+
 import com.google.inject.AbstractModule;
-import com.google.inject.Singleton;
 import cloud.compan.servlet.annotations.field.Value;
+import com.google.inject.Singleton;
 
 public class AppModule extends AbstractModule {
 
@@ -22,7 +26,14 @@ public class AppModule extends AbstractModule {
     protected void configure() {
         ConfigLoader.inject(this);
         
-        // 其他依赖也可在此绑定
+        bind(AppModule.class).toProvider(AppConfigProvider.class).in(Singleton.class);  
+        
+
+        // 3. 绑定其他服务  
+        bind(GuiceDataSourceProvider.class);  
+        bind(JdbcExecutor.class);  
+        bind(HashUtil.class);
+        bind(cloud.compan.servlet.repository.UserRepository.class);
     }
 
     public String getDefaultDataSourceName() {  
