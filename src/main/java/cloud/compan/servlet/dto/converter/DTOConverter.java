@@ -18,7 +18,7 @@ import java.sql.Timestamp;
 public class DTOConverter {
 
     /**
-     * 将Service层返回的Map结构转换为标准ResponseDTO
+     * ��Service层返回的Map结构转换为标准ResponseDTO
      */
     public static <T> ResponseDTO<T> convertServiceResponse(Map<String, Object> serviceResult) {
         if (serviceResult == null) {

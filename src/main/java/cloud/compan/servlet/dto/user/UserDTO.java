@@ -49,55 +49,6 @@ class UserUpdateDTO {
 }
 
 /**
- * 用户存储统计DTO
- */
-class UserStorageStatsDTO {
-    private Long userId;
-    private String username;
-    private Long storageUsed;
-    private Long storageLimit;
-    private Integer fileCount;
-    private Integer folderCount;
-    private Double usagePercentage;
-
-    // 构造函数
-    public UserStorageStatsDTO() {}
-
-    // Getters and Setters
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
-
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
-
-    public Long getStorageUsed() { return storageUsed; }
-    public void setStorageUsed(Long storageUsed) { this.storageUsed = storageUsed; }
-
-    public Long getStorageLimit() { return storageLimit; }
-    public void setStorageLimit(Long storageLimit) { this.storageLimit = storageLimit; }
-
-    public Integer getFileCount() { return fileCount; }
-    public void setFileCount(Integer fileCount) { this.fileCount = fileCount; }
-
-    public Integer getFolderCount() { return folderCount; }
-    public void setFolderCount(Integer folderCount) { this.folderCount = folderCount; }
-
-    public Double getUsagePercentage() { return usagePercentage; }
-    public void setUsagePercentage(Double usagePercentage) { this.usagePercentage = usagePercentage; }
-
-    // 添加缺少的方法
-    public Long getStorageAvailable() {
-        if (storageLimit != null && storageUsed != null) {
-            return storageLimit - storageUsed;
-        }
-        return 0L;
-    }
-    public void setStorageAvailable(Long storageAvailable) {
-        // 这个方法主要用于兼容性，实际值通过计算得出
-    }
-}
-
-/**
  * 用户密码修改请求DTO
  */
 class UserPasswordChangeDTO {

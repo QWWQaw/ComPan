@@ -153,7 +153,7 @@ public class DTOUsageExample {
     public static class ErrorHandlingExample {
 
         public ResponseDTO<String> handleValidationError(String field, String message) {
-            return DTOConverter.createErrorResponse(
+            return DTOConverter.<String>createErrorResponse(
                 "参数验证失败: " + field + " - " + message,
                 400,
                 "VALIDATION_ERROR"
@@ -161,7 +161,7 @@ public class DTOUsageExample {
         }
 
         public ResponseDTO<String> handleNotFoundError(String resourceType, Long resourceId) {
-            return DTOConverter.createErrorResponse(
+            return DTOConverter.<String>createErrorResponse(
                 resourceType + "不存在",
                 404,
                 "RESOURCE_NOT_FOUND"
@@ -170,7 +170,7 @@ public class DTOUsageExample {
         }
 
         public ResponseDTO<String> handlePermissionError(String operation) {
-            return DTOConverter.createErrorResponse(
+            return DTOConverter.<String>createErrorResponse(
                 "无权限执行操作: " + operation,
                 403,
                 "PERMISSION_DENIED"

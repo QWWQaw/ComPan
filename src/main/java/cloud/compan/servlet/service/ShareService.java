@@ -154,7 +154,7 @@ public class ShareService {
             }
 
             // 4. 保存分享记录
-            String sql = "INSERT INTO share (id, resource_type, resource_id, share_link, password, description, expiry_time, created_at) " +
+            String sql = "INSERT INTO share (id, share_link, file_id, folder_id, created_by, password, expire_at, created_at) " +
                         "VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
 
             Connection conn = null;
@@ -659,7 +659,7 @@ public class ShareService {
      */
     private long getTotalShareCount(Long userId) {
         try {
-            String sql = "SELECT COUNT(*) FROM share WHERE user_id = ?";
+            String sql = "SELECT COUNT(*) FROM share WHERE id = ?";
             Connection conn = null;
             PreparedStatement stmt = null;
             ResultSet rs = null;
@@ -705,7 +705,7 @@ public class ShareService {
      * 获取文件数据
      */
     private Map<String, Object> getFileData(Long fileId) throws SQLException {
-        String sql = "SELECT * FROM files WHERE file_id = ?";
+        String sql = "SELECT * FROM file WHERE file_id = ?";
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
@@ -737,7 +737,7 @@ public class ShareService {
      * 获取文件夹数据
      */
     private Map<String, Object> getFolderData(Long folderId) throws SQLException {
-        String sql = "SELECT * FROM folders WHERE folder_id = ?";
+        String sql = "SELECT * FROM folder WHERE folder_id = ?";
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
