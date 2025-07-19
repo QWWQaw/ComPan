@@ -32,7 +32,7 @@ public class ControllerScanner {
      * @param packageName 要扫描的包名，例如 "cloud.compan.servlet.controller"
      */
     public void scanAndRegister(String packageName) {
-        System.out.println("🔍 开始扫描控制器，包名: " + packageName);
+        System.out.println("开始扫描控制器，包名: " + packageName);
         
         try {
             // 1. 获取包下的所有类
@@ -43,7 +43,7 @@ public class ControllerScanner {
                 .filter(this::isController)
                 .toList();
             
-            System.out.println("📦 找到 " + controllerClasses.size() + " 个控制器类");
+            System.out.println("找到 " + controllerClasses.size() + " 个控制器类");
             
             // 3. 为每个控制器注册路由
             for (Class<?> controllerClass : controllerClasses) {
@@ -54,7 +54,7 @@ public class ControllerScanner {
             routeRegistry.printAllRoutes();
             
         } catch (Exception e) {
-            System.err.println("❌ 扫描控制器时发生错误: " + e.getMessage());
+            System.err.println("扫描控制器时发生错误: " + e.getMessage());
             throw new RuntimeException("控制器扫描失败", e);
         }
     }
@@ -83,7 +83,7 @@ public class ControllerScanner {
             }
             
         } catch (Exception e) {
-            System.err.println("❌ 注册控制器 " + controllerClass.getSimpleName() + " 时发生错误: " + e.getMessage());
+            System.err.println("注册控制器 " + controllerClass.getSimpleName() + " 时发生错误: " + e.getMessage());
             throw new RuntimeException("控制器注册失败: " + controllerClass.getName(), e);
         }
     }
@@ -213,7 +213,7 @@ public class ControllerScanner {
                 }
             }
         } catch (Exception e) {
-            System.err.println("❌ 扫描包时发生错误: " + e.getMessage());
+            System.err.println("扫描包时发生错误: " + e.getMessage());
         }
         return classes;
     }
@@ -233,7 +233,7 @@ public class ControllerScanner {
                         Class<?> clazz = Class.forName(className);
                         classes.add(clazz);
                     } catch (ClassNotFoundException e) {
-                        System.err.println("⚠️ 无法加载类: " + className);
+                        System.err.println("无法加载类: " + className);
                     }
                 }
             }

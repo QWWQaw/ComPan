@@ -12,11 +12,13 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
     <!-- 依赖版本管理 -->
+    <!-- Tomcat 10.1+ 兼容配置 -->
     <jakarta.servlet.version>6.0.0</jakarta.servlet.version>
     <jakarta.jsp.api.version>3.1.1</jakarta.jsp.api.version>
     <jakarta.el.api.version>5.0.0</jakarta.el.api.version>
     <jakarta.annotation.version>2.1.1</jakarta.annotation.version>
     <jakarta.validation.version>3.0.2</jakarta.validation.version>
+    <mockito.version>5.12.0</mockito.version>
     <hibernate.core.version>6.5.0.Final</hibernate.core.version>
     <hibernate.validator.version>8.0.1.Final</hibernate.validator.version>
     <mysql.connector.version>8.0.33</mysql.connector.version>
@@ -70,12 +72,12 @@
       <version>2.19.1</version>
     </dependency>
 
-    <!-- Jakarta Web API -->
+    <!-- Jakarta Web API - 兼容Tomcat 10.1+ -->
     <dependency>
       <groupId>jakarta.platform</groupId>
       <artifactId>jakarta.jakartaee-web-api</artifactId>
       <version>10.0.0</version>
-      <scope>provided</scope> <!-- 由Web容器（如Tomcat）提供 -->
+      <scope>provided</scope> <!-- 由Web容器（如Tomcat 10.1+）提供 -->
     </dependency>
 
     <!-- Jakarta Server Pages API -->
@@ -189,14 +191,14 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <version>5.11.0</version>
+      <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
     
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-junit-jupiter</artifactId>
-      <version>5.11.0</version>
+      <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
     
@@ -208,13 +210,6 @@
       <scope>test</scope>
     </dependency>
 
-
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <version>5.12.0</version>
-      <scope>test</scope>
-    </dependency>
 
     <dependency>
       <groupId>org.mindrot</groupId>
