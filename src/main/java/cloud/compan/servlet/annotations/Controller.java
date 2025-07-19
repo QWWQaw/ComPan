@@ -1,60 +1,19 @@
 package cloud.compan.servlet.annotations;
-
 import java.lang.annotation.*;
-
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 /**
- * 标识控制器组件的注解
- *
- * <p>用于标记Web层的控制器类，这些类负责处理HTTP请求、参数验证和响应返回。
- * Controller层是用户请求的入口点，应该保持轻量级，主要负责请求分发。
- *
- * <p>使用示例：
- * <pre>
- * {@code
- * @Controller("/api/v1/users")
- * public class UserController {
- *     // 控制器实现
- * }
- * }
- * </pre>
- *
- * @author ComPan Team
- * @since 1.0
- * @see Service
- * @see Repository
- * @see RequestMapping
+ * 控制器注解，用于标记一个类为控制器。
+ * 控制器是用于处理HTTP请求的类，它负责接收HTTP请求，处理请求，并返回HTTP响应。
+ * 控制器通常与一个或多个路由注解一起使用，以定义请求的URL路径和处理方法。
+ * 控制器可以包含多个处理方法，每个处理方法对应一个HTTP请求。
+ * 控制器可以包含多个路由注解，每个路由注解对应一个HTTP请求。
  */
 @Documented
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface Controller {
-
-    /**
-     * 指定控制器的基础路径
-     *
-     * @return 控制器的URL路径前缀，默认为空
-     */
     String value() default "";
-
-    /**
-     * 控制器描述信息
-     *
-     * @return 控制器的功能描述
-     */
-    String description() default "";
-
-    /**
-     * API版本
-     *
-     * @return API版本号，用于版本控制
-     */
-    String version() default "v1";
-
-    /**
-     * 是否启用CORS跨域支持
-     *
-     * @return true表示允许跨域访问
-     */
-    boolean cors() default false;
 }

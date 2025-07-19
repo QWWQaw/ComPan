@@ -6,6 +6,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.annotation.Inherited;
 
+import cloud.compan.servlet.annotations.enums.RequestMethod;
+
 
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)

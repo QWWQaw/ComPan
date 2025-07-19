@@ -21,6 +21,10 @@ public class ConfigLoader {
         }
     }
 
+    /**
+     * 将配置文件中的值注入到对象中
+     * @param target 目标对象
+     */
     public static void inject(Object target) {
         for(Field field : target.getClass().getDeclaredFields()) {
             Value valueAnno = field.getAnnotation(Value.class);
@@ -46,7 +50,13 @@ public class ConfigLoader {
         }
     }
 
-    static Object convertValue(String value, Class<?> targetType) {
+    /**
+     * 将配置文件中的值转换为对象的类型
+     * @param value 配置文件中的值
+     * @param targetType 目标类型
+     * @return 转换后的值
+     */
+    public static Object convertValue(String value, Class<?> targetType) {
         try{
             if (targetType == int.class || targetType == Integer.class) {
                 return Integer.parseInt(value);
@@ -54,6 +64,12 @@ public class ConfigLoader {
                 return Boolean.parseBoolean(value);
             } else if (targetType == double.class || targetType == Double.class) {
                 return Double.parseDouble(value);
+            } else if (targetType == long.class || targetType == Long.class) {
+                return Long.parseLong(value);
+            } else if (targetType == String.class) {
+                return value;
+            } else if (targetType == byte[].class) {
+                return value.getBytes();
             } else {
                 return value; // 默认处理为String
             }
