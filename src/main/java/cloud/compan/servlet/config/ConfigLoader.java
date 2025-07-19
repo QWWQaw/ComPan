@@ -3,7 +3,7 @@ package cloud.compan.servlet.config;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.Properties;
-import cloud.compan.servlet.annotations.data.field.Value;
+import cloud.compan.servlet.annotations.Value;
 
 public class ConfigLoader {
     //Properties类继承自Hashtable
@@ -64,6 +64,12 @@ public class ConfigLoader {
                 return Boolean.parseBoolean(value);
             } else if (targetType == double.class || targetType == Double.class) {
                 return Double.parseDouble(value);
+            } else if (targetType == long.class || targetType == Long.class) {
+                return Long.parseLong(value);
+            } else if (targetType == String.class) {
+                return value;
+            } else if (targetType == byte[].class) {
+                return value.getBytes();
             } else {
                 return value; // 默认处理为String
             }

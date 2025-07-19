@@ -1,0 +1,79 @@
+package cloud.compan.servlet.utils;
+
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.*;
+import javax.crypto.SecretKey;
+import java.util.Base64;
+
+import com.google.inject.Singleton;
+
+import cloud.compan.servlet.annotations.Value;
+import cloud.compan.servlet.config.ConfigLoader;
+
+import java.util.Date;
+
+/**
+ * JWT工具类实现
+ */
+@Singleton
+public class JwtUtilImpl implements JwtUtil{
+
+    @Value("jwt.secretkey")
+    private String secretKey; 
+    
+    @Value("jwt.expiration")
+    private long EXPIRATION_TIME;
+
+    private final SecretKey SECRET_KEY;
+
+    public JwtUtilImpl(){
+        ConfigLoader.inject(this);
+        byte[] decodedKey = Base64.getDecoder().decode(secretKey);
+        SECRET_KEY = Keys.hmacShaKeyFor(decodedKey);
+    }
+
+    /**
+     * 生成JWT token
+     * @param obj 需要编码的对象
+     * @return 生成的JWT token
+     */
+    @Override
+    public String generateToken(String obj) {
+        if(secretKey == null || secretKey.isEmpty()){
+            throw new IllegalArgumentException("Secret key is not set");
+        }
+        if(EXPIRATION_TIME <= 0){
+            throw new IllegalArgumentException("Expiration time is not set");
+        }
+        if(SECRET_KEY == null){
+            throw new IllegalArgumentException("Secret key is not set");
+        }
+        return Jwts.builder()
+                .claims()
+                    .add("sub", obj)
+                    .add("exp", new Date(System.currentTimeMillis() + EXPIRATION_TIME))
+                    .and()
+                .signWith(SECRET_KEY)
+                .compact();
+    }
+
+    public Claims validateToken(String token) {
+        if(secretKey == null || secretKey.isEmpty() || SECRET_KEY == null){
+            throw new IllegalStateException("JWT secret key not initialized.");
+        }
+        try {
+            JwtParser parser = Jwts.parser()
+                                   .verifyWith(SECRET_KEY)  // 设置签名密钥并自动验证签名
+                                   .build();
+
+            return parser.parseSignedClaims(token).getPayload(); // 返回 Claims（payload）
+
+        } catch (JwtException e) {
+            // Token 无效或签名失败或已过期
+            System.out.println("Invalid JWT: " + e.getMessage());
+            return null;
+        }
+    }
+
+
+}

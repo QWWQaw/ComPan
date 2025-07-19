@@ -6,7 +6,7 @@ import cloud.compan.servlet.utils.ValidationUtil;
 
 
 import com.google.inject.AbstractModule;
-import cloud.compan.servlet.annotations.data.field.Value;
+import cloud.compan.servlet.annotations.Value;
 import com.google.inject.Singleton;
 
 public class AppModule extends AbstractModule {
@@ -35,6 +35,15 @@ public class AppModule extends AbstractModule {
         bind(JdbcExecutor.class);  
         bind(HashUtil.class);
         bind(cloud.compan.servlet.repository.UserRepository.class);
+        bind(cloud.compan.servlet.repository.StorageObjectRepository.class);
+        bind(cloud.compan.servlet.repository.UserGroupRepository.class);
+        bind(cloud.compan.servlet.repository.UserGroupMemberRepository.class);
+        bind(cloud.compan.servlet.repository.FolderRepository.class);
+        bind(cloud.compan.servlet.repository.FileRepository.class);
+        bind(cloud.compan.servlet.repository.AclRepository.class);
+        bind(cloud.compan.servlet.repository.ShareRepository.class);
+        bind(cloud.compan.servlet.repository.LogRepository.class);
+        bind(cloud.compan.servlet.repository.NotificationRepository.class);
     }
 
     public String getDefaultDataSourceName() {  
