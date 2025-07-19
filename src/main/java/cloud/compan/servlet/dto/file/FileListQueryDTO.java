@@ -1,60 +1,42 @@
 package cloud.compan.servlet.dto.file;
 
 import cloud.compan.servlet.dto.common.PaginationDTO;
+import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.List;
 
 /**
  * 文件列表查询请求DTO
  * 用于Handler层接收文件列表查询参数
  */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class FileListQueryDTO {
+    @Min(value = 1, message = "文件夹ID必须大于0")
     private Long folderId; // 文件夹ID，null表示根目录
+
+    @Min(value = 1, message = "页码必须大于0")
     private Integer page = 1; // 页码，默认第1页
+
+    @Min(value = 1, message = "每页数量必须大于0")
+    @Max(value = 100, message = "每页数量不能超过100")
     private Integer perPage = 20; // 每页数量，默认20
+
+    @Pattern(regexp = "^(name|size|created_at|updated_at)$", message = "排序字段只能是name、size、created_at或updated_at")
     private String sortBy = "name"; // 排序字段：name, size, created_at, updated_at
+
+    @Pattern(regexp = "^(asc|desc)$", message = "排序顺序只能是asc或desc")
     private String sortOrder = "asc"; // 排序顺序：asc, desc
+
+    @Size(max = 100, message = "搜索关键字长度不能超过100个字符")
     private String search; // 搜索关键字
+
+    @Pattern(regexp = "^(image|document|video|audio|other)$", message = "文件类型只能是image、document、video、audio或other")
     private String fileType; // 文件类型过滤：image, document, video, audio, other
-
-    // 构造函数
-    public FileListQueryDTO() {}
-
-    // Getters and Setters
-    public Long getFolderId() { return folderId; }
-    public void setFolderId(Long folderId) { this.folderId = folderId; }
-
-    public Integer getPage() { return page; }
-    public void setPage(Integer page) {
-        this.page = page != null && page > 0 ? page : 1;
-    }
-
-    public Integer getPerPage() { return perPage; }
-    public void setPerPage(Integer perPage) {
-        this.perPage = perPage != null && perPage > 0 && perPage <= 100 ? perPage : 20;
-    }
-
-    public String getSortBy() { return sortBy; }
-    public void setSortBy(String sortBy) {
-        if (sortBy != null && (sortBy.equals("name") || sortBy.equals("size") ||
-            sortBy.equals("created_at") || sortBy.equals("updated_at"))) {
-            this.sortBy = sortBy;
-        }
-    }
-
-    public String getSortOrder() { return sortOrder; }
-    public void setSortOrder(String sortOrder) {
-        if ("desc".equalsIgnoreCase(sortOrder)) {
-            this.sortOrder = "desc";
-        } else {
-            this.sortOrder = "asc";
-        }
-    }
-
-    public String getSearch() { return search; }
-    public void setSearch(String search) { this.search = search; }
-
-    public String getFileType() { return fileType; }
-    public void setFileType(String fileType) { this.fileType = fileType; }
 
     /**
      * 验证参数是否有效

@@ -18,7 +18,7 @@ import java.sql.Timestamp;
 public class DTOConverter {
 
     /**
-     * ��Service层返回的Map结构转换为标准ResponseDTO
+     * 将Service层返回的Map结构转换为标准ResponseDTO
      */
     public static <T> ResponseDTO<T> convertServiceResponse(Map<String, Object> serviceResult) {
         if (serviceResult == null) {
@@ -34,11 +34,11 @@ public class DTOConverter {
         if (success) {
             response = ResponseDTO.success(message, (T) data, statusCode);
         } else {
-            response = ResponseDTO.error(message, (T) data, statusCode);
+            response = ResponseDTO.error(message, statusCode);
         }
 
-        // 添加时间戳
-        response.addTimestamp();
+        // 添加时间戳元数据
+        response.addMetadata("timestamp", System.currentTimeMillis());
 
         return response;
     }
@@ -149,8 +149,9 @@ public class DTOConverter {
             "pagination", pagination
         );
 
-        return ResponseDTO.success("获取文件列表成功", data)
-                .addTimestamp();
+        ResponseDTO<Map<String, Object>> response = ResponseDTO.success("获取文件列表成功", data);
+        response.addMetadata("timestamp", System.currentTimeMillis());
+        return response;
     }
 
     /**
@@ -159,7 +160,7 @@ public class DTOConverter {
     public static <T> ResponseDTO<T> createErrorResponse(String message, int statusCode, String errorCode) {
         ResponseDTO<T> response = ResponseDTO.error(message, statusCode);
         response.addMetadata("error_code", errorCode);
-        response.addTimestamp();
+        response.addMetadata("timestamp", System.currentTimeMillis());
         return response;
     }
 
@@ -169,7 +170,7 @@ public class DTOConverter {
     public static <T> ResponseDTO<T> createSuccessResponse(String message, T data, String operationType) {
         ResponseDTO<T> response = ResponseDTO.success(message, data);
         response.addMetadata("operation", operationType);
-        response.addTimestamp();
+        response.addMetadata("timestamp", System.currentTimeMillis());
         return response;
     }
 
