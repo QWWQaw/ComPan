@@ -2,7 +2,7 @@ package cloud.compan.servlet.handler;
 
 import cloud.compan.servlet.service.FileService;
 import cloud.compan.servlet.service.AuthService;
-import cloud.compan.servlet.annotations.component.Service;
+import cloud.compan.servlet.annotations.Service;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;

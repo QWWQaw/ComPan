@@ -1,7 +1,7 @@
 package cloud.compan.servlet.handler;
 
 import cloud.compan.servlet.service.UserService; // 暂时使用现有的UserService
-import cloud.compan.servlet.annotations.component.Service;
+import cloud.compan.servlet.annotations.Service;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Map;

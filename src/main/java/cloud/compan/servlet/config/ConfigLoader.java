@@ -3,7 +3,7 @@ package cloud.compan.servlet.config;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.Properties;
-import cloud.compan.servlet.annotations.data.field.Value;
+import cloud.compan.servlet.annotations.Value;
 
 public class ConfigLoader {
     //Properties类继承自Hashtable

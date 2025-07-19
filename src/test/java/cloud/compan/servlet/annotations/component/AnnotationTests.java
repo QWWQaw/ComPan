@@ -1,5 +1,6 @@
 package cloud.compan.servlet.annotations.component;
 
+import cloud.compan.servlet.annotations.*;
 import org.junit.jupiter.api.Test;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;

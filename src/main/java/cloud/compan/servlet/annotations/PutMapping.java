@@ -1,4 +1,4 @@
-package cloud.compan.servlet.annotations.component;
+package cloud.compan.servlet.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

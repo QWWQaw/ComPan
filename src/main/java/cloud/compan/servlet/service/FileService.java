@@ -1,8 +1,7 @@
 package cloud.compan.servlet.service;
 
-import cloud.compan.servlet.entity.FileEntity;
 import cloud.compan.servlet.repository.FileRepository;
-import cloud.compan.servlet.annotations.component.Service;
+import cloud.compan.servlet.annotations.Service;
 
 import javax.servlet.http.Part;
 import javax.servlet.http.HttpServletResponse;

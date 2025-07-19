@@ -1,8 +1,7 @@
 package cloud.compan.servlet.service;
 
-import cloud.compan.servlet.entity.Folder;
 import cloud.compan.servlet.repository.FolderRepository;
-import cloud.compan.servlet.annotations.component.Service;
+import cloud.compan.servlet.annotations.Service;
 
 import java.sql.*;
 import java.util.*;

@@ -3,7 +3,7 @@ package cloud.compan.servlet.repository;
 import cloud.compan.servlet.entity.FileEntity;
 import cloud.compan.servlet.entity.StorageObject;
 import cloud.compan.servlet.service.DatabaseService;
-import cloud.compan.servlet.annotations.component.Repository;
+import cloud.compan.servlet.annotations.Repository;
 
 import java.sql.*;
 import java.util.ArrayList;
