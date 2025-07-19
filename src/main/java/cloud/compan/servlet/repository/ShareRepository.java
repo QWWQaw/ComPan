@@ -62,12 +62,34 @@ public class ShareRepository extends BaseRepository<Share, Integer> {
     }
 
     /**
+     * 根据过期时间查找分享记录，过期时间晚于给定时间。
+     * @param expiredTime 过期时间
+     * @return 分享记录列表
+     */
+    public Optional<List<Share>> findByExpiredTimeA(LocalDateTime expiredTime) {
+        String sql = "SELECT * FROM `share` WHERE `expired_time` > ?";
+        List<Share> shares = executor.queryForList(entityClass, sql, rowMapper, expiredTime);
+        return Optional.of(shares);
+    }
+
+    /**
      * 根据过期时间查找分享记录。
      * @param expiredTime 过期时间
      * @return 分享记录列表
      */
-    public Optional<List<Share>> filterByExpiredTime(LocalDateTime expiredTime) {
-        String sql = "SELECT * FROM `share` WHERE `expired_time` > ?";
+    public Optional<List<Share>> findByExpiredTime(LocalDateTime expiredTime) {
+        String sql = "SELECT * FROM `share` WHERE `expired_time` = ?";
+        List<Share> shares = executor.queryForList(entityClass, sql, rowMapper, expiredTime);
+        return Optional.of(shares);
+    }
+
+    /**
+     * 根据过期时间查找分享记录，过期时间早于给定时间。
+     * @param expiredTime 过期时间
+     * @return 分享记录列表
+     */
+    public Optional<List<Share>> findByExpiredTimeBefore(LocalDateTime expiredTime) {
+        String sql = "SELECT * FROM `share` WHERE `expired_time` < ?";
         List<Share> shares = executor.queryForList(entityClass, sql, rowMapper, expiredTime);
         return Optional.of(shares);
     }

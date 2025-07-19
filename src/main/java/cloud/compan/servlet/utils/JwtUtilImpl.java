@@ -28,6 +28,22 @@ public class JwtUtilImpl implements JwtUtil{
 
     public JwtUtilImpl(){
         ConfigLoader.inject(this);
+        System.out.println("======= Trying to construct JwtUtilImpl =======");
+        if (this.secretKey == null || this.secretKey.isEmpty()) {
+            throw new IllegalStateException("JWT secret key was not loaded by ConfigLoader. Check application.properties.");
+        }
+        byte[] decodedKey = Base64.getDecoder().decode(secretKey);
+        SECRET_KEY = Keys.hmacShaKeyFor(decodedKey);
+    }
+
+    /**
+     * 构造函数，用于测试
+     * @param secretKey JWT secret key
+     * @param EXPIRATION_TIME JWT expiration time
+     */
+    public JwtUtilImpl(String secretKey, long EXPIRATION_TIME){
+        this.secretKey = secretKey;
+        this.EXPIRATION_TIME = EXPIRATION_TIME;
         byte[] decodedKey = Base64.getDecoder().decode(secretKey);
         SECRET_KEY = Keys.hmacShaKeyFor(decodedKey);
     }
@@ -57,6 +73,11 @@ public class JwtUtilImpl implements JwtUtil{
                 .compact();
     }
 
+    /**
+     * 验证JWT token
+     * @param token JWT token
+     * @return Claims
+     */
     public Claims validateToken(String token) {
         if(secretKey == null || secretKey.isEmpty() || SECRET_KEY == null){
             throw new IllegalStateException("JWT secret key not initialized.");

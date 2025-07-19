@@ -1,4 +1,4 @@
-package cloud.compan.servlet.annotations.enum;
+package cloud.compan.servlet.annotations.enums;
 
 public enum RequestMethod {
     GET,

@@ -5,6 +5,9 @@ import cloud.compan.servlet.utils.JdbcExecutor;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import java.util.List;
+import java.util.Optional;
+
 @Singleton
 public class UserGroupRepository extends BaseRepository<UserGroup, Long> {
 
@@ -13,5 +16,6 @@ public class UserGroupRepository extends BaseRepository<UserGroup, Long> {
         super(executor);
     }
 
-    // 可以根据需要添加自定义查询方法
+
+    
 } 
