@@ -21,6 +21,7 @@ public class ControllerScanner {
     private final Injector injector;
     private final RouteRegistry routeRegistry;
     
+    // 注解，容器选择如何找到参数对象并且注入
     @Inject
     public ControllerScanner(Injector injector, RouteRegistry routeRegistry) {
         this.injector = injector;
@@ -150,7 +151,7 @@ public class ControllerScanner {
         RequestMethod[] methods = mapping.method();
         if (methods.length == 0) {
             methods = new RequestMethod[]{RequestMethod.GET, RequestMethod.POST, 
-                                        RequestMethod.PUT, RequestMethod.DELETE};
+                                        RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.PATCH};
         }
         
         // 为每个HTTP方法创建路由
@@ -190,14 +191,14 @@ public class ControllerScanner {
     }
     
     /**
-     * 检查类是否为控制器
+     * 检查类是否为控制器, 含有注解@Controller就是控制器
      */
     private boolean isController(Class<?> clazz) {
         return clazz.isAnnotationPresent(Controller.class);
     }
     
     /**
-     * 获取指定包下的所有类（简化版本）
+     * 获取指定包下的所有类（简化版本），
      */
     private List<Class<?>> getClassesInPackage(String packageName) {
         List<Class<?>> classes = new ArrayList<>();
