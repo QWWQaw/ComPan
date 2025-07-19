@@ -27,7 +27,7 @@ import java.lang.annotation.*;
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface iRepository {
+public @interface Repository {
 
     /**
      * 指定Repository组件的名称

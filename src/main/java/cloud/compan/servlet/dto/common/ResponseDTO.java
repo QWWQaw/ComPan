@@ -1,5 +1,8 @@
 package cloud.compan.servlet.dto.common;
 
+import jakarta.validation.constraints.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -7,22 +10,29 @@ import java.util.Map;
  * 统一响应DTO
  * 用于Handler与Service层之间以及API响应的标准格式
  */
+@Data
+@NoArgsConstructor
 public class ResponseDTO<T> {
-    private boolean success;
+    @NotNull(message = "成功标识不能为空")
+    private Boolean success;
+
+    @NotBlank(message = "响应消息不能为空")
+    @Size(max = 500, message = "响应消息长度不能超过500个字符")
     private String message;
+
     private T data;
+
+    @Min(value = 100, message = "状态码不能小于100")
+    @Max(value = 599, message = "状态码不能大于599")
     private Integer statusCode;
+
     private Map<String, Object> metadata;
 
     // 构造函数
-    public ResponseDTO() {
-        this.metadata = new HashMap<>();
-    }
-
     public ResponseDTO(boolean success, String message) {
-        this();
         this.success = success;
         this.message = message;
+        this.metadata = new HashMap<>();
     }
 
     public ResponseDTO(boolean success, String message, T data) {
@@ -56,39 +66,12 @@ public class ResponseDTO<T> {
         return new ResponseDTO<>(false, message, null, statusCode);
     }
 
-    public static <T> ResponseDTO<T> error(String message, T data, Integer statusCode) {
-        return new ResponseDTO<>(false, message, data, statusCode);
-    }
-
-    // Getters and Setters
-    public boolean isSuccess() { return success; }
-    public void setSuccess(boolean success) { this.success = success; }
-
-    public String getMessage() { return message; }
-    public void setMessage(String message) { this.message = message; }
-
-    public T getData() { return data; }
-    public void setData(T data) { this.data = data; }
-
-    public Integer getStatusCode() { return statusCode; }
-    public void setStatusCode(Integer statusCode) { this.statusCode = statusCode; }
-
-    public Map<String, Object> getMetadata() { return metadata; }
-    public void setMetadata(Map<String, Object> metadata) { this.metadata = metadata; }
-
     // 元数据操作方法
     public ResponseDTO<T> addMetadata(String key, Object value) {
+        if (this.metadata == null) {
+            this.metadata = new HashMap<>();
+        }
         this.metadata.put(key, value);
-        return this;
-    }
-
-    public ResponseDTO<T> addTimestamp() {
-        this.metadata.put("timestamp", System.currentTimeMillis());
-        return this;
-    }
-
-    public ResponseDTO<T> addRequestId(String requestId) {
-        this.metadata.put("request_id", requestId);
         return this;
     }
 }

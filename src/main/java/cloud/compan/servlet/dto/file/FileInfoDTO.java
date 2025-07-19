@@ -1,60 +1,52 @@
 package cloud.compan.servlet.dto.file;
 
+import jakarta.validation.constraints.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.sql.Timestamp;
 
 /**
  * 文件信息DTO
  * 用于Service层返回文件详细信息
  */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class FileInfoDTO {
+    @NotNull(message = "文件ID不能为空")
+    @Min(value = 1, message = "文件ID必须大于0")
     private Long fileId;
+
+    @NotBlank(message = "文件名不能为空")
+    @Size(max = 255, message = "文件名长度不能超过255个字符")
     private String fileName;
+
+    @NotNull(message = "文件大小不能为空")
+    @Min(value = 0, message = "文件大小不能为负数")
     private Long fileSize;
+
+    @Size(max = 100, message = "MIME类型长度不能超过100个字符")
     private String mimeType;
+
+    @Min(value = 1, message = "文件夹ID必须大于0")
     private Long folderId;
+
+    @Size(max = 255, message = "文件夹名称长度不能超过255个字符")
     private String folderName; // 可选，文件夹名称
+
+    @NotNull(message = "用户ID不能为空")
+    @Min(value = 1, message = "用户ID必须大于0")
     private Long userId;
+
+    @Size(max = 64, message = "文件哈希长度不能超过64个字符")
     private String fileHash;
+
     private Timestamp createdAt;
+
     private Timestamp updatedAt;
+
     private String downloadUrl; // 下载链接
-
-    // 构造函数
-    public FileInfoDTO() {}
-
-    // Getters and Setters
-    public Long getFileId() { return fileId; }
-    public void setFileId(Long fileId) { this.fileId = fileId; }
-
-    public String getFileName() { return fileName; }
-    public void setFileName(String fileName) { this.fileName = fileName; }
-
-    public Long getFileSize() { return fileSize; }
-    public void setFileSize(Long fileSize) { this.fileSize = fileSize; }
-
-    public String getMimeType() { return mimeType; }
-    public void setMimeType(String mimeType) { this.mimeType = mimeType; }
-
-    public Long getFolderId() { return folderId; }
-    public void setFolderId(Long folderId) { this.folderId = folderId; }
-
-    public String getFolderName() { return folderName; }
-    public void setFolderName(String folderName) { this.folderName = folderName; }
-
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
-
-    public String getFileHash() { return fileHash; }
-    public void setFileHash(String fileHash) { this.fileHash = fileHash; }
-
-    public Timestamp getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
-
-    public Timestamp getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
-
-    public String getDownloadUrl() { return downloadUrl; }
-    public void setDownloadUrl(String downloadUrl) { this.downloadUrl = downloadUrl; }
 
     /**
      * 格式化文件大小为人类可读格式
