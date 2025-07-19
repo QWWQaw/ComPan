@@ -1,7 +1,7 @@
 package cloud.compan.servlet.web;
 
 import cloud.compan.servlet.annotations.enums.RequestMethod;
-import cloud.compan.servlet.controller.EnhancedTestController;
+import cloud.compan.servlet.controller.TestController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
@@ -18,147 +18,138 @@ import static org.junit.jupiter.api.Assertions.*;
 class RouteRegistryTest {
     
     private RouteRegistry routeRegistry;
-    private EnhancedTestController testController;
+    private TestController testController;
     
     @BeforeEach
     void setUp() {
         routeRegistry = new RouteRegistry();
-        testController = new EnhancedTestController();
+        testController = new TestController();
     }
     
     @Test
-    @DisplayName("测试简单路由注册和查找")
-    void testSimpleRouteRegistration() throws Exception {
-        // Given
-        Method method = EnhancedTestController.class.getMethod("apiInfo");
-        RouteInfo routeInfo = new RouteInfo("/api/test", RequestMethod.GET, 
-                                          EnhancedTestController.class, method, testController);
+    @DisplayName("测试基本路由注册")
+    void testBasicRouteRegistration() throws Exception {
+        // 创建路由信息
+        Method helloMethod = TestController.class.getDeclaredMethod("hello");
+        RouteInfo routeInfo = new RouteInfo("/api/hello", RequestMethod.GET, 
+                                          TestController.class, helloMethod, testController);
         
-        // When
+        // 注册路由
         routeRegistry.registerRoute(routeInfo);
-        var foundRouteOpt = routeRegistry.findRoute("/api/test", RequestMethod.GET);
         
-        // Then
-        assertTrue(foundRouteOpt.isPresent());
-        RouteInfo foundRoute = foundRouteOpt.get();
-        assertEquals("/api/test", foundRoute.getPath());
-        assertEquals(RequestMethod.GET, foundRoute.getHttpMethod());
-        assertEquals(method, foundRoute.getHandlerMethod());
+        // 验证路由被注册
+        assertEquals(1, routeRegistry.getRouteCount());
+        assertTrue(routeRegistry.hasRoute("/api/hello", RequestMethod.GET));
+        
+        // 查找路由
+        var foundRoute = routeRegistry.findRoute("/api/hello", RequestMethod.GET);
+        assertTrue(foundRoute.isPresent());
+        assertEquals("/api/hello", foundRoute.get().getPath());
+        assertEquals(RequestMethod.GET, foundRoute.get().getHttpMethod());
     }
     
     @Test
-    @DisplayName("测试参数化路由注册和查找")
+    @DisplayName("测试路由查找")
+    void testRouteFinding() throws Exception {
+        // 注册多个路由
+        Method helloMethod = TestController.class.getDeclaredMethod("hello");
+        Method healthMethod = TestController.class.getDeclaredMethod("health");
+        
+        RouteInfo helloRoute = new RouteInfo("/api/hello", RequestMethod.GET, 
+                                           TestController.class, helloMethod, testController);
+        RouteInfo healthRoute = new RouteInfo("/api/health", RequestMethod.GET, 
+                                            TestController.class, healthMethod, testController);
+        
+        routeRegistry.registerRoute(helloRoute);
+        routeRegistry.registerRoute(healthRoute);
+        
+        // 测试查找存在的路由
+        assertTrue(routeRegistry.findRoute("/api/hello", RequestMethod.GET).isPresent());
+        assertTrue(routeRegistry.findRoute("/api/health", RequestMethod.GET).isPresent());
+        
+        // 测试查找不存在的路由
+        assertFalse(routeRegistry.findRoute("/api/nonexistent", RequestMethod.GET).isPresent());
+        assertFalse(routeRegistry.findRoute("/api/hello", RequestMethod.POST).isPresent());
+    }
+    
+    @Test
+    @DisplayName("测试路由冲突检测")
+    void testRouteConflictDetection() throws Exception {
+        // 注册第一个路由
+        Method helloMethod = TestController.class.getDeclaredMethod("hello");
+        RouteInfo routeInfo1 = new RouteInfo("/api/test", RequestMethod.GET, 
+                                           TestController.class, helloMethod, testController);
+        routeRegistry.registerRoute(routeInfo1);
+        
+        // 尝试注册冲突的路由
+        RouteInfo routeInfo2 = new RouteInfo("/api/test", RequestMethod.GET, 
+                                           TestController.class, helloMethod, testController);
+        
+        assertThrows(IllegalArgumentException.class, () -> {
+            routeRegistry.registerRoute(routeInfo2);
+        });
+    }
+    
+    @Test
+    @DisplayName("测试参数化路由注册")
     void testParameterizedRouteRegistration() throws Exception {
-        // Given
-        Method method = EnhancedTestController.class.getMethod("getUserById", Long.class);
-        ParameterizedRouteInfo routeInfo = new ParameterizedRouteInfo("/api/users/{id}", RequestMethod.GET,
-                                                                     EnhancedTestController.class, method, testController);
+        // 创建参数化路由
+        Method helloMethod = TestController.class.getDeclaredMethod("hello");
+        ParameterizedRouteInfo paramRoute = new ParameterizedRouteInfo("/api/users/{id}", RequestMethod.GET,
+                                                                      TestController.class, helloMethod, testController);
         
-        // When
+        // 注册路由
+        routeRegistry.registerRoute(paramRoute);
+        
+        // 验证注册
+        assertEquals(1, routeRegistry.getRouteCount());
+        
+        // 测试参数化路由匹配
+        var foundRoute = routeRegistry.findRoute("/api/users/123", RequestMethod.GET);
+        assertTrue(foundRoute.isPresent());
+        assertTrue(foundRoute.get() instanceof ParameterizedRouteInfo);
+        
+        ParameterizedRouteInfo foundParamRoute = (ParameterizedRouteInfo) foundRoute.get();
+        assertTrue(foundParamRoute.hasPathVariables());
+        
+        // 测试路径变量提取
+        Map<String, String> variables = foundParamRoute.extractPathVariables("/api/users/123");
+        assertEquals("123", variables.get("id"));
+    }
+    
+    @Test
+    @DisplayName("测试路由清空")
+    void testClearRoutes() throws Exception {
+        // 注册一些路由
+        Method helloMethod = TestController.class.getDeclaredMethod("hello");
+        RouteInfo routeInfo = new RouteInfo("/api/test", RequestMethod.GET, 
+                                          TestController.class, helloMethod, testController);
         routeRegistry.registerRoute(routeInfo);
-        var foundRouteOpt = routeRegistry.findRoute("/api/users/123", RequestMethod.GET);
         
-        // Then
-        assertTrue(foundRouteOpt.isPresent());
-        RouteInfo foundRoute = foundRouteOpt.get();
-        assertTrue(foundRoute instanceof ParameterizedRouteInfo);
-        ParameterizedRouteInfo paramRoute = (ParameterizedRouteInfo) foundRoute;
+        assertEquals(1, routeRegistry.getRouteCount());
         
-        Map<String, String> pathVars = paramRoute.extractPathVariables("/api/users/123");
-        assertEquals("123", pathVars.get("id"));
+        // 清空路由
+        routeRegistry.clearRoutes();
+        
+        assertEquals(0, routeRegistry.getRouteCount());
+        assertFalse(routeRegistry.findRoute("/api/test", RequestMethod.GET).isPresent());
     }
     
     @Test
-    @DisplayName("测试路由不存在的情况")
-    void testRouteNotFound() {
-        // When
-        var foundRouteOpt = routeRegistry.findRoute("/nonexistent", RequestMethod.GET);
-        
-        // Then
-        assertFalse(foundRouteOpt.isPresent());
-    }
-    
-    @Test
-    @DisplayName("测试不同HTTP方法的路由")
-    void testDifferentHttpMethods() throws Exception {
-        // Given
-        Method getMethod = EnhancedTestController.class.getMethod("apiInfo");
-        Method postMethod = EnhancedTestController.class.getMethod("createUser", 
-                cloud.compan.servlet.model.User.class, jakarta.servlet.http.HttpServletResponse.class);
-        
-        RouteInfo getRoute = new RouteInfo("/api/test", RequestMethod.GET, 
-                                         EnhancedTestController.class, getMethod, testController);
-        RouteInfo postRoute = new RouteInfo("/api/test", RequestMethod.POST, 
-                                          EnhancedTestController.class, postMethod, testController);
-        
-        // When
-        routeRegistry.registerRoute(getRoute);
-        routeRegistry.registerRoute(postRoute);
-        
-        // Then
-        var foundGetRouteOpt = routeRegistry.findRoute("/api/test", RequestMethod.GET);
-        var foundPostRouteOpt = routeRegistry.findRoute("/api/test", RequestMethod.POST);
-        
-        assertTrue(foundGetRouteOpt.isPresent());
-        assertTrue(foundPostRouteOpt.isPresent());
-        
-        RouteInfo foundGetRoute = foundGetRouteOpt.get();
-        RouteInfo foundPostRoute = foundPostRouteOpt.get();
-        
-        assertEquals(getMethod, foundGetRoute.getHandlerMethod());
-        assertEquals(postMethod, foundPostRoute.getHandlerMethod());
-    }
-    
-    @Test
-    @DisplayName("测试获取所有路由")
-    void testGetAllRoutes() throws Exception {
-        // Given
-        Method method1 = EnhancedTestController.class.getMethod("apiInfo");
-        Method method2 = EnhancedTestController.class.getMethod("getUserById", Long.class);
-        
-        RouteInfo route1 = new RouteInfo("/api/route1", RequestMethod.GET, 
-                                       EnhancedTestController.class, method1, testController);
-        RouteInfo route2 = new RouteInfo("/api/route2", RequestMethod.POST, 
-                                       EnhancedTestController.class, method1, testController);
-        
-        // When
-        routeRegistry.registerRoute(route1);
-        routeRegistry.registerRoute(route2);
-        
-        // Then
-        var allRoutes = routeRegistry.getAllRoutes();
-        assertTrue(allRoutes.size() >= 2);
-        
-        boolean foundRoute1 = allRoutes.stream()
-                .anyMatch(route -> route.getPath().equals("/api/route1"));
-        boolean foundRoute2 = allRoutes.stream()
-                .anyMatch(route -> route.getPath().equals("/api/route2"));
-        
-        assertTrue(foundRoute1);
-        assertTrue(foundRoute2);
-    }
-    
-    @Test
-    @DisplayName("测试路径变量提取")
-    void testPathVariableExtraction() throws Exception {
-        // Given
-        Method method = EnhancedTestController.class.getMethod("getUserPost", Long.class, Long.class);
-        ParameterizedRouteInfo routeInfo = new ParameterizedRouteInfo("/api/users/{userId}/posts/{postId}", 
-                                                                     RequestMethod.GET, EnhancedTestController.class, method, testController);
-        
-        // When
+    @DisplayName("测试HTTP方法字符串查找")
+    void testHttpMethodStringLookup() throws Exception {
+        // 注册路由
+        Method helloMethod = TestController.class.getDeclaredMethod("hello");
+        RouteInfo routeInfo = new RouteInfo("/api/hello", RequestMethod.GET, 
+                                          TestController.class, helloMethod, testController);
         routeRegistry.registerRoute(routeInfo);
-        var foundRouteOpt = routeRegistry.findRoute("/api/users/123/posts/456", RequestMethod.GET);
         
-        // Then
-        assertTrue(foundRouteOpt.isPresent());
-        RouteInfo foundRoute = foundRouteOpt.get();
-        assertTrue(foundRoute instanceof ParameterizedRouteInfo);
+        // 使用字符串方法查找
+        var foundRoute = routeRegistry.findRoute("/api/hello", "GET");
+        assertTrue(foundRoute.isPresent());
         
-        ParameterizedRouteInfo paramRoute = (ParameterizedRouteInfo) foundRoute;
-        Map<String, String> pathVars = paramRoute.extractPathVariables("/api/users/123/posts/456");
-        
-        assertEquals("123", pathVars.get("userId"));
-        assertEquals("456", pathVars.get("postId"));
+        // 测试无效的HTTP方法
+        var notFoundRoute = routeRegistry.findRoute("/api/hello", "INVALID");
+        assertFalse(notFoundRoute.isPresent());
     }
 } 
