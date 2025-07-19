@@ -2,11 +2,16 @@ package cloud.compan.servlet.config;
 
 import cloud.compan.servlet.utils.HashUtil;
 import cloud.compan.servlet.utils.JdbcExecutor;
+import cloud.compan.servlet.utils.JsonUtils;
 import cloud.compan.servlet.utils.JwtUtil;
 import cloud.compan.servlet.utils.JwtUtilImpl;
 import cloud.compan.servlet.utils.ValidationUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import cloud.compan.servlet.repository.*;
+import cloud.compan.servlet.web.RouteRegistry;
+import cloud.compan.servlet.web.RequestDispatcher;
+import cloud.compan.servlet.web.ControllerScanner;
 
 
 import com.google.inject.AbstractModule;
@@ -33,16 +38,26 @@ public class AppModule extends AbstractModule {
         
         bind(AppModule.class).toProvider(AppConfigProvider.class).in(Singleton.class);  
         
-        
+        // ============ Web组件绑定 ============
+        // 路由分发、控制器扫描等核心Web功能
+        bind(RouteRegistry.class).in(Singleton.class);
+        bind(RequestDispatcher.class).in(Singleton.class);
+        bind(ControllerScanner.class).in(Singleton.class);
          
+        // ============ 数据层组件绑定 ============
         bind(GuiceDataSourceProvider.class);  
 
+        // ============ JSON和工具类组件绑定 ============
+        // 配置ObjectMapper为单例
+        bind(ObjectMapper.class).toInstance(createObjectMapper());
+        bind(JsonUtils.class).in(Singleton.class);
+        
         bind(JwtUtil.class).to(JwtUtilImpl.class).asEagerSingleton();
         bind(ValidationUtil.class).in(Singleton.class);
         bind(JdbcExecutor.class);  
         bind(HashUtil.class);
 
-        // Bind repositories here
+        // ============ Repository组件绑定 ============
         bind(UserRepository.class);
         bind(StorageObjectRepository.class);
         bind(UserGroupRepository.class);
@@ -81,5 +96,22 @@ public class AppModule extends AbstractModule {
      */
     public String getPassword() {  
         return db_password;  
-    }  
+    }
+    
+    /**
+     * 创建和配置ObjectMapper实例
+     */
+    private ObjectMapper createObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        
+        // 自动发现并注册模块（如时间处理模块等）
+        mapper.findAndRegisterModules();
+        
+        // 可以添加更多配置
+        // mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        // mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        
+        System.out.println("🔧 ObjectMapper配置完成");
+        return mapper;
+    }
 }

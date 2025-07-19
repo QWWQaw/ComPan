@@ -30,7 +30,7 @@ public class JdbcExecutor {
         this.dataSourceProvider = dataSourceProvider;  
     }  
 
-    @FunctionalInterface  
+    @FunctionalInterface  // 函数式接口，用于将resultset 的行数据映射到java对象
     public interface RowMapper<T> {  
         T map(ResultSet rs) throws SQLException;  
     }  
