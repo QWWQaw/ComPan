@@ -18,15 +18,11 @@ public class JwtUtilImplTest {
 
     private JwtUtilImpl jwtUtil;
 
-    private final String secretKey = "aV93YW50X3RvX2dvX2hvbWVfaV93YW50X3N1bW1lcl92YWNhdGlvbl9pX3dhbnRfbGliZXJ0eQ==";
-
-    private final long EXPIRATION_TIME = 3600000;
-
     @BeforeAll
     void setUp() {
         // Since JwtUtilImpl loads config in constructor, we instantiate it here
         // so it picks up the test application.properties
-        jwtUtil = new JwtUtilImpl(secretKey, EXPIRATION_TIME);
+        jwtUtil = new JwtUtilImpl();
     }
 
     @Test
@@ -75,7 +71,7 @@ public class JwtUtilImplTest {
         String token = jwtUtil.generateToken("testUser");
 
         // Create another instance with a different key to simulate an invalid signature
-        JwtUtilImpl otherJwtUtil = new JwtUtilImpl(secretKey, EXPIRATION_TIME) {
+        JwtUtilImpl otherJwtUtil = new JwtUtilImpl() {
             @Override
             public Claims validateToken(String t) {
                 // We can't easily change the final SECRET_KEY, so we'll just check against a bad token
@@ -97,4 +93,4 @@ public class JwtUtilImplTest {
         String malformedToken = "this.is.not.a.valid.jwt";
         assertNull(jwtUtil.validateToken(malformedToken));
     }
-}
+} 
