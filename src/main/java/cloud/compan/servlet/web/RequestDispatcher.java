@@ -41,7 +41,7 @@ public class RequestDispatcher {
             String requestPath = getRequestPath(request);
             String httpMethod = request.getMethod();
             
-            System.out.println("📥 收到请求: " + httpMethod + " " + requestPath);
+            System.out.println("收到请求: " + httpMethod + " " + requestPath);
             
             // 2. 查找匹配的路由
             Optional<RouteInfo> routeOpt = routeRegistry.findRoute(requestPath, httpMethod);
@@ -66,7 +66,7 @@ public class RequestDispatcher {
     private void handleRequest(RouteInfo routeInfo, HttpServletRequest request, 
                               HttpServletResponse response) throws Exception {
         
-        System.out.println("🎯 匹配路由: " + routeInfo);
+        System.out.println("匹配路由: " + routeInfo);
         
         try {
             // 1. 获取控制器方法
@@ -82,10 +82,10 @@ public class RequestDispatcher {
             // 4. 处理返回结果
             handleMethodResult(result, request, response);
             
-            System.out.println("✅ 请求处理成功");
+            System.out.println("请求处理成功");
             
         } catch (Exception e) {
-            System.err.println("❌ 执行控制器方法时发生错误: " + e.getMessage());
+            System.err.println("执行控制器方法时发生错误: " + e.getMessage());
             throw new RuntimeException("控制器方法执行失败", e);
         }
     }
@@ -141,7 +141,7 @@ public class RequestDispatcher {
                 }
                 
             } catch (Exception e) {
-                System.err.println("⚠️ 参数解析失败: " + parameter.getName() + " - " + e.getMessage());
+                System.err.println("参数解析失败: " + parameter.getName() + " - " + e.getMessage());
                 args[i] = null;
             }
         }
@@ -162,12 +162,12 @@ public class RequestDispatcher {
             } else {
                 // 使用JsonUtils反序列化为目标对象
                 Object result = jsonUtils.fromJson(request.getReader(), targetType);
-                System.out.println("📥 JsonUtils解析成功: " + targetType.getSimpleName());
+                System.out.println("JsonUtils解析成功: " + targetType.getSimpleName());
                 return result;
             }
         } else {
             // 其他内容类型处理（未来扩展）
-            System.err.println("⚠️ 不支持的Content-Type: " + contentType);
+            System.err.println("不支持的Content-Type: " + contentType);
             return null;
         }
     }
@@ -310,9 +310,9 @@ public class RequestDispatcher {
                 response.setContentType("application/json;charset=UTF-8");
                 String jsonResult = jsonUtils.toJson(result);
                 response.getWriter().write(jsonResult);
-                System.out.println("📤 JsonUtils序列化成功: " + result.getClass().getSimpleName());
+                System.out.println("JsonUtils序列化成功: " + result.getClass().getSimpleName());
             } catch (Exception e) {
-                System.err.println("❌ JsonUtils序列化失败: " + e.getMessage());
+                System.err.println("JsonUtils序列化失败: " + e.getMessage());
                 response.setContentType("text/plain;charset=UTF-8");
                 response.getWriter().write(result.toString());
             }
@@ -329,7 +329,7 @@ public class RequestDispatcher {
             String requestPath = getRequestPath(request);
             String httpMethod = request.getMethod();
             
-            System.err.println("❌ 404 Not Found: " + httpMethod + " " + requestPath);
+            System.err.println("404 Not Found: " + httpMethod + " " + requestPath);
             
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             response.setContentType("application/json;charset=UTF-8");
@@ -341,7 +341,7 @@ public class RequestDispatcher {
             response.getWriter().write(errorJson);
             
         } catch (IOException e) {
-            System.err.println("❌ 写入404错误响应时发生异常: " + e.getMessage());
+            System.err.println("写入404错误响应时发生异常: " + e.getMessage());
         }
     }
     
@@ -353,7 +353,7 @@ public class RequestDispatcher {
             String requestPath = getRequestPath(request);
             String httpMethod = request.getMethod();
             
-            System.err.println("❌ 500 Internal Server Error: " + httpMethod + " " + requestPath);
+            System.err.println("500 Internal Server Error: " + httpMethod + " " + requestPath);
             e.printStackTrace();
             
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -366,7 +366,7 @@ public class RequestDispatcher {
             response.getWriter().write(errorJson);
             
         } catch (IOException ioException) {
-            System.err.println("❌ 写入500错误响应时发生异常: " + ioException.getMessage());
+            System.err.println("写入500错误响应时发生异常: " + ioException.getMessage());
         }
     }
     
@@ -394,7 +394,7 @@ public class RequestDispatcher {
      * 获取支持的HTTP方法统计（调试用）
      */
     public void printSupportedRoutes() {
-        System.out.println("\n🚀 支持的路由:");
+        System.out.println("\n支持的路由:");
         routeRegistry.getAllRoutes().forEach(route -> 
             System.out.println("  " + route.getHttpMethod() + " " + route.getPath() + 
                              " -> " + route.getControllerClass().getSimpleName() + 

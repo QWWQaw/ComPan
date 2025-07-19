@@ -57,7 +57,7 @@ public class RouteRegistry {
             }
         }
         
-        System.out.println("✅ 路由注册成功: " + routeInfo);
+        System.out.println("路由注册成功: " + routeInfo);
     }
     
     /**
@@ -150,14 +150,14 @@ public class RouteRegistry {
      */
     public void clearRoutes() {
         routes.clear();
-        System.out.println("🗑️ 所有路由已清空");
+        System.out.println( "所有路由已清空");
     }
     
     /**
      * 打印所有注册的路由（用于调试）
      */
     public void printAllRoutes() {
-        System.out.println("\n📋 已注册的路由列表 (" + routes.size() + " 个):");
+        System.out.println("\n 已注册的路由列表 (" + routes.size() + " 个):");
         routes.values().forEach(route -> 
             System.out.println("  " + route));
     }
