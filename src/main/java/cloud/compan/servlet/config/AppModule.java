@@ -2,7 +2,11 @@ package cloud.compan.servlet.config;
 
 import cloud.compan.servlet.utils.HashUtil;
 import cloud.compan.servlet.utils.JdbcExecutor;
+import cloud.compan.servlet.utils.JwtUtil;
+import cloud.compan.servlet.utils.JwtUtilImpl;
 import cloud.compan.servlet.utils.ValidationUtil;
+
+import cloud.compan.servlet.repository.*;
 
 
 import com.google.inject.AbstractModule;
@@ -29,21 +33,26 @@ public class AppModule extends AbstractModule {
         
         bind(AppModule.class).toProvider(AppConfigProvider.class).in(Singleton.class);  
         
-        bind(ValidationUtil.class).in(Singleton.class);
+        
          
         bind(GuiceDataSourceProvider.class);  
+
+        bind(JwtUtil.class).to(JwtUtilImpl.class).asEagerSingleton();
+        bind(ValidationUtil.class).in(Singleton.class);
         bind(JdbcExecutor.class);  
         bind(HashUtil.class);
-        bind(cloud.compan.servlet.repository.UserRepository.class);
-        bind(cloud.compan.servlet.repository.StorageObjectRepository.class);
-        bind(cloud.compan.servlet.repository.UserGroupRepository.class);
-        bind(cloud.compan.servlet.repository.UserGroupMemberRepository.class);
-        bind(cloud.compan.servlet.repository.FolderRepository.class);
-        bind(cloud.compan.servlet.repository.FileRepository.class);
-        bind(cloud.compan.servlet.repository.AclRepository.class);
-        bind(cloud.compan.servlet.repository.ShareRepository.class);
-        bind(cloud.compan.servlet.repository.LogRepository.class);
-        bind(cloud.compan.servlet.repository.NotificationRepository.class);
+
+        // Bind repositories here
+        bind(UserRepository.class);
+        bind(StorageObjectRepository.class);
+        bind(UserGroupRepository.class);
+        bind(UserGroupMemberRepository.class);
+        bind(FolderRepository.class);
+        bind(FileRepository.class);
+        bind(AclRepository.class);
+        bind(ShareRepository.class);
+        bind(LogRepository.class);
+        bind(NotificationRepository.class);
     }
 
     public String getDefaultDataSourceName() {  
