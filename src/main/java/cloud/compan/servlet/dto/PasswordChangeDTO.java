@@ -1,9 +1,10 @@
 package cloud.compan.servlet.dto;
+
 import lombok.Data;
-import jakarta.validation.constraints.*;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import jakarta.validation.constraints.*;
 
 /**
  * 密码修改数据传输对象
@@ -14,7 +15,7 @@ import lombok.Builder;
 @AllArgsConstructor
 @Builder
 public class PasswordChangeDTO {
-
+    
     @NotBlank(message = "当前密码不能为空")
     private String oldPassword;
     
@@ -26,32 +27,6 @@ public class PasswordChangeDTO {
     
     @NotBlank(message = "确认密码不能为空")
     private String confirmPassword;
-
-    // getters 和 Setters
-
-    public String getOldPassword() {
-        return oldPassword;
-    }
-
-    public void setOldPassword(String oldPassword) {
-        this.oldPassword = oldPassword;
-    }
-
-    public String getNewPassword() {
-        return newPassword;
-    }
-
-    public void setNewPassword(String newPassword) {
-        this.newPassword = newPassword;
-    }
-
-    public String getConfirmPassword() {
-        return confirmPassword;
-    }
-
-    public void setConfirmPassword(String confirmPassword) {
-        this.confirmPassword = confirmPassword;
-    }
 
     // 验证方法
     public boolean isPasswordMatched() {

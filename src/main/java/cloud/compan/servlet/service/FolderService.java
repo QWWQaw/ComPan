@@ -144,7 +144,11 @@ public interface FolderService  {
                                                           Long targetParentFolderId, Long userId);
     
     // ============ 文件夹权限相关 ============
-    
+
+    ServiceResult<Boolean> deleteFolder(Long folderId, Long userId);
+
+    ServiceResult<Map<String, Object>> getFolderSize(Long folderId, Long userId);
+
     /**
      * 检查用户对文件夹的权限
      * @param folderId 文件夹ID

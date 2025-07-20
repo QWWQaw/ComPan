@@ -1,4 +1,5 @@
 package cloud.compan.servlet.dto;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
@@ -14,6 +15,7 @@ import jakarta.validation.constraints.*;
 @AllArgsConstructor
 @Builder
 public class StorageStatsDTO {
+
     @PositiveOrZero(message = "存储限制不能为负数")
     private long storageLimit;
 
@@ -42,30 +44,16 @@ public class StorageStatsDTO {
         this.usagePercentage = storageLimit > 0 ? (double) storageUsed / storageLimit * 100.0 : 0.0;
     }
 
-    // getters and setters
-
-    public long getStorageLimit() {
-        return storageLimit;
-    }
-
+    // 自定义setter方法以保持数据一致性
     public void setStorageLimit(long storageLimit) {
         this.storageLimit = storageLimit;
         this.availableSpace = storageLimit - storageUsed;
         this.usagePercentage = storageLimit > 0 ? (double) storageUsed / storageLimit * 100.0 : 0.0;
     }
     
-    public long getStorageUsed() {
-        return storageUsed;
-    }
-
     public void setStorageUsed(long storageUsed) {
         this.storageUsed = storageUsed;
         this.availableSpace = storageLimit - storageUsed;
         this.usagePercentage = storageLimit > 0 ? (double) storageUsed / storageLimit * 100.0 : 0.0;
     }
-
-    public int getFileCount() {
-        return fileCount;
-    }
-
 }

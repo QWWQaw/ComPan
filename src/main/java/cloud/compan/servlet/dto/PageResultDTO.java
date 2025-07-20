@@ -8,6 +8,7 @@ import jakarta.validation.constraints.*;
 import jakarta.validation.Valid;
 
 import java.util.List;
+
 /**
  * 分页结果数据传输对象
  * 封装分页查询的结果数据，用于前端展示
@@ -17,6 +18,7 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class PageResultDTO<T> {
+    
     @Valid
     private List<T> content;
     
@@ -42,14 +44,18 @@ public class PageResultDTO<T> {
         this.total = total;
         this.page = page;
         this.size = size;
-        this.totalPages = (int) Math.ceil((double) total / size);
+        calculateDerivedFields();
+    }
+
+    // 计算衍生字段
+    private void calculateDerivedFields() {
+        this.totalPages = size > 0 ? (int) Math.ceil((double) total / size) : 0;
         this.hasNext = page < totalPages;
         this.hasPrevious = page > 1;
         this.isEmpty = content == null || content.isEmpty();
     }
 
-    // getters and setters
-
+    // 自定义setter方法以保持数据一致性
     public void setContent(List<T> content) {
         this.content = content;
         this.isEmpty = content == null || content.isEmpty();
@@ -57,23 +63,38 @@ public class PageResultDTO<T> {
 
     public void setTotal(long total) {
         this.total = total;
-        this.totalPages = (int) Math.ceil((double) total / size);
-        this.hasNext = page < totalPages;
+        calculateDerivedFields();
     }
-    
 
     public void setPage(int page) {
         this.page = page;
-        this.hasNext = page < totalPages;
-        this.hasPrevious = page > 1;
+        calculateDerivedFields();
     }
 
     public void setSize(int size) {
         this.size = size;
-        this.totalPages = (int) Math.ceil((double) total / size);
-        this.hasNext = page < totalPages;
+        calculateDerivedFields();
     }
 
+    // 工具方法
+    public boolean isFirstPage() {
+        return page == 1;
+    }
 
+    public boolean isLastPage() {
+        return page == totalPages;
+    }
 
+    public int getContentSize() {
+        return content != null ? content.size() : 0;
+    }
+
+    public long getStartIndex() {
+        return (long) (page - 1) * size + 1;
+    }
+
+    public long getEndIndex() {
+        long end = (long) page * size;
+        return Math.min(end, total);
+    }
 }

@@ -97,7 +97,7 @@ public class ServiceResult<T> {
         result.setErrorCode(null);
         return result;
     }
-    
+
     /**
      * 创建成功结果（无数据）
      */
@@ -158,6 +158,27 @@ public class ServiceResult<T> {
         return result;
     }
     
+    /**
+     * 创建失败结果 - error方法别名
+     */
+    public static <T> ServiceResult<T> error(String message) {
+        return failure(message);
+    }
+
+    /**
+     * 创建失败结果（带错误代码） - error方法别名
+     */
+    public static <T> ServiceResult<T> error(String message, String errorCode) {
+        return failure(message, errorCode);
+    }
+
+    /**
+     * 创建失败结果（带错误代码和数据） - error方法别名
+     */
+    public static <T> ServiceResult<T> error(String message, String errorCode, T data) {
+        return failure(message, errorCode, data);
+    }
+
     @Override
     public String toString() {
         return "ServiceResult{" +

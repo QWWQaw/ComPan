@@ -91,73 +91,74 @@ public class SearchCriteria {
         return this;
     }
 
-    // Getters and Setters
-    public String getKeyword() {
-        return keyword;
+    // 验证方法
+    public boolean isValidPage() {
+        return page != null && page >= 1;
     }
 
-    public void setKeyword(String keyword) {
-        this.keyword = keyword;
+    public boolean isValidSize() {
+        return size != null && size >= 1 && size <= 100;
     }
 
-    public String getSortBy() {
-        return sortBy;
+    public boolean isValidSortDirection() {
+        return sortDirection != null && 
+               (sortDirection.equalsIgnoreCase("ASC") || sortDirection.equalsIgnoreCase("DESC"));
     }
 
-    public void setSortBy(String sortBy) {
-        this.sortBy = sortBy;
+    // 计算偏移量
+    public int getOffset() {
+        if (page == null || size == null) {
+            return 0;
+        }
+        return (page - 1) * size;
     }
 
-    public String getSortDirection() {
-        return sortDirection;
+    // 获取标准化的排序方向
+    public String getNormalizedSortDirection() {
+        if (sortDirection == null) {
+            return "ASC";
+        }
+        return sortDirection.toUpperCase();
     }
 
-    public void setSortDirection(String sortDirection) {
-        this.sortDirection = sortDirection;
-    }
-
-    public Integer getPage() {
-        return page;
-    }
-
-    public void setPage(Integer page) {
-        this.page = page;
-    }
-
-    public Integer getSize() {
-        return size;
-    }
-
-    public void setSize(Integer size) {
-        this.size = size;
-    }
-
-    public Object getFilters() {
-        return filters;
-    }
-
-    public void setFilters(Object filters) {
-        this.filters = filters;
-    }
-
-    /**
-     * 检查是否有关键词搜索
-     */
+    // 工具方法
     public boolean hasKeyword() {
         return keyword != null && !keyword.trim().isEmpty();
     }
 
-    /**
-     * 检查是否有排序
-     */
-    public boolean hasSort() {
+    public boolean hasSortBy() {
         return sortBy != null && !sortBy.trim().isEmpty();
     }
-    
-    /**
-     * 检查是否有扩展过滤条件
-     */
+
     public boolean hasFilters() {
         return filters != null;
     }
+
+    // 清理空白字符
+    public void trimValues() {
+        if (keyword != null) {
+            keyword = keyword.trim();
+        }
+        if (sortBy != null) {
+            sortBy = sortBy.trim();
+        }
+        if (sortDirection != null) {
+            sortDirection = sortDirection.trim().toUpperCase();
+        }
+    }
+
+    // 设置默认值
+    public void setDefaults() {
+        if (page == null || page < 1) {
+            page = 1;
+        }
+        if (size == null || size < 1 || size > 100) {
+            size = 20;
+        }
+        if (sortDirection == null || sortDirection.trim().isEmpty()) {
+            sortDirection = "ASC";
+        }
+    }
+    
+
 }
