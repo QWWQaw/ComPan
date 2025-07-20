@@ -1,41 +1,46 @@
 package cloud.compan.servlet.dto;
+
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import jakarta.validation.constraints.*;
+import jakarta.validation.Valid;
 
 /**
  * 服务层统一返回结果包装器
  * @param <T> 数据类型
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ServiceResult<T> {
     
     /**
      * 是否成功
      */
+    @NotNull(message = "成功标识不能为空")
     private boolean success;
     
     /**
      * 返回数据
      */
+    @Valid
     private T data;
     
     /**
      * 错误信息
      */
+    @Size(max = 500, message = "错误信息长度不能超过500个字符")
     private String message;
     
     /**
      * 错误代码
      */
+    @Size(max = 50, message = "错误代码长度不能超过50个字符")
     private String errorCode;
     
-    public ServiceResult() {}
-
-    public ServiceResult(boolean success, T data, String message, String errorCode) {
-        this.success = success;
-        this.data = data;
-        this.message = message;
-        this.errorCode = errorCode;
-    }
 
     // ============ Getter和Setter方法 ============
     

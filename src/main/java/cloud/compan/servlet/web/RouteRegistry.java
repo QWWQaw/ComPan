@@ -34,7 +34,8 @@ public class RouteRegistry {
      */
     public void registerRoute(RouteInfo routeInfo) {
         String routeKey = routeInfo.getRouteKey();
-        
+        System.out.println(" 注册路由: " + routeInfo.getHttpMethod()+ " " + routeInfo.getPath() + " -> " +
+                routeInfo.getControllerClass().getClass().getSimpleName() + "." + routeInfo.getHandlerMethod().getName());
         // 检查路由是否已存在
         RouteInfo existingRoute = routes.putIfAbsent(routeKey, routeInfo);
         if (existingRoute != null) {

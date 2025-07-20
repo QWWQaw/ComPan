@@ -24,23 +24,23 @@ public class FileDTO {
     @Positive(message = "上传者ID必须为正数")
     private Long uploaderId;
 
-    @Size(max = 50, message = "上传者名称长度不能超过50个字符")
+    @Size(max = 20, message = "上传者名称长度不能超过20个字符")
     private String uploaderName;
 
     @Positive(message = "文件夹ID必须为正数")
     private Long folderId;
 
-    @Size(max = 100, message = "文件夹名称长度不能超过100个字符")
+    @Size(max = 20, message = "文件夹名称长度不能超过20个字符")
     private String folderName;
 
-    @Size(max = 500, message = "文件夹路径长度不能超过500个字符")
+    @Size(max = 200, message = "文件夹路径长度不能超过200个字符")
     private String folderPath;
 
     @NotBlank(message = "文件名不能为空")
     @Size(max = 255, message = "文件名长度不能超过255个字符")
     private String fileName;
 
-    @Size(max = 100, message = "MIME类型长度不能超过100个字符")
+    @Size(max = 50, message = "MIME类型长度不能超过50个字符")
     private String mimeType;
 
     @PositiveOrZero(message = "文件大小不能为负数")

@@ -5,12 +5,12 @@ import cloud.compan.servlet.dto.ServiceResult;
 import cloud.compan.servlet.dto.LoginResultDTO;
 import cloud.compan.servlet.dto.StorageStatsDTO;
 import cloud.compan.servlet.dto.PageResultDTO;
-
+import cloud.compan.servlet.dto.SearchCriteria;
 /**
  * 用户服务接口
  * 定义用户相关的业务操作
  */
-public interface UserService extends BaseService<User, Long> {
+public interface UserService  {
     
     // ============ 用户认证相关 ============
     
@@ -89,4 +89,19 @@ public interface UserService extends BaseService<User, Long> {
      * 获取活跃用户
      */
     ServiceResult<PageResultDTO<User>> getActiveUsers(int days, int page, int size);
+
+    /**
+     * 获取所有用户
+     */
+    ServiceResult<User> findById(Long userId);
+
+    /**
+     * 删除指定id用户
+     */
+    ServiceResult<Boolean> deleteById(Long userId);
+
+    /**
+     * 分页查询用户
+     */
+    ServiceResult<PageResultDTO<User>>  findPageByCriteria(SearchCriteria criteria);
 } 

@@ -14,13 +14,13 @@ import java.util.Map;
  * 继承BaseController，处理用户认证相关的HTTP请求
  * 
  * 实现API 1.3文档中的认证路由：
- * - POST /api/v1/auth/register - 用户注册
- * - POST /api/v1/auth/login - 用户登录  
- * - POST /api/v1/auth/logout - 用户登出
- * - GET /api/v1/me/profile - 获取用户信息
- * - PUT /api/v1/me/update-profile - 更新用户信息
- * - PUT /api/v1/me/password - 修改密码
- * - GET /api/v1/me/storage-stats - 获取存储统计
+ * - POST /api/auth/register - 用户注册
+ * - POST /api/auth/login - 用户登录  
+ * - POST /api/auth/logout - 用户登出
+ * - GET /api/me/profile - 获取用户信息
+ * - PUT /api/me/update-profile - 更新用户信息
+ * - PUT /api/me/password - 修改密码
+ * - GET /api/me/storage-stats - 获取存储统计
  */
 @Controller
 @ResponseBody
@@ -29,11 +29,11 @@ public class AuthController extends BaseController {
     @Inject
     private AuthService authService;
     
-    // ============ 认证路由 /api/v1/auth/* ============
+    // ============ 认证路由 /api/auth/* ============
     
     /**
      * 用户注册
-     * POST /api/v1/auth/register
+     * POST /api/auth/register
      * 
      * 请求体示例：
      * {
@@ -42,8 +42,11 @@ public class AuthController extends BaseController {
      *   "password": "password123"
      * }
      */
-    @PostMapping(path = "/api/v1/auth/register")
+    @PostMapping(path = "/api/auth/register")
     public ApiResponseWrapper register(@RequestBody Map<String, Object> requestData) {
+        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
+        System.out.println("📥 请求参数: " + requestData);
         // 提取请求参数
         String username = (String) requestData.get("username");
         String email = (String) requestData.get("email");
@@ -70,7 +73,7 @@ public class AuthController extends BaseController {
     
     /**
      * 用户登录
-     * POST /api/v1/auth/login
+     * POST /api/auth/login
      * 
      * 请求体示例：
      * {
@@ -78,9 +81,12 @@ public class AuthController extends BaseController {
      *   "password": "password123"
      * }
      */
-    @PostMapping(path = "/api/v1/auth/login")
+    @PostMapping(path = "/api/auth/login")
     public ApiResponseWrapper login(@RequestBody Map<String, Object> requestData, 
                                    HttpServletRequest request) {
+        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
+        System.out.println("📥 请求参数: " + requestData);
         // 提取请求参数
         String username = (String) requestData.get("username");
         String password = (String) requestData.get("password");
@@ -110,11 +116,14 @@ public class AuthController extends BaseController {
     
     /**
      * 用户登出
-     * POST /api/v1/auth/logout
+     * POST /api/auth/logout
      * Authorization: Bearer <token>
      */
-    @PostMapping(path = "/api/v1/auth/logout")
+    @PostMapping(path = "/api/auth/logout")
     public ApiResponseWrapper logout(HttpServletRequest request) {
+        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
+        System.out.println("📥 请求参数: " + request.toString());
         // 从请求头中提取token
         String token = extractTokenFromRequest(request);
         
@@ -134,11 +143,14 @@ public class AuthController extends BaseController {
     
     /**
      * 刷新token
-     * POST /api/v1/auth/refresh
+     * POST /api/auth/refresh
      * Authorization: Bearer <token>
      */
-    @PostMapping(path = "/api/v1/auth/refresh")
+    @PostMapping(path = "/api/auth/refresh")
     public ApiResponseWrapper refreshToken(HttpServletRequest request) {
+        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
+        System.out.println("📥 请求参数: " + request.toString());
         String token = extractTokenFromRequest(request);
         
         if (token == null) {
@@ -149,15 +161,18 @@ public class AuthController extends BaseController {
         return handleServiceResult(result);
     }
     
-    // ============ 个人信息路由 /api/v1/me/* ============
+    // ============ 个人信息路由 /api/me/* ============
     
     /**
      * 获取当前用户信息
-     * GET /api/v1/me/profile
+     * GET /api/me/profile
      * Authorization: Bearer <token>
      */
-    @GetMapping(path = "/api/v1/me/profile")
+    @GetMapping(path = "/api/me/profile")
     public ApiResponseWrapper getProfile(HttpServletRequest request) {
+        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
+        System.out.println("📥 请求参数: " + request.toString());
         String token = extractTokenFromRequest(request);
         
         if (token == null) {
@@ -175,7 +190,7 @@ public class AuthController extends BaseController {
     
     /**
      * 更新用户基本信息
-     * PUT /api/v1/me/update-profile
+     * PUT /api/me/update-profile
      * Authorization: Bearer <token>
      * 
      * 请求体示例：
@@ -184,9 +199,12 @@ public class AuthController extends BaseController {
      *   "email": "new_email@example.com"
      * }
      */
-    @PutMapping(path = "/api/v1/me/update-profile")
+    @PutMapping(path = "/api/me/update-profile")
     public ApiResponseWrapper updateProfile(@RequestBody Map<String, Object> requestData,
                                           HttpServletRequest request) {
+        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
+        System.out.println("📥 请求参数: " + requestData);
         String token = extractTokenFromRequest(request);
         
         if (token == null) {
@@ -223,7 +241,7 @@ public class AuthController extends BaseController {
     
     /**
      * 修改密码
-     * PUT /api/v1/me/password
+     * PUT /api/me/password
      * Authorization: Bearer <token>
      * 
      * 请求体示例：
@@ -232,9 +250,12 @@ public class AuthController extends BaseController {
      *   "new_password": "new_password456"
      * }
      */
-    @PutMapping(path = "/api/v1/me/password")
+    @PutMapping(path = "/api/me/password")
     public ApiResponseWrapper changePassword(@RequestBody Map<String, Object> requestData,
                                            HttpServletRequest request) {
+        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
+        System.out.println("📥 请求参数: " + requestData);
         String token = extractTokenFromRequest(request);
         
         if (token == null) {
@@ -274,11 +295,14 @@ public class AuthController extends BaseController {
     
     /**
      * 获取存储统计信息
-     * GET /api/v1/me/storage-stats
+     * GET /api/me/storage-stats
      * Authorization: Bearer <token>
      */
-    @GetMapping(path = "/api/v1/me/storage-stats")
+    @GetMapping(path = "/api/me/storage-stats")
     public ApiResponseWrapper getStorageStats(HttpServletRequest request) {
+        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
+        System.out.println("📥 请求参数: " + request.toString());
         String token = extractTokenFromRequest(request);
         
         if (token == null) {
@@ -313,11 +337,14 @@ public class AuthController extends BaseController {
     
     /**
      * 获取用户活动日志
-     * GET /api/v1/me/activity-log?page=1&per_page=20&operation=upload
+     * GET /api/me/activity-log?page=1&per_page=20&operation=upload
      * Authorization: Bearer <token>
      */
-    @GetMapping(path = "/api/v1/me/activity-log")
+    @GetMapping(path = "/api/me/activity-log")
     public ApiResponseWrapper getActivityLog(HttpServletRequest request) {
+        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
+        System.out.println("📥 请求参数: " + request.toString());
         String token = extractTokenFromRequest(request);
         
         if (token == null) {
