@@ -1,9 +1,12 @@
 package cloud.compan.servlet.dto;
+import lombok.Data;
 
 /**
  * 密码修改数据传输对象
  * 用于接收用户密码修改请求的数据
  */
+import lombok.Data;
+
 public class PasswordChangeDTO {
     private String oldPassword;
     private String newPassword;

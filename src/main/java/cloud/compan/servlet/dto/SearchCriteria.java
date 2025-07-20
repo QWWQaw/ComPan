@@ -1,9 +1,12 @@
 package cloud.compan.servlet.dto;
+import lombok.Data;
 
 /**
  * 通用查询条件封装类
  * 用于封装各种查询参数，支持分页、排序、关键词搜索等
  */
+import lombok.Data;
+
 public class SearchCriteria {
     
     /**

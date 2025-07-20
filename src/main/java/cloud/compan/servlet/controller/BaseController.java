@@ -1,392 +1,310 @@
 package cloud.compan.servlet.controller;
 
+import cloud.compan.servlet.dto.PageResultDTO;
+import cloud.compan.servlet.dto.SearchCriteria;
+import cloud.compan.servlet.dto.ServiceResult;
+import cloud.compan.servlet.web.exception.HttpExceptions;
+import cloud.compan.servlet.web.response.ApiResponseWrapper;
+import cloud.compan.servlet.web.response.ValidationError;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import java.time.Instant;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 基础控制器接口
- * 定义控制器层的通用方法和响应格式规范
- * 响应格式遵循API文档v1.2标准
+ * 控制器基类
+ * 提供通用的响应处理、分页、验证等功能
  */
-public interface BaseController {
-    
-    // ============ 标准响应格式 ============
+public abstract class BaseController {
     
     /**
-     * 成功响应
-     * @param data 响应数据
-     * @return 标准响应格式
+     * 处理ServiceResult并转换为ApiResponse
      */
-    default ApiResponse<Object> success(Object data) {
-        return new ApiResponse<>(true, 200, "操作成功", data);
+    protected ApiResponseWrapper handleServiceResult(ServiceResult<?> serviceResult) {
+        if (serviceResult.isSuccess()) {
+            return ApiResponseWrapper.success(serviceResult.getMessage(), serviceResult.getData());
+        } else {
+            // 根据错误码选择合适的HTTP状态码
+            int httpStatus = mapErrorCodeToHttpStatus(serviceResult.getErrorCode());
+            return ApiResponseWrapper.error(httpStatus, serviceResult.getMessage());
+        }
     }
     
     /**
-     * 成功响应（无数据）
-     * @param message 成功消息
-     * @return 标准响应格式
+     * 处理创建操作的ServiceResult
      */
-    default ApiResponse<Object> success(String message) {
-        return new ApiResponse<>(true, 200, message, null);
+    protected ApiResponseWrapper handleCreateResult(ServiceResult<?> serviceResult) {
+        if (serviceResult.isSuccess()) {
+            return ApiResponseWrapper.created(serviceResult.getMessage(), serviceResult.getData());
+        } else {
+            int httpStatus = mapErrorCodeToHttpStatus(serviceResult.getErrorCode());
+            return ApiResponseWrapper.error(httpStatus, serviceResult.getMessage());
+        }
+    }
+    
+    /**
+     * 处理分页查询结果
+     */
+    protected ApiResponseWrapper handlePageResult(ServiceResult<PageResultDTO<?>> serviceResult) {
+        if (serviceResult.isSuccess()) {
+            PageResultDTO<?> pageResult = serviceResult.getData();
+            return ApiResponseWrapper.success("查询成功", pageResult);
+        } else {
+            int httpStatus = mapErrorCodeToHttpStatus(serviceResult.getErrorCode());
+            return ApiResponseWrapper.error(httpStatus, serviceResult.getMessage());
+        }
+    }
+    
+    /**
+     * 成功响应 - 无数据
+     */
+    protected ApiResponseWrapper success() {
+        return ApiResponseWrapper.success("操作成功");
+    }
+    
+    /**
+     * 成功响应 - 带数据
+     */
+    protected ApiResponseWrapper success(Object data) {
+        return ApiResponseWrapper.success(data);
+    }
+    
+    /**
+     * 成功响应 - 带消息和数据
+     */
+    protected ApiResponseWrapper success(String message, Object data) {
+        return ApiResponseWrapper.success(message, data);
     }
     
     /**
      * 创建成功响应
-     * @param data 创建的数据
-     * @return 标准响应格式
      */
-    default ApiResponse<Object> created(Object data) {
-        return new ApiResponse<>(true, 201, "创建成功", data);
+    protected ApiResponseWrapper created(Object data) {
+        return ApiResponseWrapper.created(data);
     }
     
     /**
-     * 创建成功响应
-     * @param message 创建成功消息
-     * @param data 创建的数据
-     * @return 标准响应格式
+     * 创建成功响应 - 带消息
      */
-    default ApiResponse<Object> created(String message, Object data) {
-        return new ApiResponse<>(true, 201, message, data);
+    protected ApiResponseWrapper created(String message, Object data) {
+        return ApiResponseWrapper.created(message, data);
     }
     
     /**
-     * 失败响应
-     * @param code 错误码
-     * @param message 错误消息
-     * @return 标准响应格式
+     * 错误响应
      */
-    default ApiResponse<Object> error(int code, String message) {
-        return new ApiResponse<>(false, code, message, null);
+    protected ApiResponseWrapper error(String message) {
+        return ApiResponseWrapper.error(400, message);
     }
     
     /**
-     * 失败响应（带错误详情）
-     * @param code 错误码
-     * @param message 错误消息
-     * @param errorData 错误详情数据
-     * @return 标准响应格式
+     * 错误响应 - 带状态码
      */
-    default ApiResponse<Object> error(int code, String message, Object errorData) {
-        return new ApiResponse<>(false, code, message, errorData);
+    protected ApiResponseWrapper error(int code, String message) {
+        return ApiResponseWrapper.error(code, message);
     }
     
     /**
-     * 参数验证失败 - 400
-     * @param message 验证失败消息
-     * @return 标准响应格式
+     * 验证错误响应
      */
-    default ApiResponse<Object> badRequest(String message) {
-        return error(400, message);
+    protected ApiResponseWrapper validationError(String message, List<ValidationError> errors) {
+        return ApiResponseWrapper.validationError(message, errors);
     }
     
     /**
-     * 参数验证失败 - 400（带验证错误详情）
-     * @param message 验证失败消息
-     * @param validationErrors 验证错误列表
-     * @return 标准响应格式
+     * 验证单个字段错误
      */
-    default ApiResponse<Object> badRequest(String message, List<ValidationError> validationErrors) {
-        Map<String, Object> errorData = new HashMap<>();
-        errorData.put("errors", validationErrors);
-        return error(400, message, errorData);
+    protected ApiResponseWrapper validationError(String field, String message) {
+        List<ValidationError> errors = new ArrayList<>();
+        errors.add(new ValidationError(field, message));
+        return validationError("参数验证失败", errors);
     }
     
     /**
-     * 未认证 - 401
-     * @param message 错误消息
-     * @return 标准响应格式
+     * 解析分页参数
      */
-    default ApiResponse<Object> unauthorized(String message) {
-        return error(401, message != null ? message : "未认证");
+    protected SearchCriteria parseSearchCriteria(HttpServletRequest request) {
+        try {
+            int page = parseIntParam(request, "page", 1);
+            int size = parseIntParam(request, "size", 20);
+            String search = request.getParameter("search");
+            String sort = request.getParameter("sort");
+            String order = request.getParameter("order");
+            
+            // 验证分页参数
+            if (page < 1) {
+                throw HttpExceptions.badRequest("页码必须大于0");
+            }
+            if (size < 1 || size > 100) {
+                throw HttpExceptions.badRequest("每页大小必须在1-100之间");
+            }
+            
+            return new SearchCriteria()
+                .keyword(search)
+                .sortBy(sort)
+                .sortDirection(order)
+                .page(page)
+                .size(size);
+            
+        } catch (Exception e) {
+            throw HttpExceptions.badRequest("分页参数解析失败: " + e.getMessage());
+        }
     }
     
     /**
-     * 权限不足 - 403
-     * @param message 错误消息
-     * @return 标准响应格式
+     * 解析整数参数
      */
-    default ApiResponse<Object> forbidden(String message) {
-        return error(403, message != null ? message : "权限不足");
+    protected int parseIntParam(HttpServletRequest request, String paramName, int defaultValue) {
+        String value = request.getParameter(paramName);
+        if (value == null || value.trim().isEmpty()) {
+            return defaultValue;
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException e) {
+            throw HttpExceptions.badRequest("参数 '" + paramName + "' 必须是有效的整数");
+        }
     }
     
     /**
-     * 资源不存在 - 404
-     * @param message 错误消息
-     * @return 标准响应格式
+     * 解析长整数参数
      */
-    default ApiResponse<Object> notFound(String message) {
-        return error(404, message != null ? message : "资源不存在");
+    protected long parseLongParam(HttpServletRequest request, String paramName, long defaultValue) {
+        String value = request.getParameter(paramName);
+        if (value == null || value.trim().isEmpty()) {
+            return defaultValue;
+        }
+        try {
+            return Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            throw HttpExceptions.badRequest("参数 '" + paramName + "' 必须是有效的长整数");
+        }
     }
     
     /**
-     * 资源冲突 - 409
-     * @param message 冲突消息
-     * @return 标准响应格式
+     * 解析布尔参数
      */
-    default ApiResponse<Object> conflict(String message) {
-        return error(409, message);
+    protected boolean parseBooleanParam(HttpServletRequest request, String paramName, boolean defaultValue) {
+        String value = request.getParameter(paramName);
+        if (value == null || value.trim().isEmpty()) {
+            return defaultValue;
+        }
+        return Boolean.parseBoolean(value);
     }
     
     /**
-     * 请求实体过大 - 413
-     * @param message 错误消息
-     * @return 标准响应格式
+     * 验证必需参数
      */
-    default ApiResponse<Object> payloadTooLarge(String message) {
-        return error(413, message != null ? message : "请求实体过大");
+    protected void requireNonNull(Object value, String paramName) {
+        if (value == null) {
+            throw HttpExceptions.badRequest("参数 '" + paramName + "' 不能为空");
+        }
     }
     
     /**
-     * 参数验证失败 - 422
-     * @param message 验证失败消息
-     * @return 标准响应格式
+     * 验证字符串参数
      */
-    default ApiResponse<Object> unprocessableEntity(String message) {
-        return error(422, message != null ? message : "参数验证失败");
+    protected void requireNonEmpty(String value, String paramName) {
+        if (value == null || value.trim().isEmpty()) {
+            throw HttpExceptions.badRequest("参数 '" + paramName + "' 不能为空");
+        }
     }
     
     /**
-     * 请求过于频繁 - 429
-     * @param message 限流消息
-     * @return 标准响应格式
+     * 验证字符串长度
      */
-    default ApiResponse<Object> tooManyRequests(String message) {
-        return error(429, message != null ? message : "请求过于频繁");
-    }
-    
-    /**
-     * 服务器内部错误 - 500
-     * @param message 错误消息
-     * @return 标准响应格式
-     */
-    default ApiResponse<Object> internalError(String message) {
-        return error(500, message != null ? message : "服务器内部错误");
-    }
-    
-    // ============ 分页响应 ============
-    
-    /**
-     * 分页响应
-     * @param items 数据列表
-     * @param currentPage 当前页码
-     * @param perPage 每页大小
-     * @param totalItems 总记录数
-     * @return 分页响应格式
-     */
-    default ApiResponse<Object> pageResponse(Object items, int currentPage, int perPage, long totalItems) {
-        Map<String, Object> data = new HashMap<>();
-        data.put("items", items);
-        data.put("pagination", new PaginationInfo(currentPage, perPage, totalItems));
-        return success(data);
-    }
-    
-    /**
-     * 分页响应（带消息）
-     * @param message 成功消息
-     * @param items 数据列表
-     * @param currentPage 当前页码
-     * @param perPage 每页大小
-     * @param totalItems 总记录数
-     * @return 分页响应格式
-     */
-    default ApiResponse<Object> pageResponse(String message, Object items, int currentPage, int perPage, long totalItems) {
-        Map<String, Object> data = new HashMap<>();
-        data.put("items", items);
-        data.put("pagination", new PaginationInfo(currentPage, perPage, totalItems));
-        return new ApiResponse<>(true, 200, message, data);
-    }
-    
-    // ============ 工具方法 ============
-    
-    /**
-     * 获取当前用户ID（从请求中）
-     * @param request HTTP请求
-     * @return 用户ID，如果未登录返回null
-     */
-    default Long getCurrentUserId(HttpServletRequest request) {
-        // 优先从JWT token中获取（后续实现）
-        // TODO: 从JWT token或session中获取用户ID
+    protected void validateStringLength(String value, String paramName, int minLength, int maxLength) {
+        if (value == null) return;
         
-        // 临时从header中获取
-        String userIdHeader = request.getHeader("X-User-ID");
-        if (userIdHeader != null) {
-            try {
-                return Long.parseLong(userIdHeader);
-            } catch (NumberFormatException e) {
-                return null;
+        int length = value.length();
+        if (length < minLength || length > maxLength) {
+            throw HttpExceptions.badRequest(
+                String.format("参数 '%s' 长度必须在%d-%d之间，当前长度: %d", 
+                    paramName, minLength, maxLength, length));
+        }
+    }
+    
+    /**
+     * 验证邮箱格式
+     */
+    protected void validateEmail(String email, String paramName) {
+        if (email == null || email.trim().isEmpty()) return;
+        
+        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+        if (!email.matches(emailRegex)) {
+            throw HttpExceptions.badRequest("参数 '" + paramName + "' 不是有效的邮箱格式");
+        }
+    }
+    
+    /**
+     * 获取客户端IP地址
+     */
+    protected String getClientIP(HttpServletRequest request) {
+        String[] headers = {
+            "X-Forwarded-For", "X-Real-IP", "Proxy-Client-IP", 
+            "WL-Proxy-Client-IP", "HTTP_CLIENT_IP", "HTTP_X_FORWARDED_FOR"
+        };
+        
+        for (String header : headers) {
+            String ip = request.getHeader(header);
+            if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
+                if (ip.contains(",")) {
+                    ip = ip.split(",")[0];
+                }
+                return ip.trim();
             }
         }
-        return null;
+        return request.getRemoteAddr();
     }
     
     /**
-     * 获取当前用户名（从请求中）
-     * @param request HTTP请求
-     * @return 用户名，如果未登录返回null
+     * 获取User-Agent
      */
-    default String getCurrentUsername(HttpServletRequest request) {
-        // TODO: 从JWT token中获取用户名
-        return request.getHeader("X-Username");
+    protected String getUserAgent(HttpServletRequest request) {
+        return request.getHeader("User-Agent");
     }
     
     /**
-     * 检查用户是否已登录
-     * @param request HTTP请求
-     * @return 是否已登录
+     * 将错误码映射为HTTP状态码
      */
-    default boolean isAuthenticated(HttpServletRequest request) {
-        return getCurrentUserId(request) != null;
-    }
-    
-    /**
-     * 检查必需参数
-     * @param params 参数map
-     * @param requiredFields 必需字段
-     * @throws IllegalArgumentException 如果参数缺失
-     */
-    default void validateRequiredFields(Map<String, Object> params, String... requiredFields) {
-        for (String field : requiredFields) {
-            if (params == null || !params.containsKey(field) || params.get(field) == null) {
-                throw new IllegalArgumentException("缺少必需参数: " + field);
-            }
-        }
-    }
-    
-    /**
-     * 检查分页参数
-     * @param page 页码
-     * @param perPage 每页大小
-     * @return 标准化的分页参数
-     */
-    default PageParams validatePageParams(Integer page, Integer perPage) {
-        int validPage = (page == null || page < 1) ? 1 : page;
-        int validPerPage = (perPage == null || perPage < 1) ? 20 : Math.min(perPage, 100); // 最大100条
-        return new PageParams(validPage, validPerPage);
-    }
-    
-    /**
-     * 设置HTTP响应状态码
-     * @param response HTTP响应
-     * @param statusCode 状态码
-     */
-    default void setResponseStatus(HttpServletResponse response, int statusCode) {
-        response.setStatus(statusCode);
-    }
-    
-    // ============ 响应数据类 ============
-    
-    /**
-     * 标准API响应格式（符合API文档v1.2）
-     */
-    class ApiResponse<T> {
-        private boolean success;
-        private int code;
-        private String message;
-        private T data;
-        private String timestamp;
+    private int mapErrorCodeToHttpStatus(String errorCode) {
+        if (errorCode == null) return 500;
         
-        public ApiResponse(boolean success, int code, String message, T data) {
-            this.success = success;
-            this.code = code;
-            this.message = message;
-            this.data = data;
-            this.timestamp = Instant.now().toString();
-        }
-        
-        // Getters
-        public boolean isSuccess() { return success; }
-        public int getCode() { return code; }
-        public String getMessage() { return message; }
-        public T getData() { return data; }
-        public String getTimestamp() { return timestamp; }
-    }
-    
-    /**
-     * 分页信息（符合API文档格式）
-     */
-    class PaginationInfo {
-        private int currentPage;
-        private int perPage;
-        private long totalItems;
-        private int totalPages;
-        private boolean hasNext;
-        private boolean hasPrev;
-        private Integer nextPage;
-        private Integer prevPage;
-        
-        public PaginationInfo(int currentPage, int perPage, long totalItems) {
-            this.currentPage = currentPage;
-            this.perPage = perPage;
-            this.totalItems = totalItems;
-            this.totalPages = (int) Math.ceil((double) totalItems / perPage);
-            this.hasNext = currentPage < totalPages;
-            this.hasPrev = currentPage > 1;
-            this.nextPage = hasNext ? currentPage + 1 : null;
-            this.prevPage = hasPrev ? currentPage - 1 : null;
-        }
-        
-        // Getters
-        public int getCurrentPage() { return currentPage; }
-        public int getPerPage() { return perPage; }
-        public long getTotalItems() { return totalItems; }
-        public int getTotalPages() { return totalPages; }
-        public boolean isHasNext() { return hasNext; }
-        public boolean isHasPrev() { return hasPrev; }
-        public Integer getNextPage() { return nextPage; }
-        public Integer getPrevPage() { return prevPage; }
-    }
-    
-    /**
-     * 验证错误信息
-     */
-    class ValidationError {
-        private String field;
-        private String message;
-        
-        public ValidationError(String field, String message) {
-            this.field = field;
-            this.message = message;
-        }
-        
-        // Getters
-        public String getField() { return field; }
-        public String getMessage() { return message; }
-    }
-    
-    /**
-     * 分页参数
-     */
-    class PageParams {
-        private int page;
-        private int perPage;
-        
-        public PageParams(int page, int perPage) {
-            this.page = page;
-            this.perPage = perPage;
-        }
-        
-        // Getters
-        public int getPage() { return page; }
-        public int getPerPage() { return perPage; }
-        
-        /**
-         * 计算数据库查询的偏移量
-         * @return 偏移量
-         */
-        public int getOffset() {
-            return (page - 1) * perPage;
-        }
-        
-        /**
-         * 获取查询限制数量
-         * @return 限制数量
-         */
-        public int getLimit() {
-            return perPage;
+        switch (errorCode) {
+            case "VALIDATION_ERROR":
+            case "INVALID_PARAMETER":
+                return 400; // Bad Request
+                
+            case "UNAUTHORIZED":
+            case "INVALID_CREDENTIALS":
+                return 401; // Unauthorized
+                
+            case "FORBIDDEN":
+            case "ACCESS_DENIED":
+                return 403; // Forbidden
+                
+            case "NOT_FOUND":
+            case "USER_NOT_FOUND":
+            case "RESOURCE_NOT_FOUND":
+                return 404; // Not Found
+                
+            case "CONFLICT":
+            case "DUPLICATE_ENTRY":
+            case "USERNAME_EXISTS":
+            case "EMAIL_EXISTS":
+                return 409; // Conflict
+                
+            case "QUOTA_EXCEEDED":
+            case "STORAGE_FULL":
+                return 413; // Payload Too Large
+                
+            case "UNSUPPORTED_OPERATION":
+                return 415; // Unsupported Media Type
+                
+            case "RATE_LIMIT_EXCEEDED":
+                return 429; // Too Many Requests
+                
+            default:
+                return 500; // Internal Server Error
         }
     }
 } 

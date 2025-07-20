@@ -1,9 +1,11 @@
 package cloud.compan.servlet.dto;
+import lombok.Data;
 
 /**
  * 服务层统一返回结果包装器
  * @param <T> 数据类型
  */
+@Data
 public class ServiceResult<T> {
     
     /**

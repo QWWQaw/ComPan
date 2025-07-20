@@ -12,8 +12,8 @@ import java.net.URL;
 import java.util.*;
 
 /**
- * 控制器扫描器 - 自动发现和注册控制器
- * 扫描指定包下的@Controller类，提取@RequestMapping信息并注册路由
+ * 增强的控制器扫描器
+ * 自动发现和注册控制器，支持所有HTTP映射注解
  */
 @Singleton
 public class ControllerScanner {
@@ -21,7 +21,6 @@ public class ControllerScanner {
     private final Injector injector;
     private final RouteRegistry routeRegistry;
     
-    // 注解，容器选择如何找到参数对象并且注入
     @Inject
     public ControllerScanner(Injector injector, RouteRegistry routeRegistry) {
         this.injector = injector;
@@ -68,7 +67,7 @@ public class ControllerScanner {
             // 1. 从Guice获取控制器实例
             Object controllerInstance = injector.getInstance(controllerClass);
             
-            // 2. 获取类级别的@RequestMapping
+            // 2. 获取类级别的路径前缀
             String classPath = getClassLevelPath(controllerClass);
             
             // 3. 扫描所有处理方法
@@ -90,81 +89,39 @@ public class ControllerScanner {
     }
     
     /**
-     * 从方法提取路由信息
+     * 从方法提取路由信息 - 使用统一的映射处理
      */
     private List<RouteInfo> extractMethodRoutes(Class<?> controllerClass, Method method, 
                                                Object controllerInstance, String classPath) {
         List<RouteInfo> routes = new ArrayList<>();
         
-        // 1. 检查@RequestMapping
+        // 1. 处理@RequestMapping（支持多个HTTP方法）
         if (method.isAnnotationPresent(RequestMapping.class)) {
             RequestMapping mapping = method.getAnnotation(RequestMapping.class);
-            routes.addAll(createRoutesFromRequestMapping(
-                controllerClass, method, controllerInstance, classPath, mapping));
+            MappingWrapper[] wrappers = MappingWrapper.fromRequestMapping(mapping);
+            
+            for (MappingWrapper wrapper : wrappers) {
+                String fullPath = combinePaths(classPath, wrapper.getPath());
+                routes.add(new ParameterizedRouteInfo(fullPath, wrapper.getHttpMethod(), 
+                                                    controllerClass, method, controllerInstance));
+            }
         }
         
-        // 2. 检查@GetMapping
-        if (method.isAnnotationPresent(GetMapping.class)) {
-            GetMapping mapping = method.getAnnotation(GetMapping.class);
-            String fullPath = combinePaths(classPath, mapping.path());
-            routes.add(new ParameterizedRouteInfo(fullPath, RequestMethod.GET, 
-                                                controllerClass, method, controllerInstance));
-        }
-        
-        // 3. 检查@PostMapping
-        if (method.isAnnotationPresent(PostMapping.class)) {
-            PostMapping mapping = method.getAnnotation(PostMapping.class);
-            String fullPath = combinePaths(classPath, mapping.path());
-            routes.add(new ParameterizedRouteInfo(fullPath, RequestMethod.POST, 
-                                                controllerClass, method, controllerInstance));
-        }
-        
-        // 4. 检查@PutMapping
-        if (method.isAnnotationPresent(PutMapping.class)) {
-            PutMapping mapping = method.getAnnotation(PutMapping.class);
-            String fullPath = combinePaths(classPath, mapping.path());
-            routes.add(new ParameterizedRouteInfo(fullPath, RequestMethod.PUT, 
-                                                controllerClass, method, controllerInstance));
-        }
-        
-        // 5. 检查@DeleteMapping
-        if (method.isAnnotationPresent(DeleteMapping.class)) {
-            DeleteMapping mapping = method.getAnnotation(DeleteMapping.class);
-            String fullPath = combinePaths(classPath, mapping.path());
-            routes.add(new ParameterizedRouteInfo(fullPath, RequestMethod.DELETE, 
-                                                controllerClass, method, controllerInstance));
+        // 2. 处理特定HTTP方法的映射注解
+        if (MappingWrapper.hasHttpMapping(method)) {
+            MappingWrapper wrapper = MappingWrapper.fromMethod(method);
+            if (wrapper != null) {
+                String fullPath = combinePaths(classPath, wrapper.getPath());
+                routes.add(new ParameterizedRouteInfo(fullPath, wrapper.getHttpMethod(), 
+                                                    controllerClass, method, controllerInstance));
+            }
         }
         
         return routes;
     }
     
     /**
-     * 从@RequestMapping创建路由信息
-     */
-    private List<RouteInfo> createRoutesFromRequestMapping(Class<?> controllerClass, Method method,
-                                                          Object controllerInstance, String classPath,
-                                                          RequestMapping mapping) {
-        List<RouteInfo> routes = new ArrayList<>();
-        String fullPath = combinePaths(classPath, mapping.path());
-        
-        // 如果没有指定HTTP方法，默认支持所有方法
-        RequestMethod[] methods = mapping.method();
-        if (methods.length == 0) {
-            methods = new RequestMethod[]{RequestMethod.GET, RequestMethod.POST, 
-                                        RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.PATCH};
-        }
-        
-        // 为每个HTTP方法创建路由
-        for (RequestMethod httpMethod : methods) {
-            routes.add(new ParameterizedRouteInfo(fullPath, httpMethod, 
-                                                controllerClass, method, controllerInstance));
-        }
-        
-        return routes;
-    }
-    
-    /**
-     * 获取类级别的路径
+     * 获取类级别的路径前缀
      */
     private String getClassLevelPath(Class<?> controllerClass) {
         // 检查@RequestMapping
@@ -193,7 +150,7 @@ public class ControllerScanner {
     }
     
     /**
-     * 检查类是否为控制器, 含有注解@Controller就是控制器
+     * 检查类是否为控制器
      */
     private boolean isController(Class<?> clazz) {
         return clazz.isAnnotationPresent(Controller.class);
@@ -241,5 +198,18 @@ public class ControllerScanner {
                 }
             }
         }
+    }
+    
+    /**
+     * 获取所有支持的HTTP映射注解信息
+     */
+    public void printSupportedMappings() {
+        System.out.println("\n支持的HTTP映射注解:");
+        System.out.println("  @GetMapping - GET请求");
+        System.out.println("  @PostMapping - POST请求");
+        System.out.println("  @PutMapping - PUT请求");
+        System.out.println("  @DeleteMapping - DELETE请求");
+        System.out.println("  @PatchMapping - PATCH请求");
+        System.out.println("  @RequestMapping - 通用映射（支持多种HTTP方法）");
     }
 } 

@@ -1,9 +1,11 @@
 package cloud.compan.servlet.dto;
+import lombok.Data;
 
 /**
  * 存储统计数据传输对象
  * 封装用户存储使用情况的统计信息
  */
+@Data
 public class StorageStatsDTO {
     private long storageLimit;
     private long storageUsed;

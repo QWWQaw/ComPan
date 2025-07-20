@@ -9,6 +9,9 @@ import cloud.compan.servlet.utils.ValidationUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import cloud.compan.servlet.repository.*;
+import cloud.compan.servlet.service.AuthService;
+import cloud.compan.servlet.service.FileService;
+import cloud.compan.servlet.service.UserService;
 import cloud.compan.servlet.web.RouteRegistry;
 import cloud.compan.servlet.web.RequestDispatcher;
 import cloud.compan.servlet.web.ControllerScanner;
@@ -43,7 +46,7 @@ public class AppModule extends AbstractModule {
         bind(RouteRegistry.class).in(Singleton.class);
         bind(RequestDispatcher.class).in(Singleton.class);
         bind(ControllerScanner.class).in(Singleton.class);
-        bind(cloud.compan.servlet.web.JsonHttpMessageConverter.class).in(Singleton.class);
+        bind(cloud.compan.servlet.converter.JsonHttpMessageConverter.class).in(Singleton.class);
          
         // ============ 数据层组件绑定 ============
         bind(GuiceDataSourceProvider.class);  
@@ -69,6 +72,11 @@ public class AppModule extends AbstractModule {
         bind(ShareRepository.class);
         bind(LogRepository.class);
         bind(NotificationRepository.class);
+        
+        // ============ Service层组件绑定 ============
+        bind(UserService.class).to(cloud.compan.servlet.service.impl.UserServiceImpl.class).in(Singleton.class);
+        bind(AuthService.class).in(Singleton.class);  // AuthService的实现类将在以后添加
+        bind(FileService.class).in(Singleton.class);  // FileService的实现类将在以后添加
     }
 
     public String getDefaultDataSourceName() {  
