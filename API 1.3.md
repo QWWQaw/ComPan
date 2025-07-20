@@ -115,8 +115,6 @@ https://api.kepan.com/api/v1
       "total_pages": 5,
       "has_next": true,
       "has_prev": false,
-      "next_page": 2,
-      "prev_page": null
     }
   }
 }
@@ -214,7 +212,7 @@ Content-Type: application/json
   "timestamp": "2025-07-17T10:30:00Z"
 
 }
-// 失败响应 - 账户被禁用（注：实际实现中可能通过其他方式管理用户状态）
+// 失败响应 - 账户被禁用
 {
   "success": false,
   "code": 403,
@@ -254,9 +252,9 @@ Authorization: Bearer <token>
   "success": true,
   "code": 200,
   "message": "获取用户信息成功",
-  "data": {
-    "user_id": 123,
-        "username": "john_doe",
+    "data": {
+    "user_id": 123,
+    "username": "john_doe",
     "email": "john@example.com",
     "storage_limit": 10737418240,
     "storage_used": 1073741824,
@@ -290,14 +288,14 @@ Content-Type: application/json
   "success": true,
   "code": 200,
   "message": "用户信息更新成功",
-  "data": {
-    "user_id": 123,
-        "username": "john_doe_new",
+    "data": {
+    "user_id": 123,
+    "username": "john_doe_new",
     "email": "newemail@example.com",
     "storage_limit": 10737418240,
     "storage_used": 1073741824,
     "updated_at": "2025-07-17T10:30:00Z" // 用户信息更改，更新updated_at
-  },
+  },
   "timestamp": "2025-07-17T10:30:00Z"
 }
 ```
@@ -415,8 +413,6 @@ Authorization: Bearer <token>
       "total_pages": 8,
       "has_next": true,
       "has_prev": false,
-      "next_page": 1,
-      "pre_page": 2
     }
   },
   "timestamp": "2025-07-17T10:30:00Z"
@@ -556,8 +552,8 @@ Authorization: Bearer <token>
     "file_id": 123,
     "file_name": "name",
     "mime_type": "type",
-    "status": true,
-    "created": "2025-07-17T10:30:00Z",
+    "status": "active",
+    "created_at": "2025-07-17T10:30:00Z",
     "updated_at": "2025-07-17T10:30:00Z"
   },
   "timestamp": "2025-07-17T10:30:00Z"

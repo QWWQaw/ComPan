@@ -1,57 +1,30 @@
-package cloud.compan.servlet.model;
-
-import cloud.compan.servlet.annotations.Entity;
-import cloud.compan.servlet.annotations.Table;
-import cloud.compan.servlet.annotations.Column;
-import cloud.compan.servlet.annotations.Id;
-import lombok.Getter;
-import lombok.Setter;
+package cloud.compan.servlet.dto;
 
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "user")
-@Getter
-@Setter
-public class User {
-
-    @Id
-    @Column(name = "user_id")
+/**
+ * 用户数据传输对象
+ * 用于控制层和服务层之间的用户数据传输
+ */
+public class UserDTO {
     private Long userId;
-
-    @Column(name = "username")
     private String username;
-
-    @Column(name = "email")
     private String email;
-
-    @Column(name = "password")
-    private String password;
-
-    @Column(name = "storage_limit")
-    private Long storageLimit = 10737418240L;//10GB
-
-    @Column(name = "storage_used")
-    private Long storageUsed = 0L;
-
-    @Column(name = "created_at")
+    private Long storageLimit;
+    private Long storageUsed;
     private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
-    public User() {
-        // no-arg constructor
-    }
-
-    public User(Long userId, String username, String email, String hashedPassword) {
+    
+    // 构造函数
+    public UserDTO() {}
+    
+    public UserDTO(Long userId, String username, String email) {
         this.userId = userId;
         this.username = username;
         this.email = email;
-        this.password = hashedPassword;
     }
     
-    // Manual getters and setters (in case Lombok doesn't work)
+    // Getters and Setters
     public Long getUserId() {
         return userId;
     }
@@ -74,14 +47,6 @@ public class User {
     
     public void setEmail(String email) {
         this.email = email;
-    }
-    
-    public String getPassword() {
-        return password;
-    }
-    
-    public void setPassword(String password) {
-        this.password = password;
     }
     
     public Long getStorageLimit() {
@@ -115,4 +80,19 @@ public class User {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
-}
+    
+    // 工具方法
+    public long getAvailableStorage() {
+        if (storageLimit == null || storageUsed == null) {
+            return 0;
+        }
+        return storageLimit - storageUsed;
+    }
+    
+    public double getUsagePercentage() {
+        if (storageLimit == null || storageUsed == null || storageLimit == 0) {
+            return 0.0;
+        }
+        return (double) storageUsed / storageLimit * 100.0;
+    }
+} 
