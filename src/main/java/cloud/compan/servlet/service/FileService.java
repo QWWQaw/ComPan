@@ -13,7 +13,7 @@ import java.util.Map;
  * 文件服务接口
  * 继承BaseService获得基础CRUD能力，同时提供文件管理相关的专门业务逻辑
  */
-public interface FileService extends BaseService<File, Long> {
+public interface FileService {
     
     // ============ 文件上传相关 ============
     

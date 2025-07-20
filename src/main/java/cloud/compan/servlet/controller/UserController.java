@@ -8,7 +8,7 @@ import cloud.compan.servlet.dto.mapper.UserMapper;
 import cloud.compan.servlet.web.response.ApiResponseWrapper;
 import com.google.inject.Inject;
 import jakarta.servlet.http.HttpServletRequest;
-
+import cloud.compan.servlet.dto.SearchCriteria;
 import java.util.Map;
 import java.util.List;
 
@@ -32,6 +32,9 @@ public class UserController extends BaseController {
      */
     @PostMapping(path = "/register")
     public ApiResponseWrapper register(@RequestBody Map<String, Object> requestData) {
+        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
+        System.out.println("📥 请求参数: " + requestData);
         String username = (String) requestData.get("username");
         String email = (String) requestData.get("email");
         String password = (String) requestData.get("password");
@@ -61,6 +64,9 @@ public class UserController extends BaseController {
      */
     @PostMapping(path = "/login")
     public ApiResponseWrapper login(@RequestBody Map<String, Object> requestData) {
+        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
+        System.out.println("📥 请求参数: " + requestData);
         String username = (String) requestData.get("username");
         String password = (String) requestData.get("password");
         
@@ -78,6 +84,10 @@ public class UserController extends BaseController {
      */
     @GetMapping(path = "/{id}")
     public ApiResponseWrapper getUserById(@PathVariable Long id) {
+        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
+        System.out.println("📥 请求参数: " + id);
+
         requireNonNull(id, "id");
         
         ServiceResult<User> result = userService.findById(id);
@@ -96,6 +106,10 @@ public class UserController extends BaseController {
      */
     @PutMapping(path = "/{id}")
     public ApiResponseWrapper updateUser(@PathVariable Long id, @RequestBody Map<String, Object> requestData) {
+        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
+        System.out.println("📥 请求参数: " + requestData);
+
         requireNonNull(id, "id");
         
         String username = (String) requestData.get("username");
@@ -125,6 +139,10 @@ public class UserController extends BaseController {
      */
     @DeleteMapping(path = "/{id}")
     public ApiResponseWrapper deleteUser(@PathVariable Long id) {
+        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
+        System.out.println("📥 请求参数: " + id);
+
         requireNonNull(id, "id");
         
         ServiceResult<Boolean> result = userService.deleteById(id);
@@ -137,6 +155,9 @@ public class UserController extends BaseController {
      */
     @GetMapping
     public ApiResponseWrapper getUsers(HttpServletRequest request) {
+        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
+        System.out.println("📥 请求参数: " + request.toString());
         SearchCriteria criteria = parseSearchCriteria(request);
         
         ServiceResult<PageResultDTO<User>> result = userService.findPageByCriteria(criteria);
@@ -156,6 +177,9 @@ public class UserController extends BaseController {
      */
     @PutMapping(path = "/{id}/password")
     public ApiResponseWrapper changePassword(@PathVariable Long id, @RequestBody Map<String, Object> requestData) {
+        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
+        System.out.println("📥 请求参数: " + requestData);
         requireNonNull(id, "id");
         
         String oldPassword = (String) requestData.get("old_password");
@@ -176,6 +200,9 @@ public class UserController extends BaseController {
      */
     @GetMapping(path = "/{id}/storage")
     public ApiResponseWrapper getStorageStats(@PathVariable Long id) {
+        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
+        System.out.println("📥 请求参数: " + id);
         requireNonNull(id, "id");
         
         ServiceResult<StorageStatsDTO> result = userService.getStorageStats(id);
@@ -188,6 +215,9 @@ public class UserController extends BaseController {
      */
     @GetMapping(path = "/check-username")
     public ApiResponseWrapper checkUsername(@RequestParam String username) {
+        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
+        System.out.println("📥 请求参数: " + username);
         requireNonEmpty(username, "username");
         validateStringLength(username, "username", 3, 50);
         
@@ -211,6 +241,9 @@ public class UserController extends BaseController {
      */
     @GetMapping(path = "/check-email")
     public ApiResponseWrapper checkEmail(@RequestParam String email) {
+        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
+        System.out.println("📥 请求参数: " + email);
         requireNonEmpty(email, "email");
         validateEmail(email, "email");
         
@@ -232,6 +265,7 @@ public class UserController extends BaseController {
      * 转换分页结果为DTO
      */
     private PageResultDTO<UserDTO> convertPageResult(PageResultDTO<User> userPageResult) {
+
         if (userPageResult == null || userPageResult.getContent() == null) {
             return new PageResultDTO<>();
         }
@@ -239,7 +273,7 @@ public class UserController extends BaseController {
         List<UserDTO> userDTOs = userPageResult.getContent().stream()
             .map(UserMapper::toDTO)
             .collect(java.util.stream.Collectors.toList());
-            
+
         return new PageResultDTO<>(
             userDTOs,
             userPageResult.getTotal(),

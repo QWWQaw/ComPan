@@ -9,7 +9,7 @@ import cloud.compan.servlet.model.User;
  * 认证服务接口
  * 继承BaseService获得基础CRUD能力，同时提供认证相关的专门业务逻辑
  */
-public interface AuthService extends BaseService<User, Long> {
+public interface AuthService {
     
     // ============ 用户注册相关 ============
     

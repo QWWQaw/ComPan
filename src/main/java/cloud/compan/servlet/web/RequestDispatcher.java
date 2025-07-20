@@ -52,7 +52,9 @@ public class RequestDispatcher {
             // 3. 提取请求信息
             String requestPath = getRequestPath(request);
             String httpMethod = request.getMethod();
-            
+
+            System.out.println("📨 处理请求: " + httpMethod + " " + requestPath);
+
             logRequest(requestPath, httpMethod, request);
             
             // 4. 查找匹配的路由

@@ -1,36 +1,53 @@
 package cloud.compan.servlet.dto;
+
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import jakarta.validation.constraints.*;
 
 /**
  * 通用查询条件封装类
  * 用于封装各种查询参数，支持分页、排序、关键词搜索等
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class SearchCriteria {
-    
     /**
      * 搜索关键词
      */
+    @Size(max = 100, message = "搜索关键词长度不能超过100个字符")
     private String keyword;
     
     /**
      * 排序字段
      */
+    @Size(max = 50, message = "排序字段长度不能超过50个字符")
     private String sortBy;
     
     /**
      * 排序方向 ASC/DESC
      */
+    @Pattern(regexp = "^(ASC|DESC)$", message = "排序方向只能是ASC或DESC")
+    @Builder.Default
     private String sortDirection = "ASC";
     
     /**
      * 页码（从1开始）
      */
+    @Min(value = 1, message = "页码必须大于等于1")
+    @Max(value = 1000, message = "页码不能超过1000")
+    @Builder.Default
     private Integer page = 1;
     
     /**
      * 每页大小
      */
+    @Min(value = 1, message = "每页大小必须大于等于1")
+    @Max(value = 100, message = "每页大小不能超过100")
+    @Builder.Default
     private Integer size = 20;
 
     /**
@@ -38,7 +55,6 @@ public class SearchCriteria {
      */
     private Object filters;
 
-    public SearchCriteria() {}
 
     public SearchCriteria(String keyword) {
         this.keyword = keyword;

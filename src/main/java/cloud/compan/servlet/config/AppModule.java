@@ -11,6 +11,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import cloud.compan.servlet.repository.*;
 import cloud.compan.servlet.service.AuthService;
 import cloud.compan.servlet.service.FileService;
+import cloud.compan.servlet.service.FolderService;
+import cloud.compan.servlet.service.ShareService;
+import cloud.compan.servlet.service.NotificationService;
+import cloud.compan.servlet.service.AclService;
+import cloud.compan.servlet.service.RecycleBinService;
+import cloud.compan.servlet.service.StorageService;
 import cloud.compan.servlet.service.UserService;
 import cloud.compan.servlet.web.RouteRegistry;
 import cloud.compan.servlet.web.RequestDispatcher;
@@ -74,9 +80,15 @@ public class AppModule extends AbstractModule {
         bind(NotificationRepository.class);
         
         // ============ Service层组件绑定 ============
-
-        bind(AuthService.class).in(Singleton.class);  // AuthService的实现类将在以后添加
-        bind(FileService.class).in(Singleton.class);  // FileService的实现类将在以后添加
+        // bind(UserService.class).in(Singleton.class);  // UserService的实现类将在以后添加
+        // bind(AuthService.class).in(Singleton.class);  // AuthService的实现类将在以后添加
+        // bind(FileService.class).in(Singleton.class);  // FileService的实现类将在以后添加
+        // bind(FolderService.class).in(Singleton.class);  // FolderService的实现类将在以后添加
+        // bind(ShareService.class).in(Singleton.class);  // ShareService的实现类将在以后添加
+        // bind(NotificationService.class).in(Singleton.class);  // NotificationService的实现类将在以后添加
+        // bind(AclService.class).in(Singleton.class);  // AclService的实现类将在以后添加
+        // bind(RecycleBinService.class).in(Singleton.class);  // RecycleBinService的实现类将在以后添加
+        // bind(StorageService.class).in(Singleton.class);  // StorageService的实现类将在以后添加
     }
 
     public String getDefaultDataSourceName() {  
