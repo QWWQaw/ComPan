@@ -83,9 +83,4 @@ public class AclServiceImpl implements AclService {
     public ServiceResult<Map<String, Object>> getResourcePermissionSummary(String resourceType, Long resourceId, Long userId) {
         return null;
     }
-
-    @Override
-    public setPermission(String resourceType, Long resourceId, Long targetUserId, String permission, Long userId) {
-        return null;
-    }
 }

@@ -4,17 +4,15 @@ import cloud.compan.servlet.annotations.Column;
 import cloud.compan.servlet.annotations.Id;
 import cloud.compan.servlet.annotations.Entity;
 import cloud.compan.servlet.annotations.Table;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "folder")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter
+@Setter
 public class Folder {
 
     @Id
@@ -33,9 +31,15 @@ public class Folder {
     @Column(name = "size")
     private Long size;
 
+    @Column(name = "status")
+    private String status;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

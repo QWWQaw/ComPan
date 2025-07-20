@@ -243,31 +243,31 @@ public class UserServiceTest {
     }
 
     @Test
-    @DisplayName("检查存储限制 - 空间足够")
-    void testCheckStorageLimitSufficient() {
+    @DisplayName("检查存储容量 - 空间足够")
+    void testCheckStorageCapacitySufficient() {
         // Given
         Long userId = 1L;
-        Long additionalSize = 1000000L; // 1MB
+        long additionalSize = 1000000L; // 1MB
 
         // When
-        ServiceResult<Boolean> result = userService.checkStorageLimit(userId, additionalSize);
+        ServiceResult<Boolean> result = userService.checkStorageCapacity(userId, additionalSize);
 
         // Then
         assertNotNull(result);
         assertTrue(result.isSuccess());
         assertTrue(result.getData());
-        assertEquals("存储空间检查通过", result.getMessage());
+        assertEquals("存储容量检查通过", result.getMessage());
     }
 
     @Test
-    @DisplayName("检查存储限制 - 空间不足")
-    void testCheckStorageLimitInsufficient() {
+    @DisplayName("检查存储容量 - 空间不足")
+    void testCheckStorageCapacityInsufficient() {
         // Given
         Long userId = 1L;
-        Long additionalSize = 10000000000L; // 10GB (超过可用空间)
+        long additionalSize = 10000000000L; // 10GB (超过可用空间)
 
         // When
-        ServiceResult<Boolean> result = userService.checkStorageLimit(userId, additionalSize);
+        ServiceResult<Boolean> result = userService.checkStorageCapacity(userId, additionalSize);
 
         // Then
         assertNotNull(result);
