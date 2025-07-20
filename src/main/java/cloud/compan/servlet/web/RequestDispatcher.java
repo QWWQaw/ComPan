@@ -22,12 +22,12 @@ import java.util.HashMap;
 public class RequestDispatcher {
     
     private final RouteRegistry routeRegistry;
-    private final JsonUtils jsonUtils;
+    private final JsonHttpMessageConverter jsonConverter;
     
     @Inject
-    public RequestDispatcher(RouteRegistry routeRegistry, JsonUtils jsonUtils) {
+    public RequestDispatcher(RouteRegistry routeRegistry, JsonHttpMessageConverter jsonConverter) {
         this.routeRegistry = routeRegistry;
-        this.jsonUtils = jsonUtils;
+        this.jsonConverter = jsonConverter;
     }
     
     /**
@@ -80,7 +80,7 @@ public class RequestDispatcher {
             Object result = handlerMethod.invoke(controllerInstance, methodArgs);
             
             // 4. 处理返回结果
-            handleMethodResult(result, request, response);
+            handleMethodResult(result, request, response, routeInfo);
             
             System.out.println("请求处理成功");
             
@@ -150,23 +150,14 @@ public class RequestDispatcher {
     }
     
     /**
-     * 解析请求体参数 - 使用封装的JsonUtils
+     * 解析请求体参数 - 使用JsonHttpMessageConverter
      */
     private Object parseRequestBody(HttpServletRequest request, Class<?> targetType) throws IOException {
         String contentType = request.getContentType();
         
         if (contentType != null && contentType.contains("application/json")) {
-            if (targetType == String.class) {
-                // 如果目标类型是String，直接返回原始JSON字符串
-                return jsonUtils.readJsonFromReader(request.getReader());
-            } else {
-                // 使用JsonUtils反序列化为目标对象
-                Object result = jsonUtils.fromJson(request.getReader(), targetType);
-                System.out.println("JsonUtils解析成功: " + targetType.getSimpleName());
-                return result;
-            }
+            return jsonConverter.read(targetType, request);
         } else {
-            // 其他内容类型处理（未来扩展）
             System.err.println("不支持的Content-Type: " + contentType);
             return null;
         }
@@ -213,11 +204,12 @@ public class RequestDispatcher {
         
         String value = request.getParameter(paramName);
         
-        if (value == null && annotation.required()) {
-            if (!annotation.defaultValue().isEmpty()) {
-                value = annotation.defaultValue();
-            } else {
+        if (value == null) {
+            if (annotation.required()) {
                 throw new IllegalArgumentException("必需的请求参数不存在: " + paramName);
+            } else {
+                String defaultValue = annotation.defaultValue();
+                value = defaultValue.isEmpty() ? null : defaultValue;
             }
         }
         
@@ -225,100 +217,95 @@ public class RequestDispatcher {
     }
     
     /**
-     * 检查是否为基本类型
+     * 判断是否为基本类型
      */
     private boolean isBasicType(Class<?> type) {
-        return type == String.class ||
-               type == int.class || type == Integer.class ||
-               type == long.class || type == Long.class ||
-               type == double.class || type == Double.class ||
-               type == float.class || type == Float.class ||
-               type == boolean.class || type == Boolean.class ||
-               type == short.class || type == Short.class ||
-               type == byte.class || type == Byte.class;
+        return type == String.class || type == int.class || type == Integer.class ||
+               type == long.class || type == Long.class || type == boolean.class ||
+               type == Boolean.class || type == double.class || type == Double.class ||
+               type == float.class || type == Float.class;
     }
     
     /**
      * 转换基本类型
      */
     private Object convertBasicType(String value, Class<?> targetType) {
-        if (value == null) {
-            return null;
-        }
+        if (value == null) return null;
         
-        try {
-            if (targetType == String.class) {
-                return value;
-            } else if (targetType == int.class || targetType == Integer.class) {
-                return Integer.parseInt(value);
-            } else if (targetType == long.class || targetType == Long.class) {
-                return Long.parseLong(value);
-            } else if (targetType == double.class || targetType == Double.class) {
-                return Double.parseDouble(value);
-            } else if (targetType == float.class || targetType == Float.class) {
-                return Float.parseFloat(value);
-            } else if (targetType == boolean.class || targetType == Boolean.class) {
-                return Boolean.parseBoolean(value);
-            } else if (targetType == short.class || targetType == Short.class) {
-                return Short.parseShort(value);
-            } else if (targetType == byte.class || targetType == Byte.class) {
-                return Byte.parseByte(value);
-            } else {
-                return value;
-            }
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("参数类型转换失败: " + value + " -> " + targetType.getSimpleName());
+        if (targetType == String.class) return value;
+        if (targetType == int.class || targetType == Integer.class) return Integer.parseInt(value);
+        if (targetType == long.class || targetType == Long.class) return Long.parseLong(value);
+        if (targetType == boolean.class || targetType == Boolean.class) return Boolean.parseBoolean(value);
+        if (targetType == double.class || targetType == Double.class) return Double.parseDouble(value);
+        if (targetType == float.class || targetType == Float.class) return Float.parseFloat(value);
+        
+        return value; // fallback
+    }
+    
+    /**
+     * 处理控制器方法的返回结果，使用HttpMessageConverter
+     */
+    private void handleMethodResult(Object result, HttpServletRequest request, 
+                                   HttpServletResponse response, RouteInfo routeInfo) throws IOException {
+        
+        // 检查是否需要JSON序列化
+        boolean useJsonConverter = shouldUseJsonConverter(routeInfo);
+        
+        if (useJsonConverter) {
+            // 使用JSON转换器
+            jsonConverter.write(result, "application/json", response);
+        } else {
+            // 普通响应处理
+            handleRegularResponse(result, response);
         }
     }
     
     /**
-     * 处理控制器方法的返回结果
+     * 判断是否应该使用JSON转换器
      */
-    private void handleMethodResult(Object result, HttpServletRequest request, 
-                                   HttpServletResponse response) throws IOException {
+    private boolean shouldUseJsonConverter(RouteInfo routeInfo) {
+        Method method = routeInfo.getHandlerMethod();
+        Class<?> controllerClass = routeInfo.getControllerClass();
         
-        // 设置响应头
-        response.setContentType("application/json;charset=UTF-8");
-        response.setCharacterEncoding("UTF-8");
+        // 检查方法级别的@ResponseBody
+        if (method.isAnnotationPresent(ResponseBody.class)) {
+            return true;
+        }
         
+        // 检查类级别的@ResponseBody
+        if (controllerClass.isAnnotationPresent(ResponseBody.class)) {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    /**
+     * 处理普通响应
+     */
+    private void handleRegularResponse(Object result, HttpServletResponse response) throws IOException {
         if (result == null) {
-            // 空结果
             response.setStatus(HttpServletResponse.SC_NO_CONTENT);
             return;
         }
         
         if (result instanceof String) {
-            // 字符串结果
             String stringResult = (String) result;
             if (stringResult.startsWith("{") || stringResult.startsWith("[")) {
-                // 看起来像JSON
                 response.setContentType("application/json;charset=UTF-8");
+            } else if (stringResult.startsWith("<")) {
+                response.setContentType("text/html;charset=UTF-8");
             } else {
-                // 普通文本
                 response.setContentType("text/plain;charset=UTF-8");
             }
+            response.setCharacterEncoding("UTF-8");
             response.getWriter().write(stringResult);
-            
-        } else if (result instanceof Number || result instanceof Boolean) {
-            // 基本类型
-            response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write(result.toString());
-            
         } else {
-            // 复杂对象 - 使用JsonUtils序列化为JSON
-            try {
-                response.setContentType("application/json;charset=UTF-8");
-                String jsonResult = jsonUtils.toJson(result);
-                response.getWriter().write(jsonResult);
-                System.out.println("JsonUtils序列化成功: " + result.getClass().getSimpleName());
-            } catch (Exception e) {
-                System.err.println("JsonUtils序列化失败: " + e.getMessage());
-                response.setContentType("text/plain;charset=UTF-8");
-                response.getWriter().write(result.toString());
-            }
+            // 其他类型默认转为字符串
+            response.setContentType("text/plain;charset=UTF-8");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write(result.toString());
         }
-        
-        response.setStatus(HttpServletResponse.SC_OK);
     }
     
     /**

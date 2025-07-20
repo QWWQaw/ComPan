@@ -167,9 +167,11 @@ public class ControllerScanner {
      * 获取类级别的路径
      */
     private String getClassLevelPath(Class<?> controllerClass) {
+        // 检查@RequestMapping
         if (controllerClass.isAnnotationPresent(RequestMapping.class)) {
             return controllerClass.getAnnotation(RequestMapping.class).path();
         }
+        // 检查@Controller
         if (controllerClass.isAnnotationPresent(Controller.class)) {
             String value = controllerClass.getAnnotation(Controller.class).value();
             return value.isEmpty() ? "" : value;
@@ -198,7 +200,7 @@ public class ControllerScanner {
     }
     
     /**
-     * 获取指定包下的所有类（简化版本），
+     * 获取指定包下的所有类
      */
     private List<Class<?>> getClassesInPackage(String packageName) {
         List<Class<?>> classes = new ArrayList<>();

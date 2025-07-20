@@ -43,6 +43,7 @@ public class AppModule extends AbstractModule {
         bind(RouteRegistry.class).in(Singleton.class);
         bind(RequestDispatcher.class).in(Singleton.class);
         bind(ControllerScanner.class).in(Singleton.class);
+        bind(cloud.compan.servlet.web.JsonHttpMessageConverter.class).in(Singleton.class);
          
         // ============ 数据层组件绑定 ============
         bind(GuiceDataSourceProvider.class);  
