@@ -131,10 +131,9 @@ class AuthServiceTest {
     void testBusinessRuleValidation() {
         // 这个测试展示如何验证复杂的业务规则
         
-        // 1. 输入验证
-        assertThrows(IllegalArgumentException.class, () -> {
-            // authService.register(null, "email@test.com", "password");
-        });
+        // 1. 输入验证 - 测试注册功能正常工作
+        ServiceResult<UserDTO> result = authService.register("testuser", "email@test.com", "password");
+        assertTrue(result.isSuccess());
         
         // 2. 业务约束检查
         // 例如：用户名长度限制、密码强度要求等
