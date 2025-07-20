@@ -4,15 +4,16 @@ import cloud.compan.servlet.annotations.Entity;
 import cloud.compan.servlet.annotations.Table;
 import cloud.compan.servlet.annotations.Column;
 import cloud.compan.servlet.annotations.Id;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "user")
-@Getter
-@Setter
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
 
     @Id
@@ -26,10 +27,10 @@ public class User {
     private String email;
 
     @Column(name = "password")
-    private String password;
+    private String passwordHash; // 修正字段名以匹配服务层代码
 
     @Column(name = "storage_limit")
-    private Long storageLimit = 10737418240L;//10GB
+    private Long storageLimit = 10737418240L; // 10GB
 
     @Column(name = "storage_used")
     private Long storageUsed = 0L;
@@ -40,79 +41,7 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public User() {
-        // no-arg constructor
-    }
-
-    public User(Long userId, String username, String email, String hashedPassword) {
-        this.userId = userId;
-        this.username = username;
-        this.email = email;
-        this.password = hashedPassword;
-    }
-    
-    // Manual getters and setters (in case Lombok doesn't work)
-    public Long getUserId() {
-        return userId;
-    }
-    
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-    
-    public String getUsername() {
-        return username;
-    }
-    
-    public void setUsername(String username) {
-        this.username = username;
-    }
-    
-    public String getEmail() {
-        return email;
-    }
-    
-    public void setEmail(String email) {
-        this.email = email;
-    }
-    
-    public String getPassword() {
-        return password;
-    }
-    
-    public void setPassword(String password) {
-        this.password = password;
-    }
-    
-    public Long getStorageLimit() {
-        return storageLimit;
-    }
-    
-    public void setStorageLimit(Long storageLimit) {
-        this.storageLimit = storageLimit;
-    }
-    
-    public Long getStorageUsed() {
-        return storageUsed;
-    }
-    
-    public void setStorageUsed(Long storageUsed) {
-        this.storageUsed = storageUsed;
-    }
-    
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-    
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-    
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-    
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
+    // 添加角色字段以支持管理员权限检查
+    @Column(name = "role")
+    private String role = "USER";
 }

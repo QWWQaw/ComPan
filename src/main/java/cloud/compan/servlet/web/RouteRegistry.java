@@ -28,37 +28,40 @@ public class RouteRegistry {
     private final Map<RequestMethod, List<ParameterizedRouteInfo>> parameterizedRoutes = new EnumMap<>(RequestMethod.class);
     
     /**
-     * 注册单个路由
-     * @param routeInfo 路由信息
-     * @throws IllegalArgumentException 如果路由已存在
+     * Register a single route
      */
     public void registerRoute(RouteInfo routeInfo) {
-        String routeKey = routeInfo.getRouteKey();
-        System.out.println(" 注册路由: " + routeInfo.getHttpMethod()+ " " + routeInfo.getPath() + " -> " +
-                routeInfo.getControllerClass().getClass().getSimpleName() + "." + routeInfo.getHandlerMethod().getName());
-        // 检查路由是否已存在
-        RouteInfo existingRoute = routes.putIfAbsent(routeKey, routeInfo);
-        if (existingRoute != null) {
-            throw new IllegalArgumentException(
-                String.format("路由冲突: %s 已经被 %s.%s 注册，无法再注册到 %s.%s",
-                    routeKey,
-                    existingRoute.getControllerClass().getSimpleName(),
-                    existingRoute.getHandlerMethod().getName(),
-                    routeInfo.getControllerClass().getSimpleName(),
-                    routeInfo.getHandlerMethod().getName())
-            );
+        if (routeInfo == null) {
+            throw new IllegalArgumentException("RouteInfo cannot be null");
         }
         
-        // 如果是参数化路由，也添加到参数化路由集合中
-        if (routeInfo instanceof ParameterizedRouteInfo) {
-            ParameterizedRouteInfo paramRoute = (ParameterizedRouteInfo) routeInfo;
-            if (paramRoute.hasPathVariables()) {
-                RequestMethod method = routeInfo.getHttpMethod();
-                parameterizedRoutes.computeIfAbsent(method, k -> new ArrayList<>()).add(paramRoute);
+        String key = routeInfo.getRouteKey();
+        
+        synchronized (routes) {
+            if (routes.containsKey(key)) {
+                System.out.println("Route already exists, overwriting: " + routeInfo.getHttpMethod()+ " " + routeInfo.getPath() + " -> " +
+                        routeInfo.getControllerClass().getSimpleName() + "." + routeInfo.getHandlerMethod().getName());
+            }
+            
+            routes.put(key, routeInfo);
+            System.out.println("Route registered successfully: " + routeInfo);
+            
+            // If it's a parameterized route, also add to parameterized routes collection
+            if (routeInfo instanceof ParameterizedRouteInfo) {
+                ParameterizedRouteInfo paramRoute = (ParameterizedRouteInfo) routeInfo;
+                System.out.println("DEBUG: Found parameterized route: " + paramRoute.getPathPattern());
+                if (paramRoute.hasPathVariables()) {
+                    RequestMethod method = routeInfo.getHttpMethod();
+                    parameterizedRoutes.computeIfAbsent(method, k -> new ArrayList<>()).add(paramRoute);
+                    System.out.println("DEBUG: Added to parameterized routes for method " + method + 
+                                     " (total: " + parameterizedRoutes.get(method).size() + ")");
+                } else {
+                    System.out.println("DEBUG: Parameterized route has no path variables: " + paramRoute.getPathPattern());
+                }
+            } else {
+                System.out.println("DEBUG: Regular route (not parameterized): " + routeInfo.getPath());
             }
         }
-        
-        System.out.println("路由注册成功: " + routeInfo);
     }
     
     /**
@@ -81,22 +84,33 @@ public class RouteRegistry {
         String normalizedPath = normalizePath(requestPath);
         String routeKey = requestMethod.name() + ":" + normalizedPath;
         
+        System.out.println("DEBUG: Looking for route: " + routeKey);
+        
         // 1. 先尝试精确匹配
         RouteInfo exactMatch = routes.get(routeKey);
         if (exactMatch != null) {
+            System.out.println("DEBUG: Found exact match: " + exactMatch);
             return Optional.of(exactMatch);
         }
+        
+        System.out.println("DEBUG: No exact match found, trying parameterized routes...");
         
         // 2. 尝试参数化路由匹配
         List<ParameterizedRouteInfo> methodRoutes = parameterizedRoutes.get(requestMethod);
         if (methodRoutes != null) {
+            System.out.println("DEBUG: Found " + methodRoutes.size() + " parameterized routes for method " + requestMethod);
             for (ParameterizedRouteInfo paramRoute : methodRoutes) {
+                System.out.println("DEBUG: Testing parameterized route: " + paramRoute.getPathPattern());
                 if (paramRoute.matches(normalizedPath, requestMethod)) {
+                    System.out.println("DEBUG: Found parameterized match: " + paramRoute);
                     return Optional.of(paramRoute);
                 }
             }
+        } else {
+            System.out.println("DEBUG: No parameterized routes found for method " + requestMethod);
         }
         
+        System.out.println("DEBUG: No route found for: " + routeKey);
         return Optional.empty();
     }
     
@@ -158,9 +172,15 @@ public class RouteRegistry {
      * 打印所有注册的路由（用于调试）
      */
     public void printAllRoutes() {
-        System.out.println("\n 已注册的路由列表 (" + routes.size() + " 个):");
+        System.out.println("\n=== REGISTERED ROUTES (" + routes.size() + " regular routes) ===");
         routes.values().forEach(route -> 
             System.out.println("  " + route));
+        
+        System.out.println("\n=== PARAMETERIZED ROUTES ===");
+        parameterizedRoutes.forEach((method, routes) -> {
+            System.out.println("  " + method + " (" + routes.size() + " routes):");
+            routes.forEach(route -> System.out.println("    " + route));
+        });
     }
     
     /**

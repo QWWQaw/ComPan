@@ -44,11 +44,11 @@ public class LoggingInterceptor implements HandlerInterceptor {
         }
         
         // 记录请求开始日志
-        System.out.printf("┌─ [%s] 请求开始 ─────────────────────────────────────%n", 
+        System.out.printf("┌─ [%s] Request started ─────────────────────────────────────%n", 
             LocalDateTime.now().format(TIME_FORMATTER));
         System.out.printf("│ %s %s%n", method, fullUrl);
-        System.out.printf("│ 客户端IP: %s%n", remoteAddr);
-        System.out.printf("│ 处理器: %s%n", handlerInfo);
+        System.out.printf("│ Client IP: %s%n", remoteAddr);
+        System.out.printf("│ Handler: %s%n", handlerInfo);
         if (userAgent != null) {
             System.out.printf("│ User-Agent: %s%n", userAgent.length() > 100 ? userAgent.substring(0, 100) + "..." : userAgent);
         }
@@ -63,13 +63,13 @@ public class LoggingInterceptor implements HandlerInterceptor {
         int status = response.getStatus();
         String contentType = response.getContentType();
         
-        System.out.printf("│ 响应状态: %d%n", status);
+        System.out.printf("│ Response Status: %d%n", status);
         if (contentType != null) {
             System.out.printf("│ Content-Type: %s%n", contentType);
         }
         
         if (exception != null) {
-            System.out.printf("│ ❌ 异常: %s - %s%n", exception.getClass().getSimpleName(), exception.getMessage());
+            System.out.printf("│ ❌ Error: %s - %s%n", exception.getClass().getSimpleName(), exception.getMessage());
         }
     }
     
@@ -80,17 +80,17 @@ public class LoggingInterceptor implements HandlerInterceptor {
         Long startTime = (Long) request.getAttribute(START_TIME_ATTRIBUTE);
         if (startTime != null) {
             long duration = System.currentTimeMillis() - startTime;
-            System.out.printf("│ ⏱️  执行时间: %d ms%n", duration);
+            System.out.printf("│ ⏱️  Execution time: %d ms%n", duration);
             
             // 根据执行时间添加性能提示
             if (duration > 1000) {
-                System.out.printf("│ ⚠️  慢请求警告: 执行时间超过1秒%n");
+                System.out.printf("│ ⚠️  Slow request warning: execution time exceeds 1 second%n");
             } else if (duration > 500) {
-                System.out.printf("│ ⚡ 性能提示: 执行时间较长%n");
+                System.out.printf("│ ⚡  Performance hint: execution time is longer%n");
             }
         }
         
-        System.out.printf("└─ [%s] 请求完成 ─────────────────────────────────────%n%n", 
+        System.out.printf("└─ [%s] Request completed ─────────────────────────────────────%n%n", 
             LocalDateTime.now().format(TIME_FORMATTER));
     }
     

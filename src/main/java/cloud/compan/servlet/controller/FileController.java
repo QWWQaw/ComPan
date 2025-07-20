@@ -152,7 +152,7 @@ public class FileController extends BaseController {
      * GET /api/files/{id}
      */
     @GetMapping(path = "/{id}")
-    public ApiResponseWrapper getFileDetails(@PathVariable Long id, HttpServletRequest request) {
+    public ApiResponseWrapper getFileDetails(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
             return error(401, "未认证");
@@ -198,7 +198,7 @@ public class FileController extends BaseController {
      * GET /api/files/{id}/download
      */
     @GetMapping(path = "/{id}/download")
-    public ApiResponseWrapper downloadFile(@PathVariable Long id, HttpServletRequest request, 
+    public ApiResponseWrapper downloadFile(@PathVariable("id") Long id, HttpServletRequest request, 
                                           HttpServletResponse response) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
@@ -225,7 +225,7 @@ public class FileController extends BaseController {
      * GET /api/files/{id}/preview
      */
     @GetMapping(path = "/{id}/preview")
-    public ApiResponseWrapper previewFile(@PathVariable Long id, HttpServletRequest request) {
+    public ApiResponseWrapper previewFile(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
             return error(401, "未认证");
@@ -245,7 +245,7 @@ public class FileController extends BaseController {
      * GET /api/files/{id}/thumbnail
      */
     @GetMapping(path = "/{id}/thumbnail")
-    public ApiResponseWrapper getThumbnail(@PathVariable Long id, 
+    public ApiResponseWrapper getThumbnail(@PathVariable("id") Long id, 
                                           @RequestParam(defaultValue = "small") String size,
                                           HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
@@ -269,7 +269,7 @@ public class FileController extends BaseController {
      * PATCH /api/files/{id}
      */
     @PatchMapping(path = "/{id}")
-    public ApiResponseWrapper renameFile(@PathVariable Long id, 
+    public ApiResponseWrapper renameFile(@PathVariable("id") Long id, 
                                         @RequestBody Map<String, Object> requestData,
                                         HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
@@ -296,7 +296,7 @@ public class FileController extends BaseController {
      * PATCH /api/files/{id}/move
      */
     @PatchMapping(path = "/{id}/move")
-    public ApiResponseWrapper moveFile(@PathVariable Long id,
+    public ApiResponseWrapper moveFile(@PathVariable("id") Long id,
                                       @RequestBody Map<String, Object> requestData,
                                       HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
@@ -325,7 +325,7 @@ public class FileController extends BaseController {
      * POST /api/files/{id}/copy
      */
     @PostMapping(path = "/{id}/copy")
-    public ApiResponseWrapper copyFile(@PathVariable Long id,
+    public ApiResponseWrapper copyFile(@PathVariable("id") Long id,
                                       @RequestBody Map<String, Object> requestData,
                                       HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
@@ -356,7 +356,7 @@ public class FileController extends BaseController {
      * DELETE /api/files/{id}
      */
     @DeleteMapping(path = "/{id}")
-    public ApiResponseWrapper deleteFile(@PathVariable Long id, HttpServletRequest request) {
+    public ApiResponseWrapper deleteFile(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
             return error(401, "未认证");
@@ -417,7 +417,7 @@ public class FileController extends BaseController {
      * GET /api/files/{id}/permissions
      */
     @GetMapping(path = "/{id}/permissions")
-    public ApiResponseWrapper getFilePermissions(@PathVariable Long id, HttpServletRequest request) {
+    public ApiResponseWrapper getFilePermissions(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
             return error(401, "未认证");

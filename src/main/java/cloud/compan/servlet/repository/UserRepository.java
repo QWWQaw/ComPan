@@ -28,12 +28,24 @@ public class UserRepository extends BaseRepository<User, Long> {
     /**  
      * 根据用户名查找用户。因为用户名是唯一的，所以预期最多返回一个结果。  
      * @param username 用户名  
-     * @return 包含用户的 Optional  
-     */  
-    public Optional<User> findByUsername(String username) {  
-        String sql = "SELECT * FROM `user` WHERE `username` = ?";  
-        return executor.queryForObject(entityClass, sql, rowMapper, username);
-    }  
+     * @return 用户对象，如果不存在返回null
+     */
+    public User findByUsername(String username) {
+        String sql = "SELECT * FROM `user` WHERE `username` = ?";
+        Optional<User> result = executor.queryForObject(entityClass, sql, rowMapper, username);
+        return result.orElse(null);
+    }
+
+    /**
+     * 根据邮箱查找用户
+     * @param email 邮箱
+     * @return 用户对象，如果不存在返回null
+     */
+    public User findByEmail(String email) {
+        String sql = "SELECT * FROM `user` WHERE `email` = ?";
+        Optional<User> result = executor.queryForObject(entityClass, sql, rowMapper, email);
+        return result.orElse(null);
+    }
     
     /**  
      * 检查具有给定用户名的用户是否存在。  
@@ -56,14 +68,15 @@ public class UserRepository extends BaseRepository<User, Long> {
      */
     public User registerNewUser(String username, String email, String plainTextPassword) {
         String hashedPassword = hashUtil.hashPassword(plainTextPassword);
-        User newUser = new User();
-        newUser.setUsername(username);
-        newUser.setEmail(email);
-        newUser.setPassword(hashedPassword);
-        newUser.setCreatedAt(LocalDateTime.now());
-        newUser.setUpdatedAt(LocalDateTime.now());
-        newUser.setStorageLimit(10737418240L); // 默认 10GB
-        newUser.setStorageUsed(0L);
+        User newUser = User.builder()
+                .username(username)
+                .email(email)
+                .passwordHash(hashedPassword)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .storageLimit(10737418240L) // 默认 10GB
+                .storageUsed(0L)
+                .build();
 
         return save(newUser);
     }

@@ -160,5 +160,29 @@ public class SearchCriteria {
         }
     }
     
+    // Manual getter methods
+    public Integer getPage() {
+        return page;
+    }
+    
+    public Integer getSize() {
+        return size;
+    }
+    
+    public String getKeyword() {
+        return keyword;
+    }
+    
+    public String getSortBy() {
+        return sortBy;
+    }
+    
+    public String getSortDirection() {
+        return sortDirection;
+    }
+    
+    public Object getFilters() {
+        return filters;
+    }
 
 }

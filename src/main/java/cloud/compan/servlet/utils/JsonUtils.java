@@ -3,6 +3,7 @@ package cloud.compan.servlet.utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -26,6 +27,8 @@ public class JsonUtils {
     @Inject
     public JsonUtils(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
+        // 注册Java 8时间模块
+        this.objectMapper.registerModule(new JavaTimeModule());
     }
     
     /**
@@ -185,4 +188,4 @@ public class JsonUtils {
             throw new RuntimeException("JSON格式化失败: " + e.getMessage(), e);
         }
     }
-} 
+}

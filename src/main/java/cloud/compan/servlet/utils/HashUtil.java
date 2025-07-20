@@ -47,7 +47,17 @@ public class HashUtil {
         }  
     }  
 
-    // --- 文件哈希部分 (使用 SHA-256) ---  
+    /**
+     * 验证明文密码是否与哈希密码匹配
+     * @param plainTextPassword 明文密码
+     * @param hashedPassword 哈希密码
+     * @return 是否匹配
+     */
+    public boolean verifyPassword(String plainTextPassword, String hashedPassword) {
+        return checkPassword(plainTextPassword, hashedPassword);
+    }
+
+    // --- 文件哈希部分 (使用 SHA-256) ---
 
     /**  
      * 计算一个输入流 (如文件) 的 SHA-256 哈希值。  

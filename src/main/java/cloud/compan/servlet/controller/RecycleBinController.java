@@ -139,7 +139,33 @@ public class RecycleBinController extends BaseController {
     }
     
     /**
-     * 永久删除
+     * 永久删除单个项目
+     * DELETE /api/recycle-bin/{id}
+     */
+    @DeleteMapping(path = "/{id}")
+    public ApiResponseWrapper permanentlyDeleteById(@PathVariable("id") Long id, HttpServletRequest request) {
+        Long userId = getUserIdFromToken(request);
+        if (userId == null) {
+            return error(401, "未认证");
+        }
+        
+        if (id == null) {
+            return error(400, "项目ID不能为空");
+        }
+        
+        // 从查询参数获取资源类型，默认为FILE
+        String resourceType = request.getParameter("resource_type");
+        if (resourceType == null || resourceType.trim().isEmpty()) {
+            resourceType = "FILE"; // 默认为文件类型
+        }
+        
+        // 直接调用Service层永久删除
+        ServiceResult<Boolean> result = recycleBinService.permanentlyDelete(resourceType, id, userId);
+        return handleServiceResult(result);
+    }
+    
+    /**
+     * 永久删除（批量）
      * DELETE /api/recycle-bin/permanent
      */
     @DeleteMapping(path = "/permanent")

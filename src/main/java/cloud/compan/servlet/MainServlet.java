@@ -3,7 +3,8 @@ package cloud.compan.servlet;
 import cloud.compan.servlet.config.AppModule;
 import cloud.compan.servlet.config.DatabaseModule;
 import cloud.compan.servlet.web.RequestDispatcher;
-import cloud.compan.servlet.web.ControllerScanner;
+import cloud.compan.servlet.web.RouteRegistry;
+import cloud.compan.servlet.web.HardcodedRouteRegistry;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import jakarta.servlet.*;
@@ -12,8 +13,8 @@ import jakarta.servlet.http.*;
 import java.io.IOException;
 
 /**
- * 主Servlet - 应用程序的入口点
- * 负责初始化Guice容器、扫描控制器、分发HTTP请求
+ * Main Servlet - Application entry point
+ * Responsible for initializing Guice container, registering routes, dispatching HTTP requests
  */
 @WebServlet(name = "MainServlet", urlPatterns = {"/*"}, loadOnStartup = 1)
 public class MainServlet extends HttpServlet {
@@ -23,80 +24,88 @@ public class MainServlet extends HttpServlet {
     
     @Override
     public void init(ServletConfig config) throws ServletException {
-        System.out.println("正在初始化 MainServlet...");
+        System.out.println("Initializing MainServlet...");
         super.init(config);
 
-
         try {
-            // 1. 初始化Guice注入器
+            // 1. Initialize Guice injector
             initializeGuice();
             
-            // 2. 扫描并注册控制器
-            scanControllers();
+            // 2. Register all routes using hardcoded approach
+            registerAllRoutes();
             
-            System.out.println("MainServlet 初始化完成！");
+            System.out.println("MainServlet initialization completed!");
             
         } catch (Exception e) {
-            System.err.println("MainServlet 初始化失败: " + e.getMessage());
+            System.err.println("MainServlet initialization failed: " + e.getMessage());
             e.printStackTrace();
-            throw new ServletException("MainServlet 初始化失败", e);
+            throw new ServletException("MainServlet initialization failed", e);
         }
     }
     
     /**
-     * 初始化Guice依赖注入容器
+     * Initialize Guice dependency injection container
      */
     private void initializeGuice() {
-        System.out.println("初始化Guice容器...");
+        System.out.println("Initializing Guice container...");
         
-        // 创建Guice注入器，安装所有模块
+        // Create Guice injector, install all modules
         injector = Guice.createInjector(
-            new AppModule(),        // 主应用模块
-            new DatabaseModule()    // 数据库模块
+            new AppModule(),        // Main application module
+            new DatabaseModule()    // Database module
         );
         
-        // 获取请求分发器实例
+        // Get request dispatcher instance
         requestDispatcher = injector.getInstance(RequestDispatcher.class);
         
-        System.out.println("Guice容器初始化完成");
+        System.out.println("Guice container initialization completed");
     }
     
     /**
-     * 扫描并注册所有控制器
+     * Register all routes using hardcoded approach
      */
-    private void scanControllers() {
-        System.out.println("开始扫描控制器...");
+    private void registerAllRoutes() {
+        System.out.println("Starting hardcoded route registration...");
         
-        // 获取控制器扫描器
-        ControllerScanner controllerScanner = injector.getInstance(ControllerScanner.class);
-        
-        // 扫描控制器包（您可以根据实际包名修改）
-        String controllerPackage = "cloud.compan.servlet.controller";
-        controllerScanner.scanAndRegister(controllerPackage);
-        
-        System.out.println("控制器扫描完成");
+        try {
+            // Get route registry
+            RouteRegistry routeRegistry = injector.getInstance(RouteRegistry.class);
+            
+            // Create hardcoded route registry
+            HardcodedRouteRegistry hardcodedRouteRegistry = new HardcodedRouteRegistry(routeRegistry, injector);
+            
+            // Register all routes
+            hardcodedRouteRegistry.registerAllRoutes();
+            
+            System.out.println("All routes hardcoded registration completed");
+            
+        } catch (Exception e) {
+            System.err.println("Route registration failed: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Route registration failed", e);
+        }
     }
     
     /**
-     * 处理所有HTTP请求
-     * 将请求分发给RequestDispatcher处理
+     * Handle all HTTP requests
+     * Dispatch requests to RequestDispatcher for processing
      */
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         
-        // 设置响应编码
+        // Set response encoding
         response.setCharacterEncoding("UTF-8");
         
         try {
-            // 分发请求到相应的控制器方法
+            // Dispatch request to appropriate controller method
             requestDispatcher.dispatch(request, response);
             
         } catch (Exception e) {
-            System.err.println("请求处理异常: " + e.getMessage());
+            System.err.println("Request processing exception: " + e.getMessage());
             e.printStackTrace();
             
-            // 返回500错误
+            // Return 500 error
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.setContentType("application/json;charset=UTF-8");
             response.getWriter().write(
@@ -107,15 +116,15 @@ public class MainServlet extends HttpServlet {
     
     @Override
     public void destroy() {
-        System.out.println("MainServlet 正在销毁...");
+        System.out.println("MainServlet is being destroyed...");
         
-        // 清理资源
+        // Clean up resources
         if (injector != null) {
-            // Guice 会自动处理单例对象的清理
-            System.out.println("Guice容器资源已清理");
+            // Guice will automatically handle singleton object cleanup
+            System.out.println("Guice container resources cleaned up");
         }
         
         super.destroy();
-        System.out.println("MainServlet 销毁完成");
+        System.out.println("MainServlet destruction completed");
     }
 }

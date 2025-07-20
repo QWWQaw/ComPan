@@ -6,3 +6,4 @@ public interface JwtUtil {
     String generateToken(String obj);
     Claims validateToken(String token);
 }
+
