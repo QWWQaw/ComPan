@@ -21,16 +21,24 @@ public class DatabaseModule extends AbstractModule {
 
     }  
 
+    /**
+     * 默认数据源提供者
+     * 使用HikariCP作为连接池
+     */
     @Singleton  
     static class DefaultDataSourceProvider implements Provider<DataSource> {  
         private final AppModule config;  
 
-        // Guice 会自动注入 AppConfig  
+        // Guice 会自动注入 AppModule  
         @Inject  
         public DefaultDataSourceProvider(AppModule config) {  
             this.config = config;  
         }  
 
+        /**
+         * 获取数据源
+         * @return 数据源
+         */
         @Override  
         public DataSource get() {  
             HikariConfig hikariConfig = new HikariConfig();  

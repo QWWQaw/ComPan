@@ -1,9 +1,9 @@
 package cloud.compan.servlet.model;
 
-import cloud.compan.servlet.annotations.data.type.Entity;
-import cloud.compan.servlet.annotations.data.type.Table;
-import cloud.compan.servlet.annotations.data.field.Column;
-import cloud.compan.servlet.annotations.data.field.Id;
+import cloud.compan.servlet.annotations.Entity;
+import cloud.compan.servlet.annotations.Table;
+import cloud.compan.servlet.annotations.Column;
+import cloud.compan.servlet.annotations.Id;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -50,5 +50,4 @@ public class User {
         this.email = email;
         this.password = hashedPassword;
     }
-
 }

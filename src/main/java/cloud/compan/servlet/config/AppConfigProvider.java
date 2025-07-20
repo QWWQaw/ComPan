@@ -2,6 +2,12 @@ package cloud.compan.servlet.config;
 
 import com.google.inject.Provider;
 
+/**
+ * 提供AppModule实例的提供者
+ * 使用Guice框架管理AppModule实例
+ * 通过ConfigLoader类注入配置
+ * 返回完全配置好的AppModule实例
+ */
 public class AppConfigProvider implements Provider<AppModule> {  
 
     /**  

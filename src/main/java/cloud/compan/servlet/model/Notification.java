@@ -10,24 +10,24 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "storage_object")
+@Table(name = "notification")
 @Getter
 @Setter
-public class StorageObject {
+public class Notification {
 
     @Id
-    @Column(name = "hash")
-    private String hash;
+    @Column(name = "id")
+    private Integer id;
 
-    @Column(name = "size")
-    private Long size;
+    @Column(name = "user_id")
+    private Long userId;
 
-    @Column(name = "storage_path")
-    private String storagePath;
+    @Column(name = "message")
+    private String message;
 
-    @Column(name = "ref_count")
-    private Integer refCount;
+    @Column(name = "is_read")
+    private Boolean isRead;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
-}
+} 
