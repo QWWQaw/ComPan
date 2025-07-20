@@ -69,7 +69,7 @@ public class LoggingInterceptor implements HandlerInterceptor {
         }
         
         if (exception != null) {
-            System.out.printf("│ ❌ Error: %s - %s%n", exception.getClass().getSimpleName(), exception.getMessage());
+            System.out.printf("│  Error: %s - %s%n", exception.getClass().getSimpleName(), exception.getMessage());
         }
     }
     
@@ -80,13 +80,13 @@ public class LoggingInterceptor implements HandlerInterceptor {
         Long startTime = (Long) request.getAttribute(START_TIME_ATTRIBUTE);
         if (startTime != null) {
             long duration = System.currentTimeMillis() - startTime;
-            System.out.printf("│ ⏱️  Execution time: %d ms%n", duration);
+            System.out.printf("│   Execution time: %d ms%n", duration);
             
             // 根据执行时间添加性能提示
             if (duration > 1000) {
-                System.out.printf("│ ⚠️  Slow request warning: execution time exceeds 1 second%n");
+                System.out.printf("│ Slow request warning: execution time exceeds 1 second%n");
             } else if (duration > 500) {
-                System.out.printf("│ ⚡  Performance hint: execution time is longer%n");
+                System.out.printf("│ Performance hint: execution time is longer%n");
             }
         }
         
