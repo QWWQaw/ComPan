@@ -29,16 +29,18 @@ public class ServiceResult<T> {
     private String errorCode;
     
     public ServiceResult() {}
-    
+
     public ServiceResult(boolean success, T data, String message, String errorCode) {
         this.success = success;
         this.data = data;
         this.message = message;
         this.errorCode = errorCode;
     }
+
+    // ============ Getter和Setter方法 ============
     
     public boolean isSuccess() {
-        return success;
+        return this.success;
     }
     
     public void setSuccess(boolean success) {
@@ -46,7 +48,7 @@ public class ServiceResult<T> {
     }
     
     public T getData() {
-        return data;
+        return this.data;
     }
     
     public void setData(T data) {
@@ -54,7 +56,7 @@ public class ServiceResult<T> {
     }
     
     public String getMessage() {
-        return message;
+        return this.message;
     }
     
     public void setMessage(String message) {
@@ -62,13 +64,23 @@ public class ServiceResult<T> {
     }
     
     public String getErrorCode() {
-        return errorCode;
+        return this.errorCode;
     }
     
     public void setErrorCode(String errorCode) {
         this.errorCode = errorCode;
     }
     
+    /**
+     * 判断操作是否失败
+     * @return true表示失败，false表示成功
+     */
+    public boolean isFailure() {
+        return !this.success;
+    }
+
+    // ============ 静态工厂方法 ============
+
     /**
      * 创建成功结果
      */
@@ -89,6 +101,18 @@ public class ServiceResult<T> {
         result.setSuccess(true);
         result.setData(null);
         result.setMessage(null);
+        result.setErrorCode(null);
+        return result;
+    }
+    
+    /**
+     * 创建成功结果（带消息）
+     */
+    public static <T> ServiceResult<T> success(T data, String message) {
+        ServiceResult<T> result = new ServiceResult<>();
+        result.setSuccess(true);
+        result.setData(data);
+        result.setMessage(message);
         result.setErrorCode(null);
         return result;
     }
@@ -116,4 +140,26 @@ public class ServiceResult<T> {
         result.setErrorCode(errorCode);
         return result;
     }
-} 
+    
+    /**
+     * 创建失败结果（带错误代码和数据）
+     */
+    public static <T> ServiceResult<T> failure(String message, String errorCode, T data) {
+        ServiceResult<T> result = new ServiceResult<>();
+        result.setSuccess(false);
+        result.setData(data);
+        result.setMessage(message);
+        result.setErrorCode(errorCode);
+        return result;
+    }
+    
+    @Override
+    public String toString() {
+        return "ServiceResult{" +
+                "success=" + success +
+                ", data=" + data +
+                ", message='" + message + '\'' +
+                ", errorCode='" + errorCode + '\'' +
+                '}';
+    }
+}

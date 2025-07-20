@@ -74,7 +74,7 @@ public class AppModule extends AbstractModule {
         bind(NotificationRepository.class);
         
         // ============ Service层组件绑定 ============
-        bind(UserService.class).to(cloud.compan.servlet.service.impl.UserServiceImpl.class).in(Singleton.class);
+
         bind(AuthService.class).in(Singleton.class);  // AuthService的实现类将在以后添加
         bind(FileService.class).in(Singleton.class);  // FileService的实现类将在以后添加
     }
