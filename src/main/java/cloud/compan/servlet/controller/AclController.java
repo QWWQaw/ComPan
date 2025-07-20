@@ -194,8 +194,8 @@ public class AclController extends BaseController {
      * 更新权限
      * PUT /api/acl/permissions/{id}
      */
-    @PutMapping(path = "/permissions/{id}")
-    public ApiResponseWrapper updatePermission(@PathVariable Long id,
+    @PutMapping(path = "/{id}")
+    public ApiResponseWrapper updatePermission(@PathVariable("id") Long id,
                                               @RequestBody Map<String, Object> requestData,
                                               HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
@@ -217,11 +217,40 @@ public class AclController extends BaseController {
     }
     
     /**
-     * 删除权限
-     * DELETE /api/acl/permissions/{id}
+     * 删除资源权限
+     * DELETE /api/acl/{resourceId}/permissions
      */
-    @DeleteMapping(path = "/permissions/{id}")
-    public ApiResponseWrapper removePermission(@PathVariable Long id, HttpServletRequest request) {
+    @DeleteMapping(path = "/{resourceId}/permissions")
+    public ApiResponseWrapper removeResourcePermission(@PathVariable("resourceId") Long resourceId, 
+                                                      @RequestBody Map<String, Object> requestData,
+                                                      HttpServletRequest request) {
+        Long userId = getUserIdFromToken(request);
+        if (userId == null) {
+            return error(401, "未认证");
+        }
+        
+        if (resourceId == null) {
+            return error(400, "资源ID不能为空");
+        }
+        
+        Number aclIdObj = (Number) requestData.get("aclId");
+        if (aclIdObj == null) {
+            return error(400, "权限ID不能为空");
+        }
+        
+        Long aclId = aclIdObj.longValue();
+        
+        // 直接调用Service层删除权限
+        ServiceResult<Boolean> result = aclService.removePermission(aclId, userId);
+        return handleServiceResult(result);
+    }
+    
+    /**
+     * 删除权限
+     * DELETE /api/acl/{id}
+     */
+    @DeleteMapping(path = "/{id}")
+    public ApiResponseWrapper removePermission(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
             return error(401, "未认证");

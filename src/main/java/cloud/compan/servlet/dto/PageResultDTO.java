@@ -23,78 +23,32 @@ public class PageResultDTO<T> {
     private List<T> content;
     
     @PositiveOrZero(message = "总记录数不能为负数")
-    private long total;
-    
-    @Min(value = 1, message = "页码必须大于等于1")
-    private int page;
-    
+    private Long totalElements;  // 修正属性名
+
+    @Min(value = 0, message = "页码必须大于等于0")
+    private Integer currentPage; // 修正属性名，使用0基索引
+
     @Min(value = 1, message = "每页大小必须大于等于1")
     @Max(value = 100, message = "每页大小不能超过100")
-    private int size;
-    
+    private Integer pageSize;    // 修正属性名
+
     @PositiveOrZero(message = "总页数不能为负数")
-    private int totalPages;
-    
-    private boolean hasNext;
-    private boolean hasPrevious;
-    private boolean isEmpty;
+    private Integer totalPages;
 
-    public PageResultDTO(List<T> content, long total, int page, int size) {
-        this.content = content;
-        this.total = total;
-        this.page = page;
-        this.size = size;
-        calculateDerivedFields();
+    private Boolean hasNext;
+    private Boolean hasPrevious;
+    private Boolean isEmpty;
+
+    // 计算派生属性的方法
+    public Boolean getHasNext() {
+        return currentPage < totalPages - 1;
     }
 
-    // 计算衍生字段
-    private void calculateDerivedFields() {
-        this.totalPages = size > 0 ? (int) Math.ceil((double) total / size) : 0;
-        this.hasNext = page < totalPages;
-        this.hasPrevious = page > 1;
-        this.isEmpty = content == null || content.isEmpty();
+    public Boolean getHasPrevious() {
+        return currentPage > 0;
     }
 
-    // 自定义setter方法以保持数据一致性
-    public void setContent(List<T> content) {
-        this.content = content;
-        this.isEmpty = content == null || content.isEmpty();
-    }
-
-    public void setTotal(long total) {
-        this.total = total;
-        calculateDerivedFields();
-    }
-
-    public void setPage(int page) {
-        this.page = page;
-        calculateDerivedFields();
-    }
-
-    public void setSize(int size) {
-        this.size = size;
-        calculateDerivedFields();
-    }
-
-    // 工具方法
-    public boolean isFirstPage() {
-        return page == 1;
-    }
-
-    public boolean isLastPage() {
-        return page == totalPages;
-    }
-
-    public int getContentSize() {
-        return content != null ? content.size() : 0;
-    }
-
-    public long getStartIndex() {
-        return (long) (page - 1) * size + 1;
-    }
-
-    public long getEndIndex() {
-        long end = (long) page * size;
-        return Math.min(end, total);
+    public Boolean getIsEmpty() {
+        return content == null || content.isEmpty();
     }
 }

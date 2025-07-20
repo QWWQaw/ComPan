@@ -150,7 +150,7 @@ public class ShareController extends BaseController {
      * GET /api/shares/{id}
      */
     @GetMapping(path = "/{id}")
-    public ApiResponseWrapper getShareDetails(@PathVariable Long id, HttpServletRequest request) {
+    public ApiResponseWrapper getShareDetails(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
             return error(401, "未认证");
@@ -192,7 +192,7 @@ public class ShareController extends BaseController {
      * GET /api/shares/{id}/logs
      */
     @GetMapping(path = "/{id}/logs")
-    public ApiResponseWrapper getShareAccessLogs(@PathVariable Long id, HttpServletRequest request) {
+    public ApiResponseWrapper getShareAccessLogs(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
             return error(401, "未认证");
@@ -218,9 +218,9 @@ public class ShareController extends BaseController {
      * PATCH /api/shares/{id}
      */
     @PatchMapping(path = "/{id}")
-    public ApiResponseWrapper updateShareSettings(@PathVariable Long id,
-                                                  @RequestBody Map<String, Object> requestData,
-                                                  HttpServletRequest request) {
+    public ApiResponseWrapper updateShareSettings(@PathVariable("id") Long id,
+                                                 @RequestBody Map<String, Object> requestData,
+                                                 HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
             return error(401, "未认证");
@@ -249,7 +249,7 @@ public class ShareController extends BaseController {
      * PATCH /api/shares/{id}/toggle
      */
     @PatchMapping(path = "/{id}/toggle")
-    public ApiResponseWrapper toggleShareStatus(@PathVariable Long id,
+    public ApiResponseWrapper toggleShareStatus(@PathVariable("id") Long id,
                                                @RequestBody Map<String, Object> requestData,
                                                HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
@@ -275,7 +275,7 @@ public class ShareController extends BaseController {
      * DELETE /api/shares/{id}
      */
     @DeleteMapping(path = "/{id}")
-    public ApiResponseWrapper deleteShare(@PathVariable Long id, HttpServletRequest request) {
+    public ApiResponseWrapper deleteShare(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
             return error(401, "未认证");
@@ -321,7 +321,7 @@ public class ShareController extends BaseController {
      * POST /api/shares/{id}/regenerate
      */
     @PostMapping(path = "/{id}/regenerate")
-    public ApiResponseWrapper regenerateShareCode(@PathVariable Long id, HttpServletRequest request) {
+    public ApiResponseWrapper regenerateShareCode(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
             return error(401, "未认证");
@@ -340,7 +340,7 @@ public class ShareController extends BaseController {
      * GET /api/shares/{id}/statistics
      */
     @GetMapping(path = "/{id}/statistics")
-    public ApiResponseWrapper getShareStatistics(@PathVariable Long id, HttpServletRequest request) {
+    public ApiResponseWrapper getShareStatistics(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
             return error(401, "未认证");

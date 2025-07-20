@@ -10,17 +10,17 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 /**
- * 认证控制器
- * 继承BaseController，处理用户认证相关的HTTP请求
+ * Authentication Controller
+ * Inherits BaseController, handles HTTP requests related to user authentication
  * 
- * 实现API 1.3文档中的认证路由：
- * - POST /api/auth/register - 用户注册
- * - POST /api/auth/login - 用户登录  
- * - POST /api/auth/logout - 用户登出
- * - GET /api/me/profile - 获取用户信息
- * - PUT /api/me/update-profile - 更新用户信息
- * - PUT /api/me/password - 修改密码
- * - GET /api/me/storage-stats - 获取存储统计
+ * Implements authentication routes from API 1.3 documentation:
+ * - POST /api/auth/register - User registration
+ * - POST /api/auth/login - User login  
+ * - POST /api/auth/logout - User logout
+ * - GET /api/me/profile - Get user information
+ * - PUT /api/me/update-profile - Update user information
+ * - PUT /api/me/password - Change password
+ * - GET /api/me/storage-stats - Get storage statistics
  */
 @Controller
 @ResponseBody
@@ -29,30 +29,30 @@ public class AuthController extends BaseController {
     @Inject
     private AuthService authService;
     
-    // ============ 认证路由 /api/auth/* ============
+    // ============ Authentication Routes /api/auth/* ============
     
     /**
-     * 用户注册
+     * User registration
      * POST /api/auth/register
      * 
-     * 请求体示例：
+     * Request body example:
      * {
      *   "username": "john_doe",
-     *   "email": "john@example.com", 
+     *   "email": "john@example.com",
      *   "password": "password123"
      * }
      */
     @PostMapping(path = "/api/auth/register")
     public ApiResponseWrapper register(@RequestBody Map<String, Object> requestData) {
-        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
-                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
-        System.out.println("📥 请求参数: " + requestData);
-        // 提取请求参数
+        System.out.println("CALLED: " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "()");
+        System.out.println("REQUEST_PARAMS: " + requestData);
+        // Extract request parameters
         String username = (String) requestData.get("username");
         String email = (String) requestData.get("email");
         String password = (String) requestData.get("password");
         
-        // 参数验证
+        // Parameter validation
         requireNonEmpty(username, "username");
         requireNonEmpty(email, "email");
         requireNonEmpty(password, "password");
@@ -61,21 +61,21 @@ public class AuthController extends BaseController {
         validateStringLength(password, "password", 6, 100);
         validateEmail(email, "email");
         
-        // 调用服务层进行注册
+        // Call service layer for registration
         ServiceResult<UserDTO> result = authService.register(username, email, password);
         
         if (result.isSuccess()) {
-            return created("注册成功", result.getData());
+            return created("Registration successful", result.getData());
         } else {
             return handleServiceResult(result);
         }
     }
     
     /**
-     * 用户登录
+     * User login
      * POST /api/auth/login
      * 
-     * 请求体示例：
+     * Request body example:
      * {
      *   "username": "john_doe",
      *   "password": "password123"
@@ -84,232 +84,264 @@ public class AuthController extends BaseController {
     @PostMapping(path = "/api/auth/login")
     public ApiResponseWrapper login(@RequestBody Map<String, Object> requestData, 
                                    HttpServletRequest request) {
-        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
-                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
-        System.out.println("📥 请求参数: " + requestData);
-        // 提取请求参数
+        System.out.println("CALLED: " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "()");
+        System.out.println("REQUEST_PARAMS: " + requestData);
+        // Extract request parameters
         String username = (String) requestData.get("username");
         String password = (String) requestData.get("password");
         
-        // 参数验证
+        // Parameter validation
         requireNonEmpty(username, "username");
         requireNonEmpty(password, "password");
         
-        // 获取客户端信息（用于安全日志）
+        // Get client information (for security logs)
         String ipAddress = getClientIP(request);
         String userAgent = getUserAgent(request);
         
-        // 检查登录频率限制
+        // Check login rate limit
         ServiceResult<Boolean> rateLimitResult = authService.checkLoginRateLimit(username, ipAddress);
         if (rateLimitResult.isSuccess() && rateLimitResult.getData()) {
-            return error(429, "登录尝试过于频繁，请稍后再试");
+            return error(429, "Login attempts too frequent, please try again later");
         }
         
-        // 调用服务层进行登录
+        // Call service layer for login
         ServiceResult<LoginResultDTO> result = authService.login(username, password);
         
-        // 记录登录尝试
+        // Record login attempt
         authService.recordLoginAttempt(username, result.isSuccess(), ipAddress, userAgent);
         
         return handleServiceResult(result);
     }
     
     /**
-     * 用户登出
+     * User logout
      * POST /api/auth/logout
      * Authorization: Bearer <token>
      */
     @PostMapping(path = "/api/auth/logout")
     public ApiResponseWrapper logout(HttpServletRequest request) {
-        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
-                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
-        System.out.println("📥 请求参数: " + request.toString());
-        // 从请求头中提取token
+        System.out.println("CALLED: " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "()");
+        System.out.println("REQUEST_PARAMS: " + request.toString());
+        // Extract token from request header
         String token = extractTokenFromRequest(request);
         
         if (token == null) {
-            return error(401, "未提供认证令牌");
+            return error(401, "No authentication token provided");
         }
         
-        // 调用服务层进行登出
+        // Call service layer for logout
         ServiceResult<Void> result = authService.logout(token);
         
         if (result.isSuccess()) {
-            return success("成功退出账号");
+            return success("Successfully logged out");
         } else {
             return handleServiceResult(result);
         }
     }
     
     /**
-     * 刷新token
+     * Refresh token
      * POST /api/auth/refresh
      * Authorization: Bearer <token>
      */
     @PostMapping(path = "/api/auth/refresh")
     public ApiResponseWrapper refreshToken(HttpServletRequest request) {
-        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
-                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
-        System.out.println("📥 请求参数: " + request.toString());
+        System.out.println("CALLED: " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "()");
+        System.out.println("REQUEST_PARAMS: " + request.toString());
         String token = extractTokenFromRequest(request);
         
         if (token == null) {
-            return error(401, "未提供认证令牌");
+            return error(401, "No authentication token provided");
         }
         
+        // Call service layer to refresh token
         ServiceResult<LoginResultDTO> result = authService.refreshToken(token);
+        
         return handleServiceResult(result);
     }
     
-    // ============ 个人信息路由 /api/me/* ============
+    // ============ Personal Information Routes /api/me/* ============
     
     /**
-     * 获取当前用户信息
+     * Get user profile
      * GET /api/me/profile
      * Authorization: Bearer <token>
      */
     @GetMapping(path = "/api/me/profile")
     public ApiResponseWrapper getProfile(HttpServletRequest request) {
-        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
-                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
-        System.out.println("📥 请求参数: " + request.toString());
+        System.out.println("CALLED: " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "()");
+        System.out.println("REQUEST_PARAMS: " + request);
         String token = extractTokenFromRequest(request);
         
         if (token == null) {
-            return error(401, "未提供认证令牌");
+            return error(401, "No authentication token provided");
         }
         
+        // Get current user ID
+        ServiceResult<Long> userIdResult = authService.extractUserIdFromToken(token);
+        if (!userIdResult.isSuccess()) {
+            return handleServiceResult(userIdResult);
+        }
+        
+        Long userId = userIdResult.getData();
+        
+        // Call service layer to get user information
         ServiceResult<UserDTO> result = authService.getCurrentUser(token);
         
         if (result.isSuccess()) {
-            return success("获取用户信息成功", result.getData());
+            return success("Get user information successful", result.getData());
         } else {
             return handleServiceResult(result);
         }
     }
     
     /**
-     * 更新用户基本信息
+     * Update user profile
      * PUT /api/me/update-profile
      * Authorization: Bearer <token>
      * 
-     * 请求体示例：
+     * Request body example:
      * {
-     *   "username": "new_username",
-     *   "email": "new_email@example.com"
+     *   "displayName": "New Display Name",
+     *   "email": "newemail@example.com",
+     *   "avatar": "avatar_url"
      * }
      */
     @PutMapping(path = "/api/me/update-profile")
     public ApiResponseWrapper updateProfile(@RequestBody Map<String, Object> requestData,
                                           HttpServletRequest request) {
-        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
-                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
-        System.out.println("📥 请求参数: " + requestData);
+        System.out.println("CALLED: " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "()");
+        System.out.println("REQUEST_PARAMS: " + requestData);
         String token = extractTokenFromRequest(request);
         
         if (token == null) {
-            return error(401, "未提供认证令牌");
+            return error(401, "No authentication token provided");
         }
         
-        // 获取当前用户ID
+        // Get current user ID
         ServiceResult<Long> userIdResult = authService.extractUserIdFromToken(token);
         if (!userIdResult.isSuccess()) {
             return handleServiceResult(userIdResult);
         }
         
         Long userId = userIdResult.getData();
-        String username = (String) requestData.get("username");
+        String displayName = (String) requestData.get("displayName");
         String email = (String) requestData.get("email");
+        String avatar = (String) requestData.get("avatar");
         
-        // 参数验证
-        if (username != null) {
-            validateStringLength(username, "username", 3, 50);
+        // Parameter validation
+        if (displayName != null) {
+            validateStringLength(displayName, "displayName", 1, 100);
         }
         if (email != null) {
             validateEmail(email, "email");
         }
+        if (avatar != null) {
+            validateStringLength(avatar, "avatar", 1, 500);
+        }
         
-        // 调用服务层更新用户信息（这里需要在AuthService中添加相应方法，或者调用UserService）
-        // 暂时返回成功，具体实现根据实际需求调整
-        return success("用户信息更新成功", Map.of(
-            "userId", userId,
-            "username", username,
-            "email", email,
-            "updated_at", java.time.LocalDateTime.now()
-        ));
+        // Call service layer to update user information (need to add corresponding method in AuthService, or call UserService)
+        // Temporarily return success, specific implementation adjusted according to actual needs
+        Map<String, Object> responseData = new java.util.HashMap<>();
+        responseData.put("userId", userId);
+        if (displayName != null) responseData.put("displayName", displayName);
+        if (email != null) responseData.put("email", email);
+        if (avatar != null) responseData.put("avatar", avatar);
+        responseData.put("updated_at", java.time.LocalDateTime.now());
+        
+        return success("User information updated successfully", responseData);
     }
     
     /**
-     * 修改密码
+     * Change password
      * PUT /api/me/password
      * Authorization: Bearer <token>
      * 
-     * 请求体示例：
+     * Request body example:
      * {
      *   "old_password": "old_password123",
      *   "new_password": "new_password456"
+     * }
+     * OR
+     * {
+     *   "currentPassword": "old_password123",
+     *   "newPassword": "new_password456"
      * }
      */
     @PutMapping(path = "/api/me/password")
     public ApiResponseWrapper changePassword(@RequestBody Map<String, Object> requestData,
                                            HttpServletRequest request) {
-        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
-                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
-        System.out.println("📥 请求参数: " + requestData);
+        System.out.println("CALLED: " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "()");
+        System.out.println("REQUEST_PARAMS: " + requestData);
         String token = extractTokenFromRequest(request);
         
         if (token == null) {
-            return error(401, "未提供认证令牌");
+            return error(401, "No authentication token provided");
         }
         
-        // 获取当前用户ID
+        // Get current user ID
         ServiceResult<Long> userIdResult = authService.extractUserIdFromToken(token);
         if (!userIdResult.isSuccess()) {
             return handleServiceResult(userIdResult);
         }
         
         Long userId = userIdResult.getData();
-        String oldPassword = (String) requestData.get("old_password");
-        String newPassword = (String) requestData.get("new_password");
         
-        // 参数验证
-        requireNonEmpty(oldPassword, "old_password");
-        requireNonEmpty(newPassword, "new_password");
+        // Support multiple parameter name formats
+        String oldPassword = (String) requestData.get("old_password");
+        if (oldPassword == null) {
+            oldPassword = (String) requestData.get("currentPassword");
+        }
+        
+        String newPassword = (String) requestData.get("new_password");
+        if (newPassword == null) {
+            newPassword = (String) requestData.get("newPassword");
+        }
+        
+        // Parameter validation
+        requireNonEmpty(oldPassword, "old_password/currentPassword");
+        requireNonEmpty(newPassword, "new_password/newPassword");
         validateStringLength(newPassword, "new_password", 6, 100);
         
-        // 验证新密码强度
+        // Validate new password strength
         ServiceResult<Void> strengthResult = authService.validatePasswordStrength(newPassword);
         if (!strengthResult.isSuccess()) {
             return handleServiceResult(strengthResult);
         }
         
-        // 调用服务层修改密码
+        // Call service layer to change password
         ServiceResult<Void> result = authService.changePassword(userId, oldPassword, newPassword);
         
         if (result.isSuccess()) {
-            return success("密码修改成功");
+            return success("Password changed successfully");
         } else {
             return handleServiceResult(result);
         }
     }
     
     /**
-     * 获取存储统计信息
+     * Get storage statistics
      * GET /api/me/storage-stats
      * Authorization: Bearer <token>
      */
     @GetMapping(path = "/api/me/storage-stats")
     public ApiResponseWrapper getStorageStats(HttpServletRequest request) {
-        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
-                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
-        System.out.println("📥 请求参数: " + request.toString());
+        System.out.println("CALLED: " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "()");
+        System.out.println("REQUEST_PARAMS: " + request.toString());
         String token = extractTokenFromRequest(request);
         
         if (token == null) {
-            return error(401, "未提供认证令牌");
+            return error(401, "No authentication token provided");
         }
         
-        // 获取当前用户ID
+        // Get current user ID
         ServiceResult<Long> userIdResult = authService.extractUserIdFromToken(token);
         if (!userIdResult.isSuccess()) {
             return handleServiceResult(userIdResult);
@@ -317,9 +349,9 @@ public class AuthController extends BaseController {
         
         Long userId = userIdResult.getData();
         
-        // 这里需要调用存储服务获取统计信息
-        // 暂时返回模拟数据
-        return success("获取存储统计成功", Map.of(
+        // Need to call storage service to get statistics
+        // Temporarily return mock data
+        return success("Get storage statistics successful", Map.of(
             "storage_limit", 10737418240L,      // 10GB
             "storage_used", 1073741824L,        // 1GB 
             "storage_available", 9663676416L,   // 9GB
@@ -336,61 +368,64 @@ public class AuthController extends BaseController {
     }
     
     /**
-     * 获取用户活动日志
+     * Get user activity log
      * GET /api/me/activity-log?page=1&per_page=20&operation=upload
      * Authorization: Bearer <token>
      */
     @GetMapping(path = "/api/me/activity-log")
     public ApiResponseWrapper getActivityLog(HttpServletRequest request) {
-        System.out.println("🎯 " + this.getClass().getSimpleName() + "." +
-                Thread.currentThread().getStackTrace()[1].getMethodName() + "() 被调用");
-        System.out.println("📥 请求参数: " + request.toString());
+        System.out.println("CALLED: " + this.getClass().getSimpleName() + "." +
+                Thread.currentThread().getStackTrace()[1].getMethodName() + "()");
+        System.out.println("REQUEST_PARAMS: " + request.toString());
         String token = extractTokenFromRequest(request);
         
         if (token == null) {
-            return error(401, "未提供认证令牌");
+            return error(401, "No authentication token provided");
         }
         
-        // 获取查询参数
+        // Get query parameters
         SearchCriteria criteria = parseSearchCriteria(request);
         String operation = request.getParameter("operation");
         
-        // 这里需要调用日志服务获取活动日志
-        // 暂时返回模拟数据
-        return success("获取活动日志成功", Map.of(
-            "items", java.util.List.of(
-                Map.of(
-                    "id", 1001,
-                    "operation", "file_upload",
-                    "details", Map.of(
-                        "file_name", "document.pdf",
-                        "file_size", 1024000,
-                        "folder_path", "/工作文档"
-                    ),
-                    "ip_address", getClientIP(request),
-                    "performed_at", java.time.LocalDateTime.now()
-                )
-            ),
-            "pagination", Map.of(
-                "current_page", criteria.getPage(),
-                "per_page", criteria.getSize(),
-                "total_items", 156,
-                "total_pages", 8,
-                "has_next", true,
-                "has_prev", false
-            )
-        ));
+        // Need to call log service to get activity logs
+        // Temporarily return mock data
+        Map<String, Object> activityItem = new java.util.HashMap<>();
+        activityItem.put("id", 1001);
+        activityItem.put("operation", "file_upload");
+        
+        Map<String, Object> details = new java.util.HashMap<>();
+        details.put("file_name", "document.pdf");
+        details.put("file_size", 1024000);
+        details.put("folder_path", "/work_documents");
+        activityItem.put("details", details);
+        
+        activityItem.put("ip_address", getClientIP(request));
+        activityItem.put("performed_at", java.time.LocalDateTime.now());
+        
+        Map<String, Object> pagination = new java.util.HashMap<>();
+        pagination.put("current_page", criteria.getPage());
+        pagination.put("per_page", criteria.getSize());
+        pagination.put("total_items", 156);
+        pagination.put("total_pages", 8);
+        pagination.put("has_next", true);
+        pagination.put("has_prev", false);
+        
+        Map<String, Object> responseData = new java.util.HashMap<>();
+        responseData.put("items", java.util.List.of(activityItem));
+        responseData.put("pagination", pagination);
+        
+        return success("Get activity log successful", responseData);
     }
     
-    // ============ 辅助方法 ============
+    // ============ Helper Methods ============
     
     /**
-     * 从请求头中提取JWT token
+     * Extract JWT token from request header
      */
     private String extractTokenFromRequest(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7); // 移除 "Bearer " 前缀
+            return authHeader.substring(7); // Remove "Bearer " prefix
         }
         return null;
     }

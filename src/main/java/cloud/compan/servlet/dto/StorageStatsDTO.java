@@ -17,43 +17,43 @@ import jakarta.validation.constraints.*;
 public class StorageStatsDTO {
 
     @PositiveOrZero(message = "存储限制不能为负数")
-    private long storageLimit;
+    private Long totalStorage;  // 修正属性名
 
     @PositiveOrZero(message = "已使用存储不能为负数")
-    private long storageUsed;
-
-    @PositiveOrZero(message = "文件数量不能为负数")
-    private int fileCount;
-
-    @PositiveOrZero(message = "文件夹数量不能为负数")
-    private int folderCount;
+    private Long usedStorage;   // 修正属性名
 
     @PositiveOrZero(message = "可用空间不能为负数")
-    private long availableSpace;
+    private Long availableStorage; // 添加可用空间
 
     @DecimalMin(value = "0.0", message = "使用百分比不能为负数")
     @DecimalMax(value = "100.0", message = "使用百分比不能超过100")
-    private double usagePercentage;
-    
-    public StorageStatsDTO(long storageLimit, long storageUsed, int fileCount, int folderCount) {
-        this.storageLimit = storageLimit;
-        this.storageUsed = storageUsed;
+    private Double usagePercentage; // 添加使用百分比
+
+    @PositiveOrZero(message = "文件数量不能为负数")
+    private Integer fileCount;
+
+    @PositiveOrZero(message = "文件夹数量不能为负数")
+    private Integer folderCount;
+
+    public StorageStatsDTO(long totalStorage, long usedStorage, int fileCount, int folderCount) {
+        this.totalStorage = totalStorage;
+        this.usedStorage = usedStorage;
         this.fileCount = fileCount;
         this.folderCount = folderCount;
-        this.availableSpace = storageLimit - storageUsed;
-        this.usagePercentage = storageLimit > 0 ? (double) storageUsed / storageLimit * 100.0 : 0.0;
+        this.availableStorage = totalStorage - usedStorage;
+        this.usagePercentage = totalStorage > 0 ? (double) usedStorage / totalStorage * 100.0 : 0.0;
     }
 
     // 自定义setter方法以保持数据一致性
-    public void setStorageLimit(long storageLimit) {
-        this.storageLimit = storageLimit;
-        this.availableSpace = storageLimit - storageUsed;
-        this.usagePercentage = storageLimit > 0 ? (double) storageUsed / storageLimit * 100.0 : 0.0;
+    public void setTotalStorage(long totalStorage) {
+        this.totalStorage = totalStorage;
+        this.availableStorage = totalStorage - usedStorage;
+        this.usagePercentage = totalStorage > 0 ? (double) usedStorage / totalStorage * 100.0 : 0.0;
     }
     
-    public void setStorageUsed(long storageUsed) {
-        this.storageUsed = storageUsed;
-        this.availableSpace = storageLimit - storageUsed;
-        this.usagePercentage = storageLimit > 0 ? (double) storageUsed / storageLimit * 100.0 : 0.0;
+    public void setUsedStorage(long usedStorage) {
+        this.usedStorage = usedStorage;
+        this.availableStorage = totalStorage - usedStorage;
+        this.usagePercentage = totalStorage > 0 ? (double) usedStorage / totalStorage * 100.0 : 0.0;
     }
 }

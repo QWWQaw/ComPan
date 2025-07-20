@@ -78,10 +78,10 @@ public class NotificationController extends BaseController {
     
     /**
      * 标记通知为已读
-     * PATCH /api/notifications/{id}/read
+     * PUT /api/notifications/{id}/read
      */
-    @PatchMapping(path = "/{id}/read")
-    public ApiResponseWrapper markAsRead(@PathVariable Long id, HttpServletRequest request) {
+    @PutMapping(path = "/{id}/read")
+    public ApiResponseWrapper markAsRead(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
             return error(401, "未认证");
@@ -91,6 +91,7 @@ public class NotificationController extends BaseController {
             return error(400, "通知ID不能为空");
         }
         
+        // 直接调用Service层标记通知为已读
         ServiceResult<Boolean> result = notificationService.markAsRead(id, userId);
         return handleServiceResult(result);
     }
@@ -142,7 +143,7 @@ public class NotificationController extends BaseController {
      * DELETE /api/notifications/{id}
      */
     @DeleteMapping(path = "/{id}")
-    public ApiResponseWrapper deleteNotification(@PathVariable Long id, HttpServletRequest request) {
+    public ApiResponseWrapper deleteNotification(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
             return error(401, "未认证");

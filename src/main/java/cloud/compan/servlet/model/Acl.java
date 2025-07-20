@@ -4,13 +4,14 @@ import cloud.compan.servlet.annotations.Column;
 import cloud.compan.servlet.annotations.Id;
 import cloud.compan.servlet.annotations.Entity;
 import cloud.compan.servlet.annotations.Table;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Table(name = "acl")
-@Getter
-@Setter
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Acl {
 
     @Id

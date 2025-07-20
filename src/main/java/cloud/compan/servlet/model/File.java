@@ -4,15 +4,16 @@ import cloud.compan.servlet.annotations.Column;
 import cloud.compan.servlet.annotations.Id;
 import cloud.compan.servlet.annotations.Entity;
 import cloud.compan.servlet.annotations.Table;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "file")
-@Getter
-@Setter
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class File {
 
     @Id
@@ -27,6 +28,9 @@ public class File {
 
     @Column(name = "file_name")
     private String fileName;
+
+    @Column(name = "file_size")
+    private Long fileSize;
 
     @Column(name = "mime_type")
     private String mimeType;
@@ -45,4 +49,4 @@ public class File {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
-} 
+}

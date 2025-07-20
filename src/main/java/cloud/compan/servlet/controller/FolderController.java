@@ -125,7 +125,7 @@ public class FolderController extends BaseController {
      * GET /api/folders/{id}
      */
     @GetMapping(path = "/{id}")
-    public ApiResponseWrapper getFolderDetails(@PathVariable Long id, HttpServletRequest request) {
+    public ApiResponseWrapper getFolderDetails(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
             return error(401, "未认证");
@@ -135,6 +135,7 @@ public class FolderController extends BaseController {
             return error(400, "文件夹ID不能为空");
         }
         
+        // 直接调用Service层获取文件夹详情
         ServiceResult<Folder> result = folderService.getFolderDetails(id, userId);
         return handleServiceResult(result);
     }
@@ -144,7 +145,7 @@ public class FolderController extends BaseController {
      * GET /api/folders/{id}/path
      */
     @GetMapping(path = "/{id}/path")
-    public ApiResponseWrapper getFolderPath(@PathVariable Long id, HttpServletRequest request) {
+    public ApiResponseWrapper getFolderPath(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
             return error(401, "未认证");
@@ -154,6 +155,7 @@ public class FolderController extends BaseController {
             return error(400, "文件夹ID不能为空");
         }
         
+        // 直接调用Service层获取文件夹路径
         ServiceResult<List<Map<String, Object>>> result = folderService.getFolderPath(id, userId);
         return handleServiceResult(result);
     }
@@ -208,7 +210,7 @@ public class FolderController extends BaseController {
      * PATCH /api/folders/{id}
      */
     @PatchMapping(path = "/{id}")
-    public ApiResponseWrapper renameFolder(@PathVariable Long id,
+    public ApiResponseWrapper renameFolder(@PathVariable("id") Long id,
                                           @RequestBody Map<String, Object> requestData,
                                           HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
@@ -234,7 +236,7 @@ public class FolderController extends BaseController {
      * PATCH /api/folders/{id}/move
      */
     @PatchMapping(path = "/{id}/move")
-    public ApiResponseWrapper moveFolder(@PathVariable Long id,
+    public ApiResponseWrapper moveFolder(@PathVariable("id") Long id,
                                         @RequestBody Map<String, Object> requestData,
                                         HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
@@ -262,7 +264,7 @@ public class FolderController extends BaseController {
      * POST /api/folders/{id}/copy
      */
     @PostMapping(path = "/{id}/copy")
-    public ApiResponseWrapper copyFolder(@PathVariable Long id,
+    public ApiResponseWrapper copyFolder(@PathVariable("id") Long id,
                                         @RequestBody Map<String, Object> requestData,
                                         HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
@@ -295,7 +297,7 @@ public class FolderController extends BaseController {
      * DELETE /api/folders/{id}
      */
     @DeleteMapping(path = "/{id}")
-    public ApiResponseWrapper deleteFolder(@PathVariable Long id, HttpServletRequest request) {
+    public ApiResponseWrapper deleteFolder(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
             return error(401, "未认证");
@@ -356,7 +358,7 @@ public class FolderController extends BaseController {
      * GET /api/folders/{id}/permissions
      */
     @GetMapping(path = "/{id}/permissions")
-    public ApiResponseWrapper getFolderPermissions(@PathVariable Long id, HttpServletRequest request) {
+    public ApiResponseWrapper getFolderPermissions(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
             return error(401, "未认证");
@@ -375,7 +377,7 @@ public class FolderController extends BaseController {
      * GET /api/folders/{id}/statistics
      */
     @GetMapping(path = "/{id}/statistics")
-    public ApiResponseWrapper getFolderStatistics(@PathVariable Long id, HttpServletRequest request) {
+    public ApiResponseWrapper getFolderStatistics(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
             return error(401, "未认证");

@@ -120,7 +120,7 @@ public abstract class BaseController {
     }
     
     /**
-     * 解析分页参数
+     * Parse pagination parameters
      */
     protected SearchCriteria parseSearchCriteria(HttpServletRequest request) {
         try {
@@ -130,28 +130,27 @@ public abstract class BaseController {
             String sort = request.getParameter("sort");
             String order = request.getParameter("order");
             
-            // 验证分页参数
+            // Validate pagination parameters
             if (page < 1) {
-                throw HttpExceptions.badRequest("页码必须大于0");
+                throw HttpExceptions.badRequest("Page number must be greater than 0");
             }
             if (size < 1 || size > 100) {
-                throw HttpExceptions.badRequest("每页大小必须在1-100之间");
+                throw HttpExceptions.badRequest("Page size must be between 1-100");
             }
             
-            return new SearchCriteria()
-                .keyword(search)
+            return new SearchCriteria(search)
                 .sortBy(sort)
                 .sortDirection(order)
                 .page(page)
                 .size(size);
             
         } catch (Exception e) {
-            throw HttpExceptions.badRequest("分页参数解析失败: " + e.getMessage());
+            throw HttpExceptions.badRequest("Failed to parse pagination parameters: " + e.getMessage());
         }
     }
     
     /**
-     * 解析整数参数
+     * Parse integer parameter
      */
     protected int parseIntParam(HttpServletRequest request, String paramName, int defaultValue) {
         String value = request.getParameter(paramName);
@@ -161,12 +160,12 @@ public abstract class BaseController {
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException e) {
-            throw HttpExceptions.badRequest("参数 '" + paramName + "' 必须是有效的整数");
+            throw HttpExceptions.badRequest("Parameter '" + paramName + "' must be a valid integer");
         }
     }
     
     /**
-     * 解析长整数参数
+     * Parse long integer parameter
      */
     protected long parseLongParam(HttpServletRequest request, String paramName, long defaultValue) {
         String value = request.getParameter(paramName);
@@ -176,12 +175,12 @@ public abstract class BaseController {
         try {
             return Long.parseLong(value);
         } catch (NumberFormatException e) {
-            throw HttpExceptions.badRequest("参数 '" + paramName + "' 必须是有效的长整数");
+            throw HttpExceptions.badRequest("Parameter '" + paramName + "' must be a valid long integer");
         }
     }
     
     /**
-     * 解析布尔参数
+     * Parse boolean parameter
      */
     protected boolean parseBooleanParam(HttpServletRequest request, String paramName, boolean defaultValue) {
         String value = request.getParameter(paramName);
@@ -192,25 +191,25 @@ public abstract class BaseController {
     }
     
     /**
-     * 验证必需参数
+     * Validate required parameter
      */
     protected void requireNonNull(Object value, String paramName) {
         if (value == null) {
-            throw HttpExceptions.badRequest("参数 '" + paramName + "' 不能为空");
+            throw HttpExceptions.badRequest("Parameter '" + paramName + "' cannot be null");
         }
     }
     
     /**
-     * 验证字符串参数
+     * Validate string parameter
      */
     protected void requireNonEmpty(String value, String paramName) {
         if (value == null || value.trim().isEmpty()) {
-            throw HttpExceptions.badRequest("参数 '" + paramName + "' 不能为空");
+            throw HttpExceptions.badRequest("Parameter '" + paramName + "' cannot be empty");
         }
     }
     
     /**
-     * 验证字符串长度
+     * Validate string length
      */
     protected void validateStringLength(String value, String paramName, int minLength, int maxLength) {
         if (value == null) return;
@@ -218,25 +217,25 @@ public abstract class BaseController {
         int length = value.length();
         if (length < minLength || length > maxLength) {
             throw HttpExceptions.badRequest(
-                String.format("参数 '%s' 长度必须在%d-%d之间，当前长度: %d", 
+                String.format("Parameter '%s' length must be between %d-%d, current length: %d", 
                     paramName, minLength, maxLength, length));
         }
     }
     
     /**
-     * 验证邮箱格式
+     * Validate email format
      */
     protected void validateEmail(String email, String paramName) {
         if (email == null || email.trim().isEmpty()) return;
         
         String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
         if (!email.matches(emailRegex)) {
-            throw HttpExceptions.badRequest("参数 '" + paramName + "' 不是有效的邮箱格式");
+            throw HttpExceptions.badRequest("Parameter '" + paramName + "' is not a valid email format");
         }
     }
     
     /**
-     * 获取客户端IP地址
+     * Get client IP address
      */
     protected String getClientIP(HttpServletRequest request) {
         String[] headers = {
@@ -257,14 +256,14 @@ public abstract class BaseController {
     }
     
     /**
-     * 获取User-Agent
+     * Get User-Agent
      */
     protected String getUserAgent(HttpServletRequest request) {
         return request.getHeader("User-Agent");
     }
     
     /**
-     * 将错误码映射为HTTP状态码
+     * Map error code to HTTP status code
      */
     private int mapErrorCodeToHttpStatus(String errorCode) {
         if (errorCode == null) return 500;
@@ -298,13 +297,15 @@ public abstract class BaseController {
                 return 413; // Payload Too Large
                 
             case "UNSUPPORTED_OPERATION":
+            case "UNSUPPORTED_MEDIA_TYPE":
                 return 415; // Unsupported Media Type
                 
             case "RATE_LIMIT_EXCEEDED":
+            case "TOO_MANY_REQUESTS":
                 return 429; // Too Many Requests
                 
             default:
                 return 500; // Internal Server Error
         }
     }
-} 
+}

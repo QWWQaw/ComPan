@@ -1,5 +1,6 @@
 package cloud.compan.servlet.web.response;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
 import java.util.List;
 
@@ -9,11 +10,25 @@ import java.util.List;
  */
 public class ApiResponseWrapper {
     
-    private final boolean success;
-    private final int code;
-    private final String message;
-    private final Object data;
-    private final String timestamp;
+    @JsonProperty("success")
+    private boolean success;
+    
+    @JsonProperty("code")
+    private int code;
+    
+    @JsonProperty("message")
+    private String message;
+    
+    @JsonProperty("data")
+    private Object data;
+    
+    @JsonProperty("timestamp")
+    private String timestamp;
+    
+    // 默认构造函数，用于JSON反序列化
+    public ApiResponseWrapper() {
+        this.timestamp = Instant.now().toString();
+    }
     
     private ApiResponseWrapper(boolean success, int code, String message, Object data) {
         this.success = success;
@@ -80,19 +95,34 @@ public class ApiResponseWrapper {
         }
     }
     
-    // Getters
+    // Getters and Setters for JSON serialization/deserialization
     public boolean isSuccess() { return success; }
+    public void setSuccess(boolean success) { this.success = success; }
+    
     public int getCode() { return code; }
+    public void setCode(int code) { this.code = code; }
+    
     public String getMessage() { return message; }
+    public void setMessage(String message) { this.message = message; }
+    
     public Object getData() { return data; }
+    public void setData(Object data) { this.data = data; }
+    
     public String getTimestamp() { return timestamp; }
+    public void setTimestamp(String timestamp) { this.timestamp = timestamp; }
     
     /**
      * 错误数据结构
      */
     public static class ErrorData {
-        private final String errorCode;
-        private final List<ValidationError> errors;
+        @JsonProperty("errorCode")
+        private String errorCode;
+        
+        @JsonProperty("errors")
+        private List<ValidationError> errors;
+        
+        // 默认构造函数，用于JSON反序列化
+        public ErrorData() {}
         
         public ErrorData(String errorCode, List<ValidationError> errors) {
             this.errorCode = errorCode;
@@ -100,6 +130,9 @@ public class ApiResponseWrapper {
         }
         
         public String getErrorCode() { return errorCode; }
+        public void setErrorCode(String errorCode) { this.errorCode = errorCode; }
+        
         public List<ValidationError> getErrors() { return errors; }
+        public void setErrors(List<ValidationError> errors) { this.errors = errors; }
     }
-} 
+}

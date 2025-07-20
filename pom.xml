@@ -71,6 +71,12 @@
       <artifactId>jackson-annotations</artifactId>
       <version>2.19.1</version>
     </dependency>
+    <!-- Jackson JSR310 module for Java 8 time support -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.datatype</groupId>
+      <artifactId>jackson-datatype-jsr310</artifactId>
+      <version>2.19.1</version>
+    </dependency>
 
     <!-- Jakarta Web API - 兼容Tomcat 10.1+ -->
     <dependency>
@@ -234,6 +240,17 @@
         <artifactId>jjwt-jackson</artifactId>
         <version>0.12.6</version>
         <scope>runtime</scope>
+    </dependency>
+
+<!--    <dependency>-->
+<!--      <groupId>org.glassfish</groupId>-->
+<!--      <artifactId>jakarta.el</artifactId>-->
+<!--      <version>5.0.0</version> <scope>test</scope>-->
+<!--    </dependency>-->
+    <dependency>
+      <groupId>com.fasterxml.jackson.datatype</groupId>
+      <artifactId>jackson-datatype-jsr310</artifactId>
+      <version>2.19.1</version>
     </dependency>
 
   </dependencies>
