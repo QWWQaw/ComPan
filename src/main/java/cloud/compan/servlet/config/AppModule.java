@@ -1,5 +1,8 @@
 package cloud.compan.servlet.config;
 
+import cloud.compan.servlet.service.impl.UserServiceImpl;
+import cloud.compan.servlet.service.impl.AuthServiceImpl;
+import cloud.compan.servlet.service.impl.FileServiceImpl;
 import cloud.compan.servlet.utils.HashUtil;
 import cloud.compan.servlet.utils.JdbcExecutor;
 import cloud.compan.servlet.utils.JsonUtils;
@@ -80,15 +83,16 @@ public class AppModule extends AbstractModule {
         bind(NotificationRepository.class);
         
         // ============ Service层组件绑定 ============
-        // bind(UserService.class).in(Singleton.class);  // UserService的实现类将在以后添加
-        // bind(AuthService.class).in(Singleton.class);  // AuthService的实现类将在以后添加
-        // bind(FileService.class).in(Singleton.class);  // FileService的实现类将在以后添加
-        // bind(FolderService.class).in(Singleton.class);  // FolderService的实现类将在以后添加
-        // bind(ShareService.class).in(Singleton.class);  // ShareService的实现类将在以后添加
-        // bind(NotificationService.class).in(Singleton.class);  // NotificationService的实现类将在以后添加
-        // bind(AclService.class).in(Singleton.class);  // AclService的实现类将在以后添加
-        // bind(RecycleBinService.class).in(Singleton.class);  // RecycleBinService的实现类将在以后添加
-        // bind(StorageService.class).in(Singleton.class);  // StorageService的实现类将在以后添加
+        bind(UserService.class).to(UserServiceImpl.class).in(Singleton.class);
+        bind(AuthService.class).to(AuthServiceImpl.class).in(Singleton.class);
+        bind(FileService.class).to(FileServiceImpl.class).in(Singleton.class);
+        // 暂时注释掉没有实现类的服务
+        // bind(FolderService.class).to(FolderServiceImpl.class).in(Singleton.class);
+        // bind(ShareService.class).to(ShareServiceImpl.class).in(Singleton.class);
+        // bind(NotificationService.class).to(NotificationServiceImpl.class).in(Singleton.class);
+        // bind(AclService.class).to(AclServiceImpl.class).in(Singleton.class);
+        // bind(RecycleBinService.class).to(RecycleBinServiceImpl.class).in(Singleton.class);
+        // bind(StorageService.class).to(StorageServiceImpl.class).in(Singleton.class);
     }
 
     public String getDefaultDataSourceName() {  

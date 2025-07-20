@@ -1,8 +1,6 @@
 package cloud.compan.servlet.service;
 
-import cloud.compan.servlet.dto.ServiceResult;
-import cloud.compan.servlet.dto.PageResultDTO;
-import cloud.compan.servlet.dto.FileDTO;
+import cloud.compan.servlet.dto.*;
 import cloud.compan.servlet.model.File;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.InputStream;
@@ -16,7 +14,9 @@ import java.util.Map;
 public interface FileService {
     
     // ============ 文件上传相关 ============
-    
+
+    ServiceResult<byte[]> downloadFile(Long fileId, Long userId);
+
     /**
      * 文件上传
      * @param fileName 文件名
@@ -157,7 +157,13 @@ public interface FileService {
      * @return 复制结果
      */
     ServiceResult<FileDTO> copyFile(Long fileId, Long targetFolderId, String newFileName, Long userId);
-    
+
+    ServiceResult<File> uploadFile(Long userId, String fileName, String contentType, Long fileSize, byte[] content);
+
+    ServiceResult<File> getFileById(Long fileId);
+
+    ServiceResult<PageResultDTO<File>> getUserFiles(Long userId, SearchCriteria criteria);
+
     /**
      * 删除文件（移入回收站）
      * @param fileId 文件ID
@@ -165,7 +171,9 @@ public interface FileService {
      * @return 删除结果
      */
     ServiceResult<Boolean> deleteFile(Long fileId, Long userId);
-    
+
+    ServiceResult<StorageStatsDTO> getStorageStats(Long userId);
+
     /**
      * 批量操作文件
      * @param fileIds 文件ID列表

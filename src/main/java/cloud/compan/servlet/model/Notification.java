@@ -4,30 +4,41 @@ import cloud.compan.servlet.annotations.Column;
 import cloud.compan.servlet.annotations.Id;
 import cloud.compan.servlet.annotations.Entity;
 import cloud.compan.servlet.annotations.Table;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "notification")
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class Notification {
 
     @Id
-    @Column(name = "id")
-    private Integer id;
+    @Column(name = "notification_id")
+    private Long notificationId;
 
     @Column(name = "user_id")
     private Long userId;
 
+    @Column(name = "title")
+    private String title;
+
     @Column(name = "message")
     private String message;
+
+    @Column(name = "type")
+    private String type;
 
     @Column(name = "is_read")
     private Boolean isRead;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
-} 
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+}
