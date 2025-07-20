@@ -19,7 +19,7 @@ public class PageResultDTO<T> {
     private boolean isEmpty;
     
     public PageResultDTO() {}
-    
+
     public PageResultDTO(List<T> content, long total, int page, int size) {
         this.content = content;
         this.total = total;
@@ -30,75 +30,33 @@ public class PageResultDTO<T> {
         this.hasPrevious = page > 1;
         this.isEmpty = content == null || content.isEmpty();
     }
-    
-    public List<T> getContent() {
-        return content;
-    }
-    
+
+    // getters and setters
+
     public void setContent(List<T> content) {
         this.content = content;
         this.isEmpty = content == null || content.isEmpty();
     }
-    
-    public long getTotal() {
-        return total;
-    }
-    
+
     public void setTotal(long total) {
         this.total = total;
         this.totalPages = (int) Math.ceil((double) total / size);
         this.hasNext = page < totalPages;
     }
     
-    public int getPage() {
-        return page;
-    }
-    
+
     public void setPage(int page) {
         this.page = page;
         this.hasNext = page < totalPages;
         this.hasPrevious = page > 1;
     }
-    
-    public int getSize() {
-        return size;
-    }
-    
+
     public void setSize(int size) {
         this.size = size;
         this.totalPages = (int) Math.ceil((double) total / size);
         this.hasNext = page < totalPages;
     }
-    
-    public int getTotalPages() {
-        return totalPages;
-    }
-    
-    public void setTotalPages(int totalPages) {
-        this.totalPages = totalPages;
-    }
-    
-    public boolean isHasNext() {
-        return hasNext;
-    }
-    
-    public void setHasNext(boolean hasNext) {
-        this.hasNext = hasNext;
-    }
-    
-    public boolean isHasPrevious() {
-        return hasPrevious;
-    }
-    
-    public void setHasPrevious(boolean hasPrevious) {
-        this.hasPrevious = hasPrevious;
-    }
-    
-    public boolean isEmpty() {
-        return isEmpty;
-    }
-    
-    public void setEmpty(boolean empty) {
-        isEmpty = empty;
-    }
-} 
+
+
+
+}

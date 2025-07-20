@@ -172,7 +172,7 @@ public class UserController extends BaseController {
     
     /**
      * 获取存储统计信息
-     * GET /api/v1/users/{id}/storage
+     * GET /api/users/{id}/storage
      */
     @GetMapping(path = "/{id}/storage")
     public ApiResponseWrapper getStorageStats(@PathVariable Long id) {
