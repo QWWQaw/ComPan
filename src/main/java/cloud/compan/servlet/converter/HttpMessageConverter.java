@@ -1,4 +1,4 @@
-package cloud.compan.servlet.web;
+package cloud.compan.servlet.converter;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

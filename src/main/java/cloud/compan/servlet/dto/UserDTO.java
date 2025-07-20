@@ -1,11 +1,13 @@
 package cloud.compan.servlet.dto;
 
 import java.time.LocalDateTime;
+import lombok.Data;
 
 /**
  * 用户数据传输对象
  * 用于控制层和服务层之间的用户数据传输
  */
+@Data
 public class UserDTO {
     private Long userId;
     private String username;

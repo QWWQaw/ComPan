@@ -1,4 +1,5 @@
 package cloud.compan.servlet.dto;
+import lombok.Data;
 
 import java.util.List;
 
@@ -6,6 +7,7 @@ import java.util.List;
  * 分页结果数据传输对象
  * 封装分页查询的结果数据，用于前端展示
  */
+@Data
 public class PageResultDTO<T> {
     private List<T> content;
     private long total;

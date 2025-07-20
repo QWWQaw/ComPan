@@ -1,9 +1,11 @@
 package cloud.compan.servlet.dto;
+import lombok.Data;
 
 /**
  * 登录结果数据传输对象
  * 封装登录成功后返回给客户端的数据
  */
+@Data
 public class LoginResultDTO {
     private UserDTO user;
     private String token;
