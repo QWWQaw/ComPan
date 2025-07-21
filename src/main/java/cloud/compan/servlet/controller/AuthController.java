@@ -1,13 +1,21 @@
 package cloud.compan.servlet.controller;
 
-import cloud.compan.servlet.annotations.*;
-import cloud.compan.servlet.service.AuthService;
-import cloud.compan.servlet.dto.*;
-import cloud.compan.servlet.web.response.ApiResponseWrapper;
-import com.google.inject.Inject;
-import jakarta.servlet.http.HttpServletRequest;
-
 import java.util.Map;
+import jakarta.servlet.http.HttpServletRequest;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import cloud.compan.servlet.annotations.Controller;
+import cloud.compan.servlet.annotations.GetMapping;
+import cloud.compan.servlet.annotations.PostMapping;
+import cloud.compan.servlet.annotations.PutMapping;
+import cloud.compan.servlet.annotations.RequestBody;
+import cloud.compan.servlet.annotations.ResponseBody;
+import cloud.compan.servlet.dto.LoginResultDTO;
+import cloud.compan.servlet.dto.SearchCriteria;
+import cloud.compan.servlet.dto.ServiceResult;
+import cloud.compan.servlet.dto.UserDTO;
+import cloud.compan.servlet.service.AuthService;
+import cloud.compan.servlet.web.response.ApiResponseWrapper;
 
 /**
  * Authentication Controller
@@ -24,6 +32,7 @@ import java.util.Map;
  */
 @Controller
 @ResponseBody
+@Singleton
 public class AuthController extends BaseController {
     
     @Inject

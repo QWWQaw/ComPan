@@ -1,20 +1,20 @@
 package cloud.compan.servlet.repository;
 
+import java.time.LocalDateTime;
+import java.util.Optional;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import cloud.compan.servlet.annotations.Repository;
 import cloud.compan.servlet.model.User;
 import cloud.compan.servlet.utils.HashUtil;
 import cloud.compan.servlet.utils.JdbcExecutor;
-
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
-import java.time.LocalDateTime;
-import java.util.Optional;
 
 /**
  * 继承自 {@link BaseRepository}，提供了对 {@link User} 实体的特定数据访问操作。
  * 它利用基类提供的通用 CRUD 功能，并添加了用户特有的查询，例如按用户名查找。
  */
 @Singleton
+@Repository
 public class UserRepository extends BaseRepository<User, Long> {
 
     private final HashUtil hashUtil;

@@ -1,21 +1,23 @@
 package cloud.compan.servlet.service.impl;
 
-import cloud.compan.servlet.service.ShareService;
-import cloud.compan.servlet.dto.ServiceResult;
-import cloud.compan.servlet.dto.PageResultDTO;
-import cloud.compan.servlet.model.Share;
-import jakarta.servlet.http.HttpServletRequest;
-import com.google.inject.Singleton;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.UUID;
+import jakarta.servlet.http.HttpServletRequest;
+import com.google.inject.Singleton;
+import cloud.compan.servlet.annotations.Service;
+import cloud.compan.servlet.dto.PageResultDTO;
+import cloud.compan.servlet.dto.ServiceResult;
+import cloud.compan.servlet.model.Share;
+import cloud.compan.servlet.service.ShareService;
 
 /**
  * 分享服务实现类
  * 简化实现，主要用于测试
  */
+@Service
 @Singleton
 public class ShareServiceImpl implements ShareService {
     

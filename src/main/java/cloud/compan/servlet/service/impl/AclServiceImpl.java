@@ -1,14 +1,15 @@
 package cloud.compan.servlet.service.impl;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import cloud.compan.servlet.annotations.Service;
 import cloud.compan.servlet.dto.PageResultDTO;
 import cloud.compan.servlet.dto.ServiceResult;
 import cloud.compan.servlet.model.Acl;
 import cloud.compan.servlet.service.AclService;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+@Service
 public class AclServiceImpl implements AclService {
     @Override
     public ServiceResult<Acl> setPermission(String resourceType, Long resourceId, Long targetUserId, String permission, Long userId) {

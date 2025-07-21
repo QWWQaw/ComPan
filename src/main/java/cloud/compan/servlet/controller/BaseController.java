@@ -1,19 +1,34 @@
 package cloud.compan.servlet.controller;
 
+import java.util.ArrayList;
+import java.util.List;
+import jakarta.servlet.http.HttpServletRequest;
 import cloud.compan.servlet.dto.PageResultDTO;
 import cloud.compan.servlet.dto.SearchCriteria;
 import cloud.compan.servlet.dto.ServiceResult;
 import cloud.compan.servlet.web.exception.HttpExceptions;
 import cloud.compan.servlet.web.response.ApiResponseWrapper;
 import cloud.compan.servlet.web.response.ValidationError;
-import jakarta.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 控制器基类
  * 提供通用的响应处理、分页、验证等功能
+ * 控制器街垒接受 service 层返回的 ServiceResult 对象，并根据其状态码和错误码返回相应的 ApiResponseWrapper 对象
+ * serviceResult 对象包含以下方法：
+ * - isSuccess()：是否成功
+ * - getErrorCode()：错误码
+ * - getMessage()：错误消息
+ * - getData()：数据
+ * 
+ * ApiResponseWrapper 对象包含以下方法：
+ * - success(message, data)：成功响应
+ * - error(code, message)：错误响应
+ * - created(message, data)：创建成功响应
+ * - validationError(message, errors)：验证错误响应
+ * 
+ * 
  */
+
 public abstract class BaseController {
     
     /**

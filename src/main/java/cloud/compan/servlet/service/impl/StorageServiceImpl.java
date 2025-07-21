@@ -1,16 +1,17 @@
 package cloud.compan.servlet.service.impl;
 
-import cloud.compan.servlet.service.*;
-import cloud.compan.servlet.dto.*;
-import cloud.compan.servlet.model.*;
-import jakarta.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import com.google.inject.Singleton;
-import java.time.LocalDateTime;
-import java.util.*;
+import cloud.compan.servlet.annotations.Service;
+import cloud.compan.servlet.dto.ServiceResult;
+import cloud.compan.servlet.service.StorageService;
 
 /**
  * 存储服务实现类
  */
+@Service
 @Singleton  
 public class StorageServiceImpl implements StorageService {
     

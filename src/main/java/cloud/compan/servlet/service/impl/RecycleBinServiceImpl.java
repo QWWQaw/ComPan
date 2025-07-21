@@ -1,17 +1,19 @@
 package cloud.compan.servlet.service.impl;
 
-import cloud.compan.servlet.service.RecycleBinService;
-import cloud.compan.servlet.dto.ServiceResult;
-import cloud.compan.servlet.dto.PageResultDTO;
-import com.google.inject.Singleton;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
+import com.google.inject.Singleton;
+import cloud.compan.servlet.annotations.Service;
+import cloud.compan.servlet.dto.PageResultDTO;
+import cloud.compan.servlet.dto.ServiceResult;
+import cloud.compan.servlet.service.RecycleBinService;
 
 /**
  * 回收站服务实现类
  * 简化实现，主要用于测试
  */
+@Service
 @Singleton
 public class RecycleBinServiceImpl implements RecycleBinService {
     

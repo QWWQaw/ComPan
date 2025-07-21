@@ -1,13 +1,14 @@
 package cloud.compan.servlet.repository;
 
-import cloud.compan.servlet.model.StorageObject;
-import cloud.compan.servlet.utils.JdbcExecutor;
+import java.util.Optional;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
-import java.util.Optional;
+import cloud.compan.servlet.annotations.Repository;
+import cloud.compan.servlet.model.StorageObject;
+import cloud.compan.servlet.utils.JdbcExecutor;
 
 @Singleton
+@Repository
 public class StorageObjectRepository extends BaseRepository<StorageObject, String> {
 
     @Inject

@@ -1,15 +1,16 @@
 package cloud.compan.servlet.repository;
 
-import cloud.compan.servlet.model.Log;
-import cloud.compan.servlet.utils.JdbcExecutor;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.time.LocalDateTime;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import cloud.compan.servlet.annotations.Repository;
+import cloud.compan.servlet.model.Log;
+import cloud.compan.servlet.utils.JdbcExecutor;
 
 @Singleton
+@Repository
 public class LogRepository extends BaseRepository<Log, Integer> {
 
     @Inject

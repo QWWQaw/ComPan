@@ -1,19 +1,25 @@
 package cloud.compan.servlet.service.impl;
 
-import cloud.compan.servlet.service.FileService;
-import cloud.compan.servlet.dto.*;
-import cloud.compan.servlet.model.File;
-import jakarta.servlet.http.HttpServletRequest;
-import com.google.inject.Singleton;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
+import jakarta.servlet.http.HttpServletRequest;
+import com.google.inject.Singleton;
+import cloud.compan.servlet.annotations.Service;
+import cloud.compan.servlet.dto.FileDTO;
+import cloud.compan.servlet.dto.PageResultDTO;
+import cloud.compan.servlet.dto.SearchCriteria;
+import cloud.compan.servlet.dto.ServiceResult;
+import cloud.compan.servlet.dto.StorageStatsDTO;
+import cloud.compan.servlet.model.File;
+import cloud.compan.servlet.service.FileService;
 
 /**
  * 文件服务实现类
  * 简化实现，主要用于测试
  */
+@Service
 @Singleton
 public class FileServiceImpl implements FileService {
 

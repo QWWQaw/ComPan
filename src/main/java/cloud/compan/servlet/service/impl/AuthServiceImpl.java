@@ -1,15 +1,17 @@
 package cloud.compan.servlet.service.impl;
 
-import cloud.compan.servlet.service.AuthService;
-import cloud.compan.servlet.dto.ServiceResult;
-import cloud.compan.servlet.dto.LoginResultDTO;
-import cloud.compan.servlet.dto.UserDTO;
 import com.google.inject.Singleton;
+import cloud.compan.servlet.annotations.Service;
+import cloud.compan.servlet.dto.LoginResultDTO;
+import cloud.compan.servlet.dto.ServiceResult;
+import cloud.compan.servlet.dto.UserDTO;
+import cloud.compan.servlet.service.AuthService;
 
 /**
  * 认证服务实现类
  * 简化实现，主要用于测试
  */
+@Service
 @Singleton
 public class AuthServiceImpl implements AuthService {
 

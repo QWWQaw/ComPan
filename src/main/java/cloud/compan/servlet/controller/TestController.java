@@ -1,13 +1,15 @@
 package cloud.compan.servlet.controller;
 
-import cloud.compan.servlet.annotations.*;
-import cloud.compan.servlet.service.UserService;
-import cloud.compan.servlet.dto.*;
-import cloud.compan.servlet.dto.mapper.UserMapper;
-import cloud.compan.servlet.web.response.ApiResponseWrapper;
-import com.google.inject.Inject;
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import cloud.compan.servlet.annotations.Controller;
+import cloud.compan.servlet.annotations.PutMapping;
+import cloud.compan.servlet.annotations.RequestBody;
+import cloud.compan.servlet.annotations.ResponseBody;
+import cloud.compan.servlet.dto.mapper.UserMapper;
+import cloud.compan.servlet.service.UserService;
+import cloud.compan.servlet.web.response.ApiResponseWrapper;
 
 /**
  * 用户控制器
@@ -15,6 +17,7 @@ import java.util.Map;
  */
 @Controller("/api/test")
 @ResponseBody
+@Singleton
 public class TestController extends BaseController {
 
     @Inject

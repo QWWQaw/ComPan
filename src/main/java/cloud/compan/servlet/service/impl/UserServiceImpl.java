@@ -1,18 +1,20 @@
 package cloud.compan.servlet.service.impl;
 
-import cloud.compan.servlet.service.UserService;
-import cloud.compan.servlet.model.User;
-import cloud.compan.servlet.dto.ServiceResult;
+import com.google.inject.Singleton;
+import cloud.compan.servlet.annotations.Service;
 import cloud.compan.servlet.dto.LoginResultDTO;
-import cloud.compan.servlet.dto.StorageStatsDTO;
 import cloud.compan.servlet.dto.PageResultDTO;
 import cloud.compan.servlet.dto.SearchCriteria;
-import com.google.inject.Singleton;
+import cloud.compan.servlet.dto.ServiceResult;
+import cloud.compan.servlet.dto.StorageStatsDTO;
+import cloud.compan.servlet.model.User;
+import cloud.compan.servlet.service.UserService;
 
 /**
  * 用户服务实现类
  * 简化实现，主要用于测试
  */
+@Service
 @Singleton
 public class UserServiceImpl implements UserService {
 

@@ -1,15 +1,16 @@
 package cloud.compan.servlet.repository;
 
-import cloud.compan.servlet.model.Share;
-import cloud.compan.servlet.utils.JdbcExecutor;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import cloud.compan.servlet.annotations.Repository;
+import cloud.compan.servlet.model.Share;
+import cloud.compan.servlet.utils.JdbcExecutor;
 
 @Singleton
+@Repository
 public class ShareRepository extends BaseRepository<Share, Integer> {
 
     @Inject

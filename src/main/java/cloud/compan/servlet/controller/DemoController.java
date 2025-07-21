@@ -1,10 +1,21 @@
 package cloud.compan.servlet.controller;
 
-import cloud.compan.servlet.annotations.*;
+import java.util.Map;
+import jakarta.servlet.http.HttpServletRequest;
+import com.google.inject.Singleton;
+import cloud.compan.servlet.annotations.Controller;
+import cloud.compan.servlet.annotations.DeleteMapping;
+import cloud.compan.servlet.annotations.GetMapping;
+import cloud.compan.servlet.annotations.PatchMapping;
+import cloud.compan.servlet.annotations.PathVariable;
+import cloud.compan.servlet.annotations.PostMapping;
+import cloud.compan.servlet.annotations.PutMapping;
+import cloud.compan.servlet.annotations.RequestBody;
+import cloud.compan.servlet.annotations.RequestMapping;
+import cloud.compan.servlet.annotations.RequestParam;
+import cloud.compan.servlet.annotations.ResponseBody;
 import cloud.compan.servlet.annotations.enums.RequestMethod;
 import cloud.compan.servlet.web.response.ApiResponseWrapper;
-import jakarta.servlet.http.HttpServletRequest;
-import java.util.Map;
 
 /**
  * 演示控制器
@@ -12,6 +23,7 @@ import java.util.Map;
  */
 @Controller("/api/demo")
 @ResponseBody
+@Singleton
 public class DemoController extends BaseController {
     
     /**

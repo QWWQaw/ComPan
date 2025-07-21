@@ -1,13 +1,14 @@
 package cloud.compan.servlet.repository;
 
-import cloud.compan.servlet.model.Notification;
-import cloud.compan.servlet.utils.JdbcExecutor;
+import java.util.List;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-
-import java.util.List;
+import cloud.compan.servlet.annotations.Repository;
+import cloud.compan.servlet.model.Notification;
+import cloud.compan.servlet.utils.JdbcExecutor;
 
 @Singleton
+@Repository
 public class NotificationRepository extends BaseRepository<Notification, Integer> {
 
     @Inject

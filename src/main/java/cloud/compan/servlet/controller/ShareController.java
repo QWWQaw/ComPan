@@ -1,18 +1,26 @@
 package cloud.compan.servlet.controller;
 
-import cloud.compan.servlet.annotations.*;
-import cloud.compan.servlet.service.ShareService;
-import cloud.compan.servlet.service.AuthService;
-import cloud.compan.servlet.dto.*;
-import cloud.compan.servlet.model.Share;
-import cloud.compan.servlet.web.response.ApiResponseWrapper;
-import com.google.inject.Inject;
-import jakarta.servlet.http.HttpServletRequest;
-
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
+import jakarta.servlet.http.HttpServletRequest;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import cloud.compan.servlet.annotations.Controller;
+import cloud.compan.servlet.annotations.DeleteMapping;
+import cloud.compan.servlet.annotations.GetMapping;
+import cloud.compan.servlet.annotations.PatchMapping;
+import cloud.compan.servlet.annotations.PathVariable;
+import cloud.compan.servlet.annotations.PostMapping;
+import cloud.compan.servlet.annotations.RequestBody;
+import cloud.compan.servlet.annotations.ResponseBody;
+import cloud.compan.servlet.dto.PageResultDTO;
+import cloud.compan.servlet.dto.ServiceResult;
+import cloud.compan.servlet.model.Share;
+import cloud.compan.servlet.service.AuthService;
+import cloud.compan.servlet.service.ShareService;
+import cloud.compan.servlet.web.response.ApiResponseWrapper;
 
 /**
  * 分享控制器
@@ -33,6 +41,7 @@ import java.util.List;
  */
 @Controller("/api/shares")
 @ResponseBody
+@Singleton
 public class ShareController extends BaseController {
     
     @Inject

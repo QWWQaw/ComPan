@@ -1,36 +1,23 @@
 package cloud.compan.servlet.config;
 
-import cloud.compan.servlet.service.impl.UserServiceImpl;
-import cloud.compan.servlet.service.impl.AuthServiceImpl;
-import cloud.compan.servlet.service.impl.FileServiceImpl;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.AbstractModule;
+import com.google.inject.Singleton;
+import cloud.compan.servlet.annotations.Value;
 import cloud.compan.servlet.utils.HashUtil;
 import cloud.compan.servlet.utils.JdbcExecutor;
 import cloud.compan.servlet.utils.JsonUtils;
 import cloud.compan.servlet.utils.JwtUtil;
 import cloud.compan.servlet.utils.JwtUtilImpl;
 import cloud.compan.servlet.utils.ValidationUtil;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import cloud.compan.servlet.repository.*;
-import cloud.compan.servlet.service.AuthService;
-import cloud.compan.servlet.service.FileService;
-import cloud.compan.servlet.service.FolderService;
-import cloud.compan.servlet.service.ShareService;
-import cloud.compan.servlet.service.NotificationService;
-import cloud.compan.servlet.service.AclService;
-import cloud.compan.servlet.service.RecycleBinService;
-import cloud.compan.servlet.service.StorageService;
-import cloud.compan.servlet.service.UserService;
-import cloud.compan.servlet.web.RouteRegistry;
-import cloud.compan.servlet.web.RequestDispatcher;
 import cloud.compan.servlet.web.ControllerScanner;
+import cloud.compan.servlet.web.RequestDispatcher;
+import cloud.compan.servlet.web.RouteRegistry;
 
-
-import com.google.inject.AbstractModule;
-import cloud.compan.servlet.annotations.Value;
-import com.google.inject.Singleton;
-import cloud.compan.servlet.service.impl.*;
-import cloud.compan.servlet.service.*;
+/**
+ * 主应用模块
+ * 使用AutoScanModule自动注册Service和Controller组件
+ */
 public class AppModule extends AbstractModule {
 
     @Value("db.default.name")
@@ -49,14 +36,17 @@ public class AppModule extends AbstractModule {
     protected void configure() {
         ConfigLoader.inject(this);
         
+        // 安装自动扫描模块，自动注册@Service和@Controller注解的类
+        install(new AutoScanModule("cloud.compan.servlet"));
+        
         bind(AppModule.class).toProvider(AppConfigProvider.class).in(Singleton.class);  
         
         // ============ Web组件绑定 ============
         // 路由分发、控制器扫描等核心Web功能
-        bind(RouteRegistry.class).in(Singleton.class);
-        bind(RequestDispatcher.class).in(Singleton.class);
-        bind(ControllerScanner.class).in(Singleton.class);
-        bind(cloud.compan.servlet.converter.JsonHttpMessageConverter.class).in(Singleton.class);
+        bind(RouteRegistry.class).asEagerSingleton();
+        bind(RequestDispatcher.class).asEagerSingleton();
+        bind(ControllerScanner.class).asEagerSingleton();
+        bind(cloud.compan.servlet.converter.JsonHttpMessageConverter.class).asEagerSingleton();
          
         // ============ 数据层组件绑定 ============
         bind(GuiceDataSourceProvider.class);  
@@ -72,27 +62,10 @@ public class AppModule extends AbstractModule {
         bind(HashUtil.class);
 
         // ============ Repository组件绑定 ============
-        bind(UserRepository.class);
-        bind(StorageObjectRepository.class);
-        bind(UserGroupRepository.class);
-        bind(UserGroupMemberRepository.class);
-        bind(FolderRepository.class);
-        bind(FileRepository.class);
-        bind(AclRepository.class);
-        bind(ShareRepository.class);
-        bind(LogRepository.class);
-        bind(NotificationRepository.class);
+        // Repository组件已由AutoScanModule自动扫描和注册
+        // 不再需要手动绑定
         
-        // ============ Service层组件绑定 ============
-        bind(UserService.class).to(UserServiceImpl.class).in(Singleton.class);
-        bind(AuthService.class).to(AuthServiceImpl.class).in(Singleton.class);
-        bind(FileService.class).to(FileServiceImpl.class).in(Singleton.class);
-        bind(FolderService.class).to(FolderServiceImpl.class).in(Singleton.class);
-        bind(StorageService.class).to(StorageServiceImpl.class).in(Singleton.class);
-        bind(ShareService.class).to(ShareServiceImpl.class).in(Singleton.class);
-        bind(NotificationService.class).to(NotificationServiceImpl.class).in(Singleton.class);
-        bind(RecycleBinService.class).to(RecycleBinServiceImpl.class).in(Singleton.class);
-        bind(AclService.class).to(AclServiceImpl.class).in(Singleton.class);
+
     }
 
     public String getDefaultDataSourceName() {  
@@ -136,7 +109,7 @@ public class AppModule extends AbstractModule {
         // mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         // mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         
-        System.out.println("🔧 ObjectMapper配置完成");
+        System.out.println("ObjectMapper configuration completed");
         return mapper;
     }
 }
