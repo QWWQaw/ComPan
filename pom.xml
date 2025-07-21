@@ -71,12 +71,6 @@
       <artifactId>jackson-annotations</artifactId>
       <version>2.19.1</version>
     </dependency>
-    <!-- Jackson JSR310 module for Java 8 time support -->
-    <dependency>
-      <groupId>com.fasterxml.jackson.datatype</groupId>
-      <artifactId>jackson-datatype-jsr310</artifactId>
-      <version>2.19.1</version>
-    </dependency>
 
     <!-- Jakarta Web API - 兼容Tomcat 10.1+ -->
     <dependency>
@@ -101,6 +95,12 @@
       <version>${jakarta.el.api.version}</version>
       <scope>provided</scope>
     </dependency>
+        <!-- Jakarta Expression Language Implementation -->
+        <dependency>
+          <groupId>org.glassfish</groupId>
+          <artifactId>jakarta.el</artifactId>
+          <version>4.0.2</version>
+        </dependency>
     
     <!-- Jakarta Expression Language Implementation -->
     <dependency>
@@ -192,6 +192,17 @@
     </dependency>
 
     <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.36</version>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>1.5.18</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
       <version>${junit.jupiter.version}</version>
@@ -253,12 +264,38 @@
         <version>0.12.6</version>
         <scope>runtime</scope>
     </dependency>
+    <dependency>
+      <groupId>com.fasterxml.jackson.datatype</groupId>
+      <artifactId>jackson-datatype-jsr310</artifactId>
+      <version>2.19.1</version> <!-- 请使用最新稳定版本 -->
+    </dependency>
 
-<!--    <dependency>-->
-<!--      <groupId>org.glassfish</groupId>-->
-<!--      <artifactId>jakarta.el</artifactId>-->
-<!--      <version>5.0.0</version> <scope>test</scope>-->
-<!--    </dependency>-->
+    <!-- pom.xml -->
+    <dependency>
+      <groupId>com.h2database</groupId>
+      <artifactId>h2</artifactId>
+      <version>2.3.232</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>javax.servlet-api</artifactId>
+      <version>4.0.1</version> <!-- 或者你使用的版本 -->
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <version>RELEASE</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testng</groupId>
+      <artifactId>testng</artifactId>
+      <version>RELEASE</version>
+      <scope>compile</scope>
+    </dependency>
 
   </dependencies>
 

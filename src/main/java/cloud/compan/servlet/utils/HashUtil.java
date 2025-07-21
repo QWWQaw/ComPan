@@ -87,7 +87,7 @@ public class HashUtil {
      * @param hash 字节数组
      * @return 十六进制字符串
      */  
-    private String bytesToHex(byte[] hash) {  
+    private static String bytesToHex(byte[] hash) {
         StringBuilder hexString = new StringBuilder(2 * hash.length);  
         for (byte b : hash) {  
             String hex = Integer.toHexString(0xff & b);  
@@ -97,7 +97,22 @@ public class HashUtil {
             hexString.append(hex);  
         }  
         return hexString.toString();  
-    }  
+    }
+
+    /**
+     * 计算字节数组的 MD5 哈希值
+     * @param data 要计算哈希的字节数组
+     * @return MD5 哈希值的十六进制字符串
+     */
+    public static String calculateMD5(byte[] data) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            digest.update(data);
+            return bytesToHex(digest.digest());
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("MD5 algorithm not available", e);
+        }
+    }
 
     public static void main(String[] args) {
         HashUtil hashUtil = new HashUtil();
