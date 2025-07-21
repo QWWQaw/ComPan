@@ -6,7 +6,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import cloud.compan.servlet.annotations.Controller;
 import cloud.compan.servlet.annotations.DeleteMapping;
 import cloud.compan.servlet.annotations.GetMapping;
 import cloud.compan.servlet.annotations.PatchMapping;
@@ -14,7 +13,7 @@ import cloud.compan.servlet.annotations.PathVariable;
 import cloud.compan.servlet.annotations.PostMapping;
 import cloud.compan.servlet.annotations.RequestBody;
 import cloud.compan.servlet.annotations.RequestParam;
-import cloud.compan.servlet.annotations.ResponseBody;
+import cloud.compan.servlet.annotations.RestController;
 import cloud.compan.servlet.dto.FileDTO;
 import cloud.compan.servlet.dto.PageResultDTO;
 import cloud.compan.servlet.dto.ServiceResult;
@@ -40,8 +39,7 @@ import cloud.compan.servlet.web.response.ApiResponseWrapper;
  * - DELETE /api/files/{id} - 删除文件
  * - POST /api/files/batch - 批量操作文件
  */
-@Controller("/api/files")
-@ResponseBody
+@RestController("/api/files")
 @Singleton
 public class FileController extends BaseController {
     

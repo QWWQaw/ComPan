@@ -1,24 +1,24 @@
 package cloud.compan.servlet.web;
 
-import cloud.compan.servlet.annotations.*;
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import cloud.compan.servlet.annotations.PathVariable;
+import cloud.compan.servlet.annotations.RequestBody;
+import cloud.compan.servlet.annotations.RequestParam;
+import cloud.compan.servlet.annotations.ResponseBody;
+import cloud.compan.servlet.annotations.RestController;
 import cloud.compan.servlet.converter.JsonHttpMessageConverter;
 import cloud.compan.servlet.web.exception.HttpExceptions;
 import cloud.compan.servlet.web.exception.WebException;
 import cloud.compan.servlet.web.response.ApiResponseWrapper;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonValue;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import java.lang.reflect.Method;
-import java.lang.reflect.Parameter;
-import java.io.IOException;
-import java.time.Instant;
-import java.util.Optional;
-import java.util.Map;
-import java.util.HashMap;
 
 /**
  * Enhanced HTTP request dispatcher
@@ -406,8 +406,14 @@ public class RequestDispatcher {
         Method method = routeInfo.getHandlerMethod();
         Class<?> controllerClass = routeInfo.getControllerClass();
         
-        return method.isAnnotationPresent(ResponseBody.class) || 
-               controllerClass.isAnnotationPresent(ResponseBody.class);
+        // 检查 @ResponseBody 注解
+        boolean hasResponseBody = method.isAnnotationPresent(ResponseBody.class) || 
+                                 controllerClass.isAnnotationPresent(ResponseBody.class);
+        
+        // 检查 @RestController 注解（它包含了 @ResponseBody）
+        boolean hasRestController = controllerClass.isAnnotationPresent(RestController.class);
+        
+        return hasResponseBody || hasRestController;
     }
     
     /**

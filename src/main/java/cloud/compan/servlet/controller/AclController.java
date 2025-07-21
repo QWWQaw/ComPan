@@ -5,14 +5,13 @@ import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import cloud.compan.servlet.annotations.Controller;
 import cloud.compan.servlet.annotations.DeleteMapping;
 import cloud.compan.servlet.annotations.GetMapping;
 import cloud.compan.servlet.annotations.PathVariable;
 import cloud.compan.servlet.annotations.PostMapping;
 import cloud.compan.servlet.annotations.PutMapping;
 import cloud.compan.servlet.annotations.RequestBody;
-import cloud.compan.servlet.annotations.ResponseBody;
+import cloud.compan.servlet.annotations.RestController;
 import cloud.compan.servlet.dto.PageResultDTO;
 import cloud.compan.servlet.dto.ServiceResult;
 import cloud.compan.servlet.model.Acl;
@@ -31,8 +30,7 @@ import cloud.compan.servlet.web.response.ApiResponseWrapper;
  * - DELETE /api/acl/permissions/{id} - 删除权限
  * - GET /api/acl/check - 检查权限
  */
-@Controller("/api/acl")
-@ResponseBody
+@RestController("/api/acl")
 @Singleton
 public class AclController extends BaseController {
     

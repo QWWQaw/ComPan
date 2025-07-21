@@ -1,24 +1,25 @@
 package cloud.compan.servlet.controller;
 
-import cloud.compan.servlet.service.transfer.StorageService;
+import java.io.IOException;
+import java.io.InputStream;
 import jakarta.servlet.http.HttpServletResponse;
-import cloud.compan.servlet.annotations.Autowired;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import cloud.compan.servlet.annotations.GetMapping;
 import cloud.compan.servlet.annotations.PathVariable;
 import cloud.compan.servlet.annotations.RestController;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.io.InputStream;
+import cloud.compan.servlet.service.transfer.StorageService;
 
 @RestController
+@Singleton
 public class FileDownloadController {
 
     private final StorageService storageService;
     private static final Logger logger = LoggerFactory.getLogger(FileDownloadController.class);
 
-    @Autowired
+    @Inject
     public FileDownloadController(StorageService storageService) {
         this.storageService = storageService;
     }

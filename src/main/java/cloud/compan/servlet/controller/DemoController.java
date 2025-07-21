@@ -3,7 +3,6 @@ package cloud.compan.servlet.controller;
 import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
 import com.google.inject.Singleton;
-import cloud.compan.servlet.annotations.Controller;
 import cloud.compan.servlet.annotations.DeleteMapping;
 import cloud.compan.servlet.annotations.GetMapping;
 import cloud.compan.servlet.annotations.PatchMapping;
@@ -13,7 +12,7 @@ import cloud.compan.servlet.annotations.PutMapping;
 import cloud.compan.servlet.annotations.RequestBody;
 import cloud.compan.servlet.annotations.RequestMapping;
 import cloud.compan.servlet.annotations.RequestParam;
-import cloud.compan.servlet.annotations.ResponseBody;
+import cloud.compan.servlet.annotations.RestController;
 import cloud.compan.servlet.annotations.enums.RequestMethod;
 import cloud.compan.servlet.web.response.ApiResponseWrapper;
 
@@ -21,8 +20,7 @@ import cloud.compan.servlet.web.response.ApiResponseWrapper;
  * 演示控制器
  * 展示所有HTTP映射注解的使用方法
  */
-@Controller("/api/demo")
-@ResponseBody
+@RestController("/api/demo")
 @Singleton
 public class DemoController extends BaseController {
     

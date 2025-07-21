@@ -5,14 +5,13 @@ import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import cloud.compan.servlet.annotations.Controller;
 import cloud.compan.servlet.annotations.DeleteMapping;
 import cloud.compan.servlet.annotations.GetMapping;
 import cloud.compan.servlet.annotations.PatchMapping;
 import cloud.compan.servlet.annotations.PathVariable;
 import cloud.compan.servlet.annotations.PutMapping;
 import cloud.compan.servlet.annotations.RequestBody;
-import cloud.compan.servlet.annotations.ResponseBody;
+import cloud.compan.servlet.annotations.RestController;
 import cloud.compan.servlet.dto.PageResultDTO;
 import cloud.compan.servlet.dto.ServiceResult;
 import cloud.compan.servlet.model.Notification;
@@ -36,8 +35,7 @@ import cloud.compan.servlet.web.response.ApiResponseWrapper;
  * - PATCH /api/notifications/read-all - 全部标记为已读
  * - DELETE /api/notifications/{id} - 删除通知
  */
-@Controller("/api/notifications")
-@ResponseBody
+@RestController("/api/notifications")
 @Singleton
 public class NotificationController extends BaseController {
     

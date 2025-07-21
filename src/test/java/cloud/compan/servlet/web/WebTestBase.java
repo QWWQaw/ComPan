@@ -1,26 +1,22 @@
 package cloud.compan.servlet.web;
 
-import cloud.compan.servlet.config.AppModule;
-import cloud.compan.servlet.config.DatabaseModule;
-import cloud.compan.servlet.web.RequestDispatcher;
-import cloud.compan.servlet.web.ControllerScanner;
-import cloud.compan.servlet.web.RouteRegistry;
-import com.google.inject.*;
-import com.google.inject.name.Named;
+import static org.mockito.Mockito.when;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Properties;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.google.inject.name.Names;
 import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.io.InputStream;
-import java.io.IOException;
-import java.util.Properties;
-
-import static org.mockito.Mockito.*;
+import cloud.compan.servlet.config.AppModule;
+import cloud.compan.servlet.config.DatabaseModule;
 
 /**
  * Web测试基类
@@ -128,7 +124,7 @@ public abstract class WebTestBase {
                 "db.default.name",
                 "db.default.url",
                 "db.default.username",
-                "jwt.secretkey"
+                "jwt.secret"
         };
 
         for (String prop : requiredProps) {

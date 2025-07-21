@@ -1,5 +1,21 @@
 package cloud.compan.servlet.service.impl;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import com.google.inject.Inject;
+import cloud.compan.servlet.annotations.Service;
 import cloud.compan.servlet.model.StorageObject;
 import cloud.compan.servlet.model.transfer.FileChunk;
 import cloud.compan.servlet.model.transfer.UploadSession;
@@ -8,13 +24,8 @@ import cloud.compan.servlet.service.transfer.ChunkService;
 import cloud.compan.servlet.service.transfer.StorageService;
 import cloud.compan.servlet.utils.FileTransferUtils;
 import cloud.compan.servlet.utils.HashUtil;
-import jakarta.servlet.jsp.jstl.core.LoopTagSupport;
 
-import java.io.*;
-import java.nio.file.*;
-import java.time.LocalDateTime;
-import java.util.*;
-
+@Service
 public class ChunkServiceImpl implements ChunkService {
 
     private final StorageService storageService;
@@ -22,6 +33,7 @@ public class ChunkServiceImpl implements ChunkService {
     public final Map<String, UploadSession> sessionMap = new HashMap<>();
     private final Set<String> processingSessions = new HashSet<>();
 
+    @Inject
     public ChunkServiceImpl(StorageService storageService, StorageObjectRepository storageObjectRepository) {
         this.storageService = storageService;
         this.storageObjectRepository = storageObjectRepository;

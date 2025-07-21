@@ -1,22 +1,21 @@
 package cloud.compan.servlet.web;
 
-import cloud.compan.servlet.model.transfer.FileChunk;
-import cloud.compan.servlet.model.transfer.UploadSession;
-import cloud.compan.servlet.service.transfer.ChunkService;
-import cloud.compan.servlet.utils.FileTransferUtils;
-import cloud.compan.servlet.utils.JsonUtils;
-import cloud.compan.servlet.utils.ServiceLocate;
-
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import cloud.compan.servlet.model.transfer.FileChunk;
+import cloud.compan.servlet.model.transfer.UploadSession;
+import cloud.compan.servlet.service.transfer.ChunkService;
+import cloud.compan.servlet.utils.FileTransferUtils;
+import cloud.compan.servlet.utils.JsonUtils;
+import cloud.compan.servlet.utils.ServiceLocate;
 
 @WebServlet("/file/transfer")
 public class FileTransferServlet extends HttpServlet {

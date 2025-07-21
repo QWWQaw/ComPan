@@ -1,17 +1,15 @@
 package cloud.compan.servlet.model.transfer;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
-
 @Getter
 @Setter
 @ToString
-
 public class FileChunk {
     private String sessionId;
     private int index;

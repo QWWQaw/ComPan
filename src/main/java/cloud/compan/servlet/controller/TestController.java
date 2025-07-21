@@ -3,10 +3,9 @@ package cloud.compan.servlet.controller;
 import java.util.Map;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import cloud.compan.servlet.annotations.Controller;
 import cloud.compan.servlet.annotations.PutMapping;
 import cloud.compan.servlet.annotations.RequestBody;
-import cloud.compan.servlet.annotations.ResponseBody;
+import cloud.compan.servlet.annotations.RestController;
 import cloud.compan.servlet.dto.mapper.UserMapper;
 import cloud.compan.servlet.service.UserService;
 import cloud.compan.servlet.web.response.ApiResponseWrapper;
@@ -15,8 +14,7 @@ import cloud.compan.servlet.web.response.ApiResponseWrapper;
  * 用户控制器
  * 处理用户相关的HTTP请求，包括认证、用户管理等功能
  */
-@Controller("/api/test")
-@ResponseBody
+@RestController("/api/test")
 @Singleton
 public class TestController extends BaseController {
 

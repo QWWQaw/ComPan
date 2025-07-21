@@ -7,14 +7,13 @@ import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import cloud.compan.servlet.annotations.Controller;
 import cloud.compan.servlet.annotations.DeleteMapping;
 import cloud.compan.servlet.annotations.GetMapping;
 import cloud.compan.servlet.annotations.PatchMapping;
 import cloud.compan.servlet.annotations.PathVariable;
 import cloud.compan.servlet.annotations.PostMapping;
 import cloud.compan.servlet.annotations.RequestBody;
-import cloud.compan.servlet.annotations.ResponseBody;
+import cloud.compan.servlet.annotations.RestController;
 import cloud.compan.servlet.dto.PageResultDTO;
 import cloud.compan.servlet.dto.ServiceResult;
 import cloud.compan.servlet.model.Share;
@@ -39,8 +38,7 @@ import cloud.compan.servlet.web.response.ApiResponseWrapper;
  * - DELETE /api/shares/{id} - 删除分享
  * - GET /s/{shareCode} - 访问分享链接
  */
-@Controller("/api/shares")
-@ResponseBody
+@RestController("/api/shares")
 @Singleton
 public class ShareController extends BaseController {
     
@@ -409,8 +407,7 @@ public class ShareController extends BaseController {
  * 分享访问控制器
  * 处理公开分享链接的访问（不需要认证）
  */
-@Controller("/s")
-@ResponseBody
+@RestController("/s")
 class ShareAccessController extends BaseController {
     
     @Inject

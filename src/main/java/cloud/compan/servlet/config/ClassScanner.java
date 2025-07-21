@@ -35,7 +35,7 @@ public class ClassScanner {
                 for (Class<?> clazz : classes) {
                     if (clazz.isAnnotationPresent(annotationClass)) {
                         annotatedClasses.add(clazz);
-                        logger.info("Found class with annotation: " + clazz.getName() + " [" + annotationClass.getSimpleName() + "]");
+                        if (Boolean.getBoolean("debug.components")) logger.info("Found class with annotation: " + clazz.getName() + " [" + annotationClass.getSimpleName() + "]");
                     }
                 }
             } catch (Exception e) {

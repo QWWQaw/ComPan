@@ -1,9 +1,16 @@
 package cloud.compan.servlet.web;
 
-import cloud.compan.servlet.controller.*;
-import com.google.inject.Injector;
 import java.lang.reflect.Method;
+import com.google.inject.Injector;
 import cloud.compan.servlet.annotations.enums.RequestMethod;
+import cloud.compan.servlet.controller.AclController;
+import cloud.compan.servlet.controller.AuthController;
+import cloud.compan.servlet.controller.FileController;
+import cloud.compan.servlet.controller.FolderController;
+import cloud.compan.servlet.controller.NotificationController;
+import cloud.compan.servlet.controller.RecycleBinController;
+import cloud.compan.servlet.controller.ShareController;
+import cloud.compan.servlet.controller.StorageController;
 
 /**
  * Hardcoded Route Registry
@@ -153,16 +160,12 @@ public class HardcodedRouteRegistry {
     private void registerRoute(String httpMethod, String path, Class<?> controllerClass, 
                              String methodName, Object controllerInstance) {
         try {
-            System.out.println("DEBUG: Registering route: " + httpMethod + " " + path + " -> " + controllerClass.getSimpleName() + "." + methodName);
-            
             // Get method object
             Method method = findMethod(controllerClass, methodName);
             if (method == null) {
                 System.err.println("Method not found: " + controllerClass.getSimpleName() + "." + methodName);
                 return;
             }
-            
-            System.out.println("DEBUG: Found method: " + method.getName() + " with " + method.getParameterCount() + " parameters");
             
             // Convert HTTP method string to enum
             RequestMethod requestMethod = RequestMethod.valueOf(httpMethod);
@@ -171,18 +174,14 @@ public class HardcodedRouteRegistry {
             RouteInfo routeInfo;
             if (path.contains("{")) {
                 // Parameterized route
-                System.out.println("DEBUG: Creating parameterized route for: " + path);
                 routeInfo = new ParameterizedRouteInfo(path, requestMethod, controllerClass, method, controllerInstance);
             } else {
                 // Regular route
-                System.out.println("DEBUG: Creating regular route for: " + path);
                 routeInfo = new RouteInfo(path, requestMethod, controllerClass, method, controllerInstance);
             }
             
             // Register route
             routeRegistry.registerRoute(routeInfo);
-            
-            System.out.println("Registered route: " + httpMethod + " " + path + " -> " + controllerClass.getSimpleName() + "." + methodName);
             
         } catch (Exception e) {
             System.err.println("Failed to register route: " + httpMethod + " " + path + " -> " + controllerClass.getSimpleName() + "." + methodName);

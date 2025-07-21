@@ -1,16 +1,19 @@
 package cloud.compan.servlet;
 
-import cloud.compan.servlet.config.AppModule;
-import cloud.compan.servlet.config.DatabaseModule;
-import cloud.compan.servlet.web.RequestDispatcher;
-import cloud.compan.servlet.web.RouteRegistry;
-import cloud.compan.servlet.web.HardcodedRouteRegistry;
+import java.io.IOException;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import jakarta.servlet.*;
-import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.*;
-import java.io.IOException;
+import cloud.compan.servlet.config.AppModule;
+import cloud.compan.servlet.config.DatabaseModule;
+import cloud.compan.servlet.web.HardcodedRouteRegistry;
+import cloud.compan.servlet.web.RequestDispatcher;
+import cloud.compan.servlet.web.RouteRegistry;
 
 /**
  * Main Servlet - Application entry point
@@ -56,6 +59,9 @@ public class MainServlet extends HttpServlet {
             new AppModule(),        // Main application module
             new DatabaseModule()    // Database module
         );
+        
+        // Initialize ServiceLocate with the main injector
+        cloud.compan.servlet.utils.ServiceLocate.initialize(injector);
         
         // Get request dispatcher instance
         requestDispatcher = injector.getInstance(RequestDispatcher.class);

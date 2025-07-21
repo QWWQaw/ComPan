@@ -1,18 +1,18 @@
 package cloud.compan.servlet.integration;
 
-import cloud.compan.servlet.web.RouteRegistry;
-import cloud.compan.servlet.web.RouteInfo;
+import java.lang.reflect.Method;
+import com.google.inject.Injector;
+import cloud.compan.servlet.annotations.enums.RequestMethod;
+import cloud.compan.servlet.controller.AclController;
 import cloud.compan.servlet.controller.AuthController;
 import cloud.compan.servlet.controller.FileController;
 import cloud.compan.servlet.controller.FolderController;
-import cloud.compan.servlet.controller.ShareController;
-import cloud.compan.servlet.controller.StorageController;
 import cloud.compan.servlet.controller.NotificationController;
 import cloud.compan.servlet.controller.RecycleBinController;
-import cloud.compan.servlet.controller.AclController;
-import cloud.compan.servlet.annotations.enums.RequestMethod;
-import com.google.inject.Injector;
-import java.lang.reflect.Method;
+import cloud.compan.servlet.controller.ShareController;
+import cloud.compan.servlet.controller.StorageController;
+import cloud.compan.servlet.web.RouteInfo;
+import cloud.compan.servlet.web.RouteRegistry;
 
 /**
  * 硬编码路由注册器
@@ -194,7 +194,7 @@ public class HardcodedRouteRegistry {
             // 获取ShareAccessController类
             Class<?> shareAccessControllerClass = null;
             for (Class<?> innerClass : shareController.getClass().getDeclaredClasses()) {
-                if (innerClass.getSimpleName().equals("ShareAccessController")) {
+                if ("ShareAccessController".equals(innerClass.getSimpleName())) {
                     shareAccessControllerClass = innerClass;
                     break;
                 }
@@ -296,7 +296,6 @@ public class HardcodedRouteRegistry {
             if (handlerMethod != null) {
                 RouteInfo routeInfo = new RouteInfo(path, method, controllerClass, handlerMethod, controller);
                 routeRegistry.registerRoute(routeInfo);
-                System.out.println("Registered route: " + method + " " + path + " -> " + controllerClass.getSimpleName() + "." + methodName);
             } else {
                 System.err.println("Method not found: " + controllerClass.getSimpleName() + "." + methodName);
             }

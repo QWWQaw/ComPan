@@ -1,10 +1,10 @@
 package cloud.compan.servlet.controller;
 
-import cloud.compan.servlet.web.WebTestBase;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import cloud.compan.servlet.web.WebTestBase;
 
 /**
  * TestController 单元测试
@@ -208,7 +208,7 @@ class TestControllerTest extends WebTestBase {
     @DisplayName("测试配置加载 - 成功")
     void testConfigLoading_Success() throws Exception {
         get("/api/test/config")
-            .param("key", "jwt.secretkey")
+            .param("key", "jwt.secret")
             .execute();
     }
     

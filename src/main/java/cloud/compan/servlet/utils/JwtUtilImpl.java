@@ -40,17 +40,17 @@
 // }
 package cloud.compan.servlet.utils;
 
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.*;
-import javax.crypto.SecretKey;
 import java.util.Base64;
-
+import java.util.Date;
+import javax.crypto.SecretKey;
 import com.google.inject.Singleton;
-
 import cloud.compan.servlet.annotations.Value;
 import cloud.compan.servlet.config.ConfigLoader;
-
-import java.util.Date;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.JwtParser;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 
 /**
  * JWT工具类实现
@@ -58,10 +58,10 @@ import java.util.Date;
 @Singleton
 public class JwtUtilImpl implements JwtUtil{
 
-    @Value("jwt.secretkey")
+    @Value("jwt.secret")
     private String secretKey; 
     
-    @Value("jwt.expiration")
+    @Value("jwt.expiration.seconds")
     private long EXPIRATION_TIME;
 
     private final SecretKey SECRET_KEY;
@@ -72,6 +72,8 @@ public class JwtUtilImpl implements JwtUtil{
         if (this.secretKey == null || this.secretKey.isEmpty()) {
             throw new IllegalStateException("JWT secret key was not loaded by ConfigLoader. Check application.properties.");
         }
+        // 将秒转换为毫秒
+        this.EXPIRATION_TIME = this.EXPIRATION_TIME * 1000;
         byte[] decodedKey = Base64.getDecoder().decode(secretKey);
         SECRET_KEY = Keys.hmacShaKeyFor(decodedKey);
     }
@@ -118,10 +120,17 @@ public class JwtUtilImpl implements JwtUtil{
      * @param token JWT token
      * @return Claims
      */
+    @Override
     public Claims validateToken(String token) {
         if(secretKey == null || secretKey.isEmpty() || SECRET_KEY == null){
             throw new IllegalStateException("JWT secret key not initialized.");
         }
+        
+        // 检查token是否为空或null
+        if(token == null || token.trim().isEmpty()){
+            return null;
+        }
+        
         try {
             JwtParser parser = Jwts.parser()
                                    .verifyWith(SECRET_KEY)  // 设置签名密钥并自动验证签名
@@ -132,6 +141,10 @@ public class JwtUtilImpl implements JwtUtil{
         } catch (JwtException e) {
             // Token 无效或签名失败或已过期
             System.out.println("Invalid JWT: " + e.getMessage());
+            return null;
+        } catch (IllegalArgumentException e) {
+            // Token格式错误（如空字符串）
+            System.out.println("Invalid token format: " + e.getMessage());
             return null;
         }
     }

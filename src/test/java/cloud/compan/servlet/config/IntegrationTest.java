@@ -1,6 +1,12 @@
 package cloud.compan.servlet.config;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import java.util.Collection;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
@@ -141,9 +147,12 @@ class IntegrationTest {
         Collection<RouteInfo> routes = routeRegistry.getAllRoutes();
         assertFalse(routes.isEmpty(), "Routes should be registered");
         
-        System.out.println("Registered routes:");
-        for (RouteInfo route : routes) {
-            System.out.println("  " + route.getHttpMethod() + " " + route.getPath() + " -> " + route.getHandlerMethod().getName());
+        // 只在调试模式下打印路由信息
+        if (Boolean.getBoolean("debug.routes")) {
+            System.out.println("Registered routes:");
+            for (RouteInfo route : routes) {
+                System.out.println("  " + route.getHttpMethod() + " " + route.getPath() + " -> " + route.getHandlerMethod().getName());
+            }
         }
         
         // Verify specific routes exist

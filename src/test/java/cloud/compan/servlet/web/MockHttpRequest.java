@@ -1,15 +1,11 @@
 package cloud.compan.servlet.web;
 
-import cloud.compan.servlet.web.RequestDispatcher;
-import cloud.compan.servlet.utils.JsonUtils;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import static org.mockito.Mockito.when;
 import java.io.StringWriter;
 import java.util.Map;
-import java.util.HashMap;
-
-import static org.mockito.Mockito.*;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * 模拟HTTP请求，支持流式API测试
@@ -76,8 +72,15 @@ public class MockHttpRequest {
     public MockHttpRequest jsonBody(Object body) {
         try {
             String json = objectMapper.writeValueAsString(body);
-            // 这里可以模拟请求体的读取，但由于复杂性，
-            // 建议在实际测试中直接模拟Service层
+            
+            // 模拟请求体读取
+            java.io.StringReader stringReader = new java.io.StringReader(json);
+            java.io.BufferedReader bufferedReader = new java.io.BufferedReader(stringReader);
+            
+            when(request.getReader()).thenReturn(bufferedReader);
+            when(request.getContentType()).thenReturn("application/json");
+            when(request.getContentLength()).thenReturn(json.length());
+            
             return contentType("application/json");
         } catch (Exception e) {
             throw new RuntimeException("Failed to serialize JSON body", e);

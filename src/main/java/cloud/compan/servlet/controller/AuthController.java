@@ -4,12 +4,11 @@ import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import cloud.compan.servlet.annotations.Controller;
 import cloud.compan.servlet.annotations.GetMapping;
 import cloud.compan.servlet.annotations.PostMapping;
 import cloud.compan.servlet.annotations.PutMapping;
 import cloud.compan.servlet.annotations.RequestBody;
-import cloud.compan.servlet.annotations.ResponseBody;
+import cloud.compan.servlet.annotations.RestController;
 import cloud.compan.servlet.dto.LoginResultDTO;
 import cloud.compan.servlet.dto.SearchCriteria;
 import cloud.compan.servlet.dto.ServiceResult;
@@ -30,8 +29,7 @@ import cloud.compan.servlet.web.response.ApiResponseWrapper;
  * - PUT /api/me/password - Change password
  * - GET /api/me/storage-stats - Get storage statistics
  */
-@Controller
-@ResponseBody
+@RestController
 @Singleton
 public class AuthController extends BaseController {
     

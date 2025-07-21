@@ -1,15 +1,19 @@
 package cloud.compan.servlet.web;
 
-import cloud.compan.servlet.annotations.*;
-import cloud.compan.servlet.annotations.enums.RequestMethod;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.Singleton;
-
 import java.io.File;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
+import com.google.inject.Singleton;
+import cloud.compan.servlet.annotations.Controller;
+import cloud.compan.servlet.annotations.RequestMapping;
+import cloud.compan.servlet.annotations.RestController;
 
 /**
  * 增强的控制器扫描器
@@ -20,6 +24,7 @@ public class ControllerScanner {
     
     private final Injector injector;
     private final RouteRegistry routeRegistry;
+    private static final boolean DEBUG = Boolean.getBoolean("debug.components");
     
     @Inject
     public ControllerScanner(Injector injector, RouteRegistry routeRegistry) {
@@ -32,18 +37,22 @@ public class ControllerScanner {
      * @param packageName 要扫描的包名，例如 "cloud.compan.servlet.controller"
      */
     public void scanAndRegister(String packageName) {
-        System.out.println("开始扫描控制器，包名: " + packageName);
+        if (DEBUG) System.out.println("开始扫描控制器，包名: " + packageName);
         
         try {
             // 1. 获取包下的所有类
             List<Class<?>> classes = getClassesInPackage(packageName);
+            if (DEBUG) System.out.println("扫描到 " + classes.size() + " 个类");
             
-            // 2. 过滤出控制器类
-            List<Class<?>> controllerClasses = classes.stream()
-                .filter(this::isController)
-                .toList();
-            
-            System.out.println("找到 " + controllerClasses.size() + " 个控制器类");
+            // 只保留主代码下的控制器，去重
+            Set<Class<?>> controllerClasses = new HashSet<>();
+            for (Class<?> clazz : classes) {
+                if (isController(clazz) && isMainClass(clazz)) {
+                    controllerClasses.add(clazz);
+                    if (DEBUG) System.out.println("  控制器: " + clazz.getName());
+                }
+            }
+            if (DEBUG) System.out.println("找到 " + controllerClasses.size() + " 个控制器类");
             
             // 3. 为每个控制器注册路由
             for (Class<?> controllerClass : controllerClasses) {
@@ -121,19 +130,35 @@ public class ControllerScanner {
     }
     
     /**
-     * 获取类级别的路径前缀
+     * 判断是否为主代码下的类（排除测试类）
+     */
+    private boolean isMainClass(Class<?> clazz) {
+        String path = clazz.getProtectionDomain().getCodeSource().getLocation().getPath();
+        return path.contains("/main/") && !clazz.getName().endsWith("Test");
+    }
+
+    /**
+     * 检查类是否为控制器
+     */
+    private boolean isController(Class<?> clazz) {
+        return clazz.isAnnotationPresent(Controller.class) || 
+               clazz.isAnnotationPresent(RestController.class);
+    }
+    
+    /**
+     * 获取类级别的路径前缀（合并处理Controller和RestController）
      */
     private String getClassLevelPath(Class<?> controllerClass) {
-        // 检查@RequestMapping
         if (controllerClass.isAnnotationPresent(RequestMapping.class)) {
             return controllerClass.getAnnotation(RequestMapping.class).path();
         }
-        // 检查@Controller
+        String value = null;
         if (controllerClass.isAnnotationPresent(Controller.class)) {
-            String value = controllerClass.getAnnotation(Controller.class).value();
-            return value.isEmpty() ? "" : value;
+            value = controllerClass.getAnnotation(Controller.class).value();
+        } else if (controllerClass.isAnnotationPresent(RestController.class)) {
+            value = controllerClass.getAnnotation(RestController.class).value();
         }
-        return "";
+        return (value != null && !value.isEmpty()) ? value : "";
     }
     
     /**
@@ -150,26 +175,38 @@ public class ControllerScanner {
     }
     
     /**
-     * 检查类是否为控制器
-     */
-    private boolean isController(Class<?> clazz) {
-        return clazz.isAnnotationPresent(Controller.class);
-    }
-    
-    /**
-     * 获取指定包下的所有类
+     * 获取指定包下的所有类（去重，优先主类路径）
      */
     private List<Class<?>> getClassesInPackage(String packageName) {
+        Set<String> classNames = new HashSet<>();
         List<Class<?>> classes = new ArrayList<>();
         try {
             String path = packageName.replace('.', '/');
-            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            URL resource = classLoader.getResource(path);
             
-            if (resource != null) {
-                File directory = new File(resource.getFile());
-                if (directory.exists()) {
-                    scanDirectory(directory, packageName, classes);
+            // 尝试多个ClassLoader来找到正确的类路径
+            ClassLoader[] classLoaders = {
+                Thread.currentThread().getContextClassLoader(),
+                getClass().getClassLoader(),
+                ClassLoader.getSystemClassLoader()
+            };
+            
+            for (ClassLoader classLoader : classLoaders) {
+                if (classLoader != null) {
+                    Enumeration<URL> resources = classLoader.getResources(path);
+                    while (resources.hasMoreElements()) {
+                        URL resource = resources.nextElement();
+                        String protocol = resource.getProtocol();
+                        
+                        if ("file".equals(protocol)) {
+                            File directory = new File(resource.getFile());
+                            if (directory.exists()) {
+                                scanDirectory(directory, packageName, classes, classNames);
+                            }
+                        } else if ("jar".equals(protocol)) {
+                            // 处理JAR包中的类
+                            scanJarClasses(resource, path, packageName, classes, classNames);
+                        }
+                    }
                 }
             }
         } catch (Exception e) {
@@ -179,24 +216,64 @@ public class ControllerScanner {
     }
     
     /**
-     * 递归扫描目录中的类文件
+     * 递归扫描目录中的类文件（去重）
      */
-    private void scanDirectory(File directory, String packageName, List<Class<?>> classes) {
+    private void scanDirectory(File directory, String packageName, List<Class<?>> classes, Set<String> classNames) {
         File[] files = directory.listFiles();
         if (files != null) {
             for (File file : files) {
                 if (file.isDirectory()) {
-                    scanDirectory(file, packageName + "." + file.getName(), classes);
+                    scanDirectory(file, packageName + "." + file.getName(), classes, classNames);
                 } else if (file.getName().endsWith(".class")) {
                     String className = packageName + "." + file.getName().replace(".class", "");
-                    try {
-                        Class<?> clazz = Class.forName(className);
-                        classes.add(clazz);
-                    } catch (ClassNotFoundException e) {
-                        System.err.println("无法加载类: " + className);
+                    if (classNames.add(className)) {
+                        try {
+                            Class<?> clazz = Class.forName(className);
+                            classes.add(clazz);
+                        } catch (ClassNotFoundException e) {
+                            if (DEBUG) System.err.println("无法加载类: " + className);
+                        }
                     }
                 }
             }
+        }
+    }
+    
+    /**
+     * 扫描JAR包中的类文件（去重）
+     */
+    private void scanJarClasses(URL resource, String packagePath, String packageName, List<Class<?>> classes, Set<String> classNames) {
+        try {
+            String jarPath = resource.getPath();
+            if (jarPath.startsWith("file:")) {
+                jarPath = jarPath.substring(5);
+            }
+            if (jarPath.contains("!")) {
+                jarPath = jarPath.substring(0, jarPath.indexOf("!"));
+            }
+            
+            try (java.util.jar.JarFile jarFile = new java.util.jar.JarFile(jarPath)) {
+                java.util.Enumeration<java.util.jar.JarEntry> entries = jarFile.entries();
+                
+                while (entries.hasMoreElements()) {
+                    java.util.jar.JarEntry entry = entries.nextElement();
+                    String entryName = entry.getName();
+                    
+                    if (entryName.startsWith(packagePath) && entryName.endsWith(".class")) {
+                        String className = entryName.substring(0, entryName.length() - 6).replace('/', '.');
+                        if (classNames.add(className)) {
+                            try {
+                                Class<?> clazz = Class.forName(className);
+                                classes.add(clazz);
+                            } catch (ClassNotFoundException e) {
+                                if (DEBUG) System.err.println("无法加载JAR中的类: " + className);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            if (DEBUG) System.err.println("扫描JAR包时发生错误: " + e.getMessage());
         }
     }
     

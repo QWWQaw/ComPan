@@ -1,16 +1,16 @@
 package cloud.compan.servlet.web;
 
-import cloud.compan.servlet.config.AppModule;
-import cloud.compan.servlet.config.DatabaseModule;
-import com.google.inject.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.google.inject.name.Names;
 import org.junit.jupiter.api.BeforeEach;
-
-import java.io.InputStream;
-import java.io.IOException;
-import java.util.Properties;
-
-import static org.junit.jupiter.api.Assertions.*;
+import cloud.compan.servlet.config.AppModule;
+import cloud.compan.servlet.config.DatabaseModule;
 
 /**
  * 简化的测试基类
@@ -91,7 +91,7 @@ public abstract class SimpleTestBase {
                 "db.default.name",
                 "db.default.url",
                 "db.default.username",
-                "jwt.secretkey"
+                "jwt.secret"
         };
 
         for (String prop : requiredProps) {

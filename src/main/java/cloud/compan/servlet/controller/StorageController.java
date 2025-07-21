@@ -5,11 +5,10 @@ import java.util.Map;
 import jakarta.servlet.http.HttpServletRequest;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import cloud.compan.servlet.annotations.Controller;
 import cloud.compan.servlet.annotations.GetMapping;
 import cloud.compan.servlet.annotations.PostMapping;
 import cloud.compan.servlet.annotations.RequestBody;
-import cloud.compan.servlet.annotations.ResponseBody;
+import cloud.compan.servlet.annotations.RestController;
 import cloud.compan.servlet.dto.ServiceResult;
 import cloud.compan.servlet.service.AuthService;
 import cloud.compan.servlet.service.StorageService;
@@ -24,8 +23,7 @@ import cloud.compan.servlet.web.response.ApiResponseWrapper;
  * - GET /api/storage/quota - 获取存储配额
  * - GET /api/storage/analysis - 存储分析
  */
-@Controller("/api/storage")
-@ResponseBody
+@RestController("/api/storage")
 @Singleton
 public class StorageController extends BaseController {
     

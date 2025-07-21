@@ -1,11 +1,15 @@
 package cloud.compan.servlet.web;
 
-import cloud.compan.servlet.annotations.enums.RequestMethod;
-import com.google.inject.Singleton;
-
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.*;
+import com.google.inject.Singleton;
+import cloud.compan.servlet.annotations.enums.RequestMethod;
 
 /**
  * 路由注册器 - 线程安全的路由管理中心
@@ -39,27 +43,19 @@ public class RouteRegistry {
         
         synchronized (routes) {
             if (routes.containsKey(key)) {
-                System.out.println("Route already exists, overwriting: " + routeInfo.getHttpMethod()+ " " + routeInfo.getPath() + " -> " +
+                System.err.println("Route already exists, overwriting: " + routeInfo.getHttpMethod()+ " " + routeInfo.getPath() + " -> " +
                         routeInfo.getControllerClass().getSimpleName() + "." + routeInfo.getHandlerMethod().getName());
             }
             
             routes.put(key, routeInfo);
-            System.out.println("Route registered successfully: " + routeInfo);
             
             // If it's a parameterized route, also add to parameterized routes collection
             if (routeInfo instanceof ParameterizedRouteInfo) {
                 ParameterizedRouteInfo paramRoute = (ParameterizedRouteInfo) routeInfo;
-                System.out.println("DEBUG: Found parameterized route: " + paramRoute.getPathPattern());
                 if (paramRoute.hasPathVariables()) {
                     RequestMethod method = routeInfo.getHttpMethod();
                     parameterizedRoutes.computeIfAbsent(method, k -> new ArrayList<>()).add(paramRoute);
-                    System.out.println("DEBUG: Added to parameterized routes for method " + method + 
-                                     " (total: " + parameterizedRoutes.get(method).size() + ")");
-                } else {
-                    System.out.println("DEBUG: Parameterized route has no path variables: " + paramRoute.getPathPattern());
                 }
-            } else {
-                System.out.println("DEBUG: Regular route (not parameterized): " + routeInfo.getPath());
             }
         }
     }
@@ -84,33 +80,22 @@ public class RouteRegistry {
         String normalizedPath = normalizePath(requestPath);
         String routeKey = requestMethod.name() + ":" + normalizedPath;
         
-        System.out.println("DEBUG: Looking for route: " + routeKey);
-        
         // 1. 先尝试精确匹配
         RouteInfo exactMatch = routes.get(routeKey);
         if (exactMatch != null) {
-            System.out.println("DEBUG: Found exact match: " + exactMatch);
             return Optional.of(exactMatch);
         }
-        
-        System.out.println("DEBUG: No exact match found, trying parameterized routes...");
         
         // 2. 尝试参数化路由匹配
         List<ParameterizedRouteInfo> methodRoutes = parameterizedRoutes.get(requestMethod);
         if (methodRoutes != null) {
-            System.out.println("DEBUG: Found " + methodRoutes.size() + " parameterized routes for method " + requestMethod);
             for (ParameterizedRouteInfo paramRoute : methodRoutes) {
-                System.out.println("DEBUG: Testing parameterized route: " + paramRoute.getPathPattern());
                 if (paramRoute.matches(normalizedPath, requestMethod)) {
-                    System.out.println("DEBUG: Found parameterized match: " + paramRoute);
                     return Optional.of(paramRoute);
                 }
             }
-        } else {
-            System.out.println("DEBUG: No parameterized routes found for method " + requestMethod);
         }
         
-        System.out.println("DEBUG: No route found for: " + routeKey);
         return Optional.empty();
     }
     
@@ -172,15 +157,18 @@ public class RouteRegistry {
      * 打印所有注册的路由（用于调试）
      */
     public void printAllRoutes() {
-        System.out.println("\n=== REGISTERED ROUTES (" + routes.size() + " regular routes) ===");
-        routes.values().forEach(route -> 
-            System.out.println("  " + route));
-        
-        System.out.println("\n=== PARAMETERIZED ROUTES ===");
-        parameterizedRoutes.forEach((method, routes) -> {
-            System.out.println("  " + method + " (" + routes.size() + " routes):");
-            routes.forEach(route -> System.out.println("    " + route));
-        });
+        // 只在调试模式下打印，或者可以通过配置控制
+        if (Boolean.getBoolean("debug.routes")) {
+            System.out.println("\n=== REGISTERED ROUTES (" + routes.size() + " regular routes) ===");
+            routes.values().forEach(route -> 
+                System.out.println("  " + route));
+            
+            System.out.println("\n=== PARAMETERIZED ROUTES ===");
+            parameterizedRoutes.forEach((method, routes) -> {
+                System.out.println("  " + method + " (" + routes.size() + " routes):");
+                routes.forEach(route -> System.out.println("    " + route));
+            });
+        }
     }
     
     /**
