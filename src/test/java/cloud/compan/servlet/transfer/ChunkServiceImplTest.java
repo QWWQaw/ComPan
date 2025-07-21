@@ -15,6 +15,7 @@ import org.mockito.Mockito;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -58,6 +59,7 @@ class ChunkServiceImplTest {
         // 创建测试会话
         UploadSession session = chunkService.initUploadSession("test.txt", 1024);
         String sessionId = session.getSessionId();
+        System.out.println("测试会话ID: " + sessionId);
 
         // 创建测试分块
         byte[] chunkData = "Test chunk data".getBytes();
@@ -70,15 +72,29 @@ class ChunkServiceImplTest {
         // 保存分块
         chunkService.saveChunk(chunk);
 
-        // 验证分块已保存
-        Path chunkPath = Paths.get(FileTransferUtils.getTempDir(), sessionId + "_0.tmp");
-        assertTrue(Files.exists(chunkPath));
+        // 构建预期的文件存储路径
+        String tempDir = FileTransferUtils.getTempDir();
+        Path expectedChunkPath = Paths.get(tempDir, sessionId + "_0.tmp");
+
+        // 输出文件存储位置
+        System.out.println("分块文件存储位置: " + expectedChunkPath.toAbsolutePath());
+
+        // 验证分块已保存到正确位置
+        assertTrue(Files.exists(expectedChunkPath), "分块文件应存在");
+
+        // 验证文件内容
+        byte[] savedData = Files.readAllBytes(expectedChunkPath);
+        assertArrayEquals(chunkData, savedData, "保存的文件内容与原始数据不一致");
+
+        // 验证文件大小
+        assertEquals(chunkData.length, Files.size(expectedChunkPath), "文件大小不正确");
 
         // 验证会话状态更新
-        assertTrue(session.getCompletedChunks().contains(0));
+        assertTrue(session.getCompletedChunks().contains(0), "会话状态未更新");
 
         // 清理测试文件
-        Files.deleteIfExists(chunkPath);
+        Files.deleteIfExists(expectedChunkPath);
+        System.out.println("已清理临时文件: " + expectedChunkPath.toAbsolutePath());
     }
 
     @Test
@@ -210,4 +226,7 @@ class ChunkServiceImplTest {
         // 验证没有创建新文件
         verify(storageService, never()).storeFile(any(), anyLong(), anyString());
     }
+
+
+
 }

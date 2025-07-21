@@ -18,7 +18,20 @@ public class FileTransferUtils {
     }
 
     public static String generateFileId(String fileName) {
-        return "FILE_" + System.currentTimeMillis() + "_" + UUID.randomUUID() + "_" + fileName;
+        // 使用UUID确保唯一性
+        String uuid = UUID.randomUUID().toString().replace("-", "");
+
+        // 添加时间戳防止冲突
+        long timestamp = System.currentTimeMillis();
+
+        // 保留原始文件名后缀
+        String extension = "";
+        int dotIndex = fileName.lastIndexOf('.');
+        if (dotIndex > 0) {
+            extension = fileName.substring(dotIndex);
+        }
+
+        return timestamp + "_" + uuid + extension;
     }
 
     public static int getChunkSize() {

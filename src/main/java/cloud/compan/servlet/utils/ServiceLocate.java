@@ -2,10 +2,10 @@ package cloud.compan.servlet.utils;
 
 import cloud.compan.servlet.config.GuiceDataSourceProvider;
 import cloud.compan.servlet.repository.StorageObjectRepository;
+import cloud.compan.servlet.service.impl.StorageServiceImpl;
 import cloud.compan.servlet.service.transfer.ChunkService;
-import cloud.compan.servlet.service.transfer.StorageService;
+import cloud.compan.servlet.service.StorageService;
 import cloud.compan.servlet.service.impl.ChunkServiceImpl;
-import cloud.compan.servlet.service.impl.LocalStorageServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -29,10 +29,10 @@ public class ServiceLocate {
 
         // 初始化仓库和服务
         StorageObjectRepository storageObjectRepository = new StorageObjectRepository(jdbcExecutor);
-        StorageService storageService = new LocalStorageServiceImpl();
+        StorageService storageService = new StorageServiceImpl();
 
         // 注册服务实例
-        services.put(ChunkService.class, new ChunkServiceImpl(storageService, storageObjectRepository));
+        services.put(ChunkService.class, new ChunkServiceImpl((cloud.compan.servlet.service.transfer.StorageService) storageService, storageObjectRepository));
         services.put(StorageService.class, storageService);
         services.put(StorageObjectRepository.class, storageObjectRepository);
         services.put(JdbcExecutor.class, jdbcExecutor);
