@@ -30,9 +30,11 @@ public class User {
     private String passwordHash; // 修正字段名以匹配服务层代码
 
     @Column(name = "storage_limit")
+    @Builder.Default
     private Long storageLimit = 10737418240L; // 10GB
 
     @Column(name = "storage_used")
+    @Builder.Default
     private Long storageUsed = 0L;
 
     @Column(name = "created_at")
@@ -43,5 +45,6 @@ public class User {
 
     // 添加角色字段以支持管理员权限检查
     @Column(name = "role")
+    @Builder.Default
     private String role = "USER";
 }

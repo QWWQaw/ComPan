@@ -131,10 +131,15 @@
       <version>${hibernate.core.version}</version>
     </dependency>
 
-    <!-- MySQL JDBC driver-->
+    <!-- MySQL JDBC driver
     <dependency>
       <groupId>mysql</groupId>
       <artifactId>mysql-connector-java</artifactId>
+      <version>8.0.33</version>
+    </dependency> -->
+    <dependency>
+      <groupId>com.mysql</groupId>
+      <artifactId>mysql-connector-j</artifactId>
       <version>8.0.33</version>
     </dependency>
 
@@ -247,11 +252,6 @@
 <!--      <artifactId>jakarta.el</artifactId>-->
 <!--      <version>5.0.0</version> <scope>test</scope>-->
 <!--    </dependency>-->
-    <dependency>
-      <groupId>com.fasterxml.jackson.datatype</groupId>
-      <artifactId>jackson-datatype-jsr310</artifactId>
-      <version>2.19.1</version>
-    </dependency>
 
   </dependencies>
 
