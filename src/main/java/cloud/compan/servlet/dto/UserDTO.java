@@ -1,11 +1,16 @@
 package cloud.compan.servlet.dto;
 
 import java.time.LocalDateTime;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import jakarta.validation.constraints.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 用户数据传输对象
@@ -59,5 +64,63 @@ public class UserDTO {
             return 0.0;
         }
         return (double) storageUsed / storageLimit * 100.0;
+    }
+    
+    // 手动添加getter方法，因为Lombok可能没有正确生成
+    public Long getUserId() {
+        return userId;
+    }
+    
+    public String getUsername() {
+        return username;
+    }
+    
+    public String getEmail() {
+        return email;
+    }
+    
+    public Long getStorageLimit() {
+        return storageLimit;
+    }
+    
+    public Long getStorageUsed() {
+        return storageUsed;
+    }
+    
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+    
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+    
+    // 手动添加setter方法
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+    
+    public void setUsername(String username) {
+        this.username = username;
+    }
+    
+    public void setEmail(String email) {
+        this.email = email;
+    }
+    
+    public void setStorageLimit(Long storageLimit) {
+        this.storageLimit = storageLimit;
+    }
+    
+    public void setStorageUsed(Long storageUsed) {
+        this.storageUsed = storageUsed;
+    }
+    
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+    
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

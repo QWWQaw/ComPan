@@ -1,4 +1,24 @@
 /**
+ * 分页数据通用接口
+ * @property {T[]} content - 数据内容
+ * @property {number} totalElements - 总元素数
+ * @property {number} currentPage - 当前页码
+ * @property {number} pageSize - 每页大小
+ * @property {number} totalPages - 总页数
+ * @property {boolean} hasNext - 是否有下一页
+ * @property {boolean} hasPrevious - 是否有上一页
+ */
+export interface PaginatedData<T> {
+  content: T[];
+  totalElements: number;
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
+/**
  * 用户信息
  * @property {string} userId - 用户ID
  * @property {string} username - 用户名

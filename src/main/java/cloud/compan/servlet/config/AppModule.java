@@ -39,6 +39,8 @@ public class AppModule extends AbstractModule {
         // 安装自动扫描模块，自动注册@Service和@Controller注解的类
         install(new AutoScanModule("cloud.compan.servlet"));
         
+        // 安装数据库模块
+        install(new DatabaseModule());
         bind(AppModule.class).toProvider(AppConfigProvider.class).in(Singleton.class);  
         
         // ============ Web组件绑定 ============

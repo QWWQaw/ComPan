@@ -17,11 +17,12 @@ import cloud.compan.servlet.dto.ServiceResult;
 import cloud.compan.servlet.model.Folder;
 import cloud.compan.servlet.service.AuthService;
 import cloud.compan.servlet.service.FolderService;
+import cloud.compan.servlet.utils.ControllerUtils;
 import cloud.compan.servlet.web.response.ApiResponseWrapper;
 
 /**
  * 文件夹控制器
- * 继承BaseController，处理文件夹管理相关的HTTP请求
+ * 处理文件夹管理相关的HTTP请求
  * 
  * 职责：
  * - 处理HTTP请求参数
@@ -36,9 +37,9 @@ import cloud.compan.servlet.web.response.ApiResponseWrapper;
  * - DELETE /api/folders/{id} - 删除文件夹
  * - POST /api/folders/batch - 批量操作文件夹
  */
-@RestController("/api/folders")
+@RestController("/api/v1/folders")
 @Singleton
-public class FolderController extends BaseController {
+public class FolderController {
     
     @Inject
     private FolderService folderService;
@@ -57,20 +58,20 @@ public class FolderController extends BaseController {
                                           HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         String folderName = (String) requestData.get("folder_name");
         Number parentFolderIdObj = (Number) requestData.get("parent_folder_id");
         
         if (folderName == null || folderName.trim().isEmpty()) {
-            return error(400, "文件夹名称不能为空");
+            return ControllerUtils.error(400, "文件夹名称不能为空");
         }
         
         Long parentFolderId = parentFolderIdObj != null ? parentFolderIdObj.longValue() : null;
         
         ServiceResult<Folder> result = folderService.createFolder(folderName, parentFolderId, userId);
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -82,7 +83,7 @@ public class FolderController extends BaseController {
                                            HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         @SuppressWarnings("unchecked")
@@ -90,41 +91,38 @@ public class FolderController extends BaseController {
         Number parentFolderIdObj = (Number) requestData.get("parent_folder_id");
         
         if (folderNames == null || folderNames.isEmpty()) {
-            return error(400, "文件夹名称列表不能为空");
+            return ControllerUtils.error(400, "文件夹名称列表不能为空");
         }
         
         Long parentFolderId = parentFolderIdObj != null ? parentFolderIdObj.longValue() : null;
         
         ServiceResult<List<Folder>> result = folderService.createFolders(folderNames, parentFolderId, userId);
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     // ============ 文件夹查询相关 ============
     
     /**
      * 获取文件夹列表
-     * GET /api/folders
+     * GET /api/folders?parent_folder_id=123&page=1&size=20
      */
     @GetMapping
     public ApiResponseWrapper getFolders(HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         String parentFolderIdStr = request.getParameter("parent_folder_id");
-        String sortBy = request.getParameter("sort");
-        String sortOrder = request.getParameter("order");
-        
-        int page = parseIntParam(request, "page", 1);
-        int size = parseIntParam(request, "per_page", 20);
+        int page = ControllerUtils.parseIntParam(request, "page", 1);
+        int size = ControllerUtils.parseIntParam(request, "size", 20);
+        String sortBy = request.getParameter("sort_by");
+        String sortOrder = request.getParameter("sort_order");
         
         Long parentFolderId = parentFolderIdStr != null ? Long.parseLong(parentFolderIdStr) : null;
         
-        ServiceResult<PageResultDTO<Folder>> result = folderService.getSubFolders(
-            parentFolderId, userId, page, size, sortBy, sortOrder);
-            
-        return handleServiceResult(result);
+        ServiceResult<PageResultDTO<Folder>> result = folderService.getFolders(userId, parentFolderId, page, size, sortBy, sortOrder);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -135,79 +133,71 @@ public class FolderController extends BaseController {
     public ApiResponseWrapper getFolderDetails(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
-        if (id == null) {
-            return error(400, "文件夹ID不能为空");
-        }
-        
-        // 直接调用Service层获取文件夹详情
         ServiceResult<Folder> result = folderService.getFolderDetails(id, userId);
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
-     * 获取文件夹路径（面包屑导航）
+     * 获取文件夹路径
      * GET /api/folders/{id}/path
      */
     @GetMapping(path = "/{id}/path")
     public ApiResponseWrapper getFolderPath(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
-        if (id == null) {
-            return error(400, "文件夹ID不能为空");
-        }
-        
-        // 直接调用Service层获取文件夹路径
-        ServiceResult<List<Map<String, Object>>> result = folderService.getFolderPath(id, userId);
-        return handleServiceResult(result);
+        ServiceResult<List<Folder>> result = folderService.getFolderPath(id, userId);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
      * 搜索文件夹
-     * GET /api/folders/search
+     * GET /api/folders/search?keyword=test
      */
     @GetMapping(path = "/search")
     public ApiResponseWrapper searchFolders(HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         String keyword = request.getParameter("keyword");
+        String parentFolderIdStr = request.getParameter("parent_folder_id");
+        int page = ControllerUtils.parseIntParam(request, "page", 1);
+        int size = ControllerUtils.parseIntParam(request, "size", 20);
+        
         if (keyword == null || keyword.trim().isEmpty()) {
-            return error(400, "搜索关键词不能为空");
+            return ControllerUtils.error(400, "搜索关键词不能为空");
         }
         
-        int page = parseIntParam(request, "page", 1);
-        int size = parseIntParam(request, "per_page", 20);
+        Long parentFolderId = parentFolderIdStr != null ? Long.parseLong(parentFolderIdStr) : null;
         
-        ServiceResult<PageResultDTO<Folder>> result = folderService.searchFolders(keyword, userId, page, size);
-        return handleServiceResult(result);
+        ServiceResult<PageResultDTO<Folder>> result = folderService.searchFolders(
+            userId, keyword, parentFolderId, page, size);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
-     * 获取文件夹树形结构
-     * GET /api/folders/tree
+     * 获取文件夹树结构
+     * GET /api/folders/tree?root_folder_id=123
      */
     @GetMapping(path = "/tree")
     public ApiResponseWrapper getFolderTree(HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         String rootFolderIdStr = request.getParameter("root_folder_id");
-        int maxDepth = parseIntParam(request, "max_depth", 3);
-        
         Long rootFolderId = rootFolderIdStr != null ? Long.parseLong(rootFolderIdStr) : null;
         
-        ServiceResult<Map<String, Object>> result = folderService.getFolderTree(rootFolderId, userId, maxDepth);
-        return handleServiceResult(result);
+        ServiceResult<Map<String, Object>> result = folderService.getFolderTree(userId, rootFolderId);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     // ============ 文件夹操作相关 ============
@@ -222,20 +212,16 @@ public class FolderController extends BaseController {
                                           HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
-        if (id == null) {
-            return error(400, "文件夹ID不能为空");
+        String newName = (String) requestData.get("name");
+        if (newName == null || newName.trim().isEmpty()) {
+            return ControllerUtils.error(400, "新文件夹名称不能为空");
         }
         
-        String newFolderName = (String) requestData.get("folder_name");
-        if (newFolderName == null || newFolderName.trim().isEmpty()) {
-            return error(400, "新文件夹名称不能为空");
-        }
-        
-        ServiceResult<Folder> result = folderService.renameFolder(id, newFolderName, userId);
-        return handleServiceResult(result);
+        ServiceResult<Folder> result = folderService.renameFolder(id, newName, userId);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -248,22 +234,17 @@ public class FolderController extends BaseController {
                                         HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
-        if (id == null) {
-            return error(400, "文件夹ID不能为空");
+        Number targetParentIdObj = (Number) requestData.get("target_parent_id");
+        if (targetParentIdObj == null) {
+            return ControllerUtils.error(400, "目标父文件夹ID不能为空");
         }
         
-        Number targetParentFolderIdObj = (Number) requestData.get("target_parent_folder_id");
-        if (targetParentFolderIdObj == null) {
-            return error(400, "目标父文件夹ID不能为空");
-        }
-        
-        Long targetParentFolderId = targetParentFolderIdObj.longValue();
-        
-        ServiceResult<Folder> result = folderService.moveFolder(id, targetParentFolderId, userId);
-        return handleServiceResult(result);
+        Long targetParentId = targetParentIdObj.longValue();
+        ServiceResult<Folder> result = folderService.moveFolder(id, targetParentId, userId);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -276,27 +257,24 @@ public class FolderController extends BaseController {
                                         HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
-        if (id == null) {
-            return error(400, "文件夹ID不能为空");
+        Number targetParentIdObj = (Number) requestData.get("target_parent_id");
+        String newName = (String) requestData.get("new_name");
+        Boolean includeSubfolders = (Boolean) requestData.get("include_subfolders");
+        
+        if (targetParentIdObj == null) {
+            return ControllerUtils.error(400, "目标父文件夹ID不能为空");
         }
         
-        Number targetParentFolderIdObj = (Number) requestData.get("target_parent_folder_id");
-        String newFolderName = (String) requestData.get("new_folder_name");
-        Boolean copyContents = (Boolean) requestData.get("copy_contents");
-        
-        if (targetParentFolderIdObj == null) {
-            return error(400, "目标父文件夹ID不能为空");
+        Long targetParentId = targetParentIdObj.longValue();
+        if (includeSubfolders == null) {
+            includeSubfolders = true;
         }
         
-        Long targetParentFolderId = targetParentFolderIdObj.longValue();
-        boolean shouldCopyContents = copyContents != null ? copyContents : true;
-        
-        ServiceResult<Folder> result = folderService.copyFolder(
-            id, targetParentFolderId, newFolderName, userId, shouldCopyContents);
-        return handleServiceResult(result);
+        ServiceResult<Folder> result = folderService.copyFolder(id, targetParentId, newName, includeSubfolders, userId);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -307,18 +285,13 @@ public class FolderController extends BaseController {
     public ApiResponseWrapper deleteFolder(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
-        if (id == null) {
-            return error(400, "文件夹ID不能为空");
-        }
+        Boolean recursive = ControllerUtils.parseBooleanParam(request, "recursive", false);
         
-        String deleteContentsStr = request.getParameter("delete_contents");
-        boolean deleteContents = "true".equals(deleteContentsStr);
-        
-        ServiceResult<Boolean> result = folderService.deleteFolder(id, userId, deleteContents);
-        return handleServiceResult(result);
+        ServiceResult<Boolean> result = folderService.deleteFolder(id, recursive, userId);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -330,53 +303,36 @@ public class FolderController extends BaseController {
                                                   HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
-        String action = (String) requestData.get("action");
+        String operation = (String) requestData.get("operation");
         @SuppressWarnings("unchecked")
-        List<Number> folderIdNumbers = (List<Number>) requestData.get("folder_ids");
-        Number targetParentFolderIdObj = (Number) requestData.get("target_parent_folder_id");
+        List<Long> folderIds = (List<Long>) requestData.get("folder_ids");
         
-        if (action == null || action.trim().isEmpty()) {
-            return error(400, "操作类型不能为空");
+        if (operation == null || folderIds == null || folderIds.isEmpty()) {
+            return ControllerUtils.error(400, "缺少必需参数: operation, folder_ids");
         }
         
-        if (folderIdNumbers == null || folderIdNumbers.isEmpty()) {
-            return error(400, "文件夹ID列表不能为空");
-        }
-        
-        List<Long> folderIds = folderIdNumbers.stream()
-            .map(Number::longValue)
-            .toList();
-            
-        Long targetParentFolderId = targetParentFolderIdObj != null ? targetParentFolderIdObj.longValue() : null;
-        
-        ServiceResult<Map<String, Object>> result = folderService.batchOperateFolders(
-            folderIds, action, targetParentFolderId, userId);
-            
-        return handleServiceResult(result);
+        ServiceResult<Map<String, Object>> result = folderService.batchOperateFolders(operation, folderIds, userId);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     // ============ 文件夹权限和统计相关 ============
     
     /**
-     * 获取文件夹权限列表
+     * 获取文件夹权限
      * GET /api/folders/{id}/permissions
      */
     @GetMapping(path = "/{id}/permissions")
     public ApiResponseWrapper getFolderPermissions(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
-        if (id == null) {
-            return error(400, "文件夹ID不能为空");
-        }
-        
-        ServiceResult<List<Map<String, Object>>> result = folderService.getFolderPermissions(id, userId);
-        return handleServiceResult(result);
+        ServiceResult<Map<String, Object>> result = folderService.getFolderPermissions(id, userId);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -387,55 +343,42 @@ public class FolderController extends BaseController {
     public ApiResponseWrapper getFolderStatistics(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
-        }
-        
-        if (id == null) {
-            return error(400, "文件夹ID不能为空");
+            return ControllerUtils.error(401, "未认证");
         }
         
         ServiceResult<Map<String, Object>> result = folderService.getFolderStatistics(id, userId);
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
-     * 获取用户根目录
+     * 获取根文件夹
      * GET /api/folders/root
      */
     @GetMapping(path = "/root")
     public ApiResponseWrapper getRootFolder(HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         ServiceResult<Folder> result = folderService.getRootFolder(userId);
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
-    // ============ 辅助方法 ============
-    
     /**
-     * 从请求中获取用户ID
+     * 从token中获取用户ID
      */
     private Long getUserIdFromToken(HttpServletRequest request) {
-        String token = extractTokenFromRequest(request);
+        String token = ControllerUtils.extractTokenFromRequest(request);
         if (token == null) {
             return null;
         }
         
         ServiceResult<Long> result = authService.extractUserIdFromToken(token);
-        return result.isSuccess() ? result.getData() : null;
-    }
-    
-    /**
-     * 从请求头中提取JWT token
-     */
-    private String extractTokenFromRequest(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7);
+        if (!result.isSuccess()) {
+            return null;
         }
-        return null;
+        
+        return result.getData();
     }
 } 

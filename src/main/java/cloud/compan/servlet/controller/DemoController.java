@@ -14,15 +14,16 @@ import cloud.compan.servlet.annotations.RequestMapping;
 import cloud.compan.servlet.annotations.RequestParam;
 import cloud.compan.servlet.annotations.RestController;
 import cloud.compan.servlet.annotations.enums.RequestMethod;
+import cloud.compan.servlet.utils.ControllerUtils;
 import cloud.compan.servlet.web.response.ApiResponseWrapper;
 
 /**
  * 演示控制器
  * 展示所有HTTP映射注解的使用方法
  */
-@RestController("/api/demo")
+@RestController("/api/v1/demo")
 @Singleton
-public class DemoController extends BaseController {
+public class DemoController {
     
     /**
      * GET请求演示
@@ -30,7 +31,7 @@ public class DemoController extends BaseController {
      */
     @GetMapping(path = "/get-example")
     public ApiResponseWrapper getExample() {
-        return success("GET请求处理成功", Map.of(
+        return ControllerUtils.success("GET请求处理成功", Map.of(
             "method", "GET",
             "description", "用于获取资源",
             "example", "获取用户列表、获取文件信息等"
@@ -43,7 +44,7 @@ public class DemoController extends BaseController {
      */
     @PostMapping(path = "/post-example")
     public ApiResponseWrapper postExample(@RequestBody Map<String, Object> data) {
-        return created("POST请求处理成功", Map.of(
+        return ControllerUtils.created("POST请求处理成功", Map.of(
             "method", "POST",
             "description", "用于创建新资源",
             "receivedData", data,
@@ -57,7 +58,7 @@ public class DemoController extends BaseController {
      */
     @PutMapping(path = "/put-example/{id}")
     public ApiResponseWrapper putExample(@PathVariable Long id, @RequestBody Map<String, Object> data) {
-        return success("PUT请求处理成功", Map.of(
+        return ControllerUtils.success("PUT请求处理成功", Map.of(
             "method", "PUT",
             "description", "用于完整更新资源",
             "resourceId", id,
@@ -72,7 +73,7 @@ public class DemoController extends BaseController {
      */
     @DeleteMapping(path = "/delete-example/{id}")
     public ApiResponseWrapper deleteExample(@PathVariable Long id) {
-        return success("DELETE请求处理成功", Map.of(
+        return ControllerUtils.success("DELETE请求处理成功", Map.of(
             "method", "DELETE",
             "description", "用于删除资源",
             "deletedResourceId", id,
@@ -86,7 +87,7 @@ public class DemoController extends BaseController {
      */
     @PatchMapping(path = "/patch-example/{id}")
     public ApiResponseWrapper patchExample(@PathVariable Long id, @RequestBody Map<String, Object> partialData) {
-        return success("PATCH请求处理成功", Map.of(
+        return ControllerUtils.success("PATCH请求处理成功", Map.of(
             "method", "PATCH",
             "description", "用于部分更新资源",
             "resourceId", id,
@@ -105,18 +106,18 @@ public class DemoController extends BaseController {
         String httpMethod = request.getMethod();
         
         if ("GET".equals(httpMethod)) {
-            return success("GET方法处理", Map.of(
+            return ControllerUtils.success("GET方法处理", Map.of(
                 "method", "GET",
                 "description", "通过RequestMapping处理的GET请求"
             ));
         } else if ("POST".equals(httpMethod)) {
-            return success("POST方法处理", Map.of(
+            return ControllerUtils.success("POST方法处理", Map.of(
                 "method", "POST",
                 "description", "通过RequestMapping处理的POST请求",
                 "data", data
             ));
         } else {
-            return error("不支持的HTTP方法: " + httpMethod);
+            return ControllerUtils.error("不支持的HTTP方法: " + httpMethod);
         }
     }
     
@@ -129,7 +130,7 @@ public class DemoController extends BaseController {
                                            @RequestParam(required = false) String search,
                                            @RequestParam(defaultValue = "1") int page,
                                            @RequestParam(defaultValue = "20") int size) {
-        return success("复杂参数处理成功", Map.of(
+        return ControllerUtils.success("复杂参数处理成功", Map.of(
             "category", category,
             "search", search != null ? search : "无搜索条件",
             "page", page,
@@ -144,7 +145,7 @@ public class DemoController extends BaseController {
      */
     @GetMapping(path = "/methods-overview")
     public ApiResponseWrapper methodsOverview() {
-        return success("HTTP方法总览", Map.of(
+        return ControllerUtils.success("HTTP方法总览", Map.of(
             "GET", "获取资源 - 幂等、安全",
             "POST", "创建资源 - 非幂等",
             "PUT", "完整更新资源 - 幂等",

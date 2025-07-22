@@ -1,13 +1,12 @@
 package cloud.compan.servlet.service;
 
-import cloud.compan.servlet.dto.ServiceResult;
 import cloud.compan.servlet.dto.LoginResultDTO;
+import cloud.compan.servlet.dto.ServiceResult;
 import cloud.compan.servlet.dto.UserDTO;
-import cloud.compan.servlet.model.User;
 
 /**
  * 认证服务接口
- * 继承BaseService获得基础CRUD能力，同时提供认证相关的专门业务逻辑
+ * 
  */
 public interface AuthService {
     
@@ -37,9 +36,10 @@ public interface AuthService {
      * 用户登录
      * @param username 用户名（或邮箱）
      * @param password 密码
+     * @param request HTTP请求对象，用于获取客户端信息
      * @return 登录结果，包含token和用户信息
      */
-    ServiceResult<LoginResultDTO> login(String username, String password);
+    ServiceResult<LoginResultDTO> login(String username, String password, jakarta.servlet.http.HttpServletRequest request);
     
     /**
      * 用户登出
@@ -103,22 +103,6 @@ public interface AuthService {
      * @return 验证结果
      */
     ServiceResult<Void> validatePasswordStrength(String password);
-    
-    // ============ 用户状态管理 ============
-    
-    /**
-     * 检查用户账户状态
-     * @param userId 用户ID
-     * @return 账户状态信息
-     */
-    ServiceResult<String> checkAccountStatus(Long userId);
-    
-    /**
-     * 获取当前登录用户信息
-     * @param token JWT token
-     * @return 用户信息
-     */
-    ServiceResult<UserDTO> getCurrentUser(String token);
     
     // ============ 安全相关 ============
     

@@ -17,11 +17,7 @@ public class StorageServiceImpl implements StorageService {
     
     @Override
     public ServiceResult<Map<String, Object>> getUserStorageStatistics(Long userId) {
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("totalSize", 1024000L);
-        stats.put("usedSize", 512000L);
-        stats.put("fileCount", 100);
-        return ServiceResult.success(stats, "获取存储统计成功");
+        
     }
     
     @Override  

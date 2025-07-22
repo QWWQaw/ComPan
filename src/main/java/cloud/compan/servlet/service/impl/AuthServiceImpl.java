@@ -3,6 +3,7 @@ package cloud.compan.servlet.service.impl;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -36,6 +37,9 @@ public class AuthServiceImpl implements AuthService {
     // 简单的内存缓存，用于存储登录尝试记录（生产环境应使用Redis）
     private final Map<String, Integer> loginAttempts = new ConcurrentHashMap<>();
     private final Map<String, Long> lastLoginAttempt = new ConcurrentHashMap<>();
+
+    // 添加 token 黑名单
+    private final Set<String> blacklistedTokens = ConcurrentHashMap.newKeySet();
 
     @Override
     public ServiceResult<UserDTO> register(String username, String email, String password) {
@@ -74,8 +78,8 @@ public class AuthServiceImpl implements AuthService {
         if (username == null || username.trim().isEmpty()) {
             return ServiceResult.error("用户名不能为空", "USERNAME_EMPTY");
         }
-        if (username.length() < 3 || username.length() > 50) {
-            return ServiceResult.error("用户名长度必须在3-50个字符之间", "USERNAME_LENGTH_INVALID");
+        if (username.length() < 3 || username.length() > 15) {
+            return ServiceResult.error("用户名长度必须在3-15个字符之间", "USERNAME_LENGTH_INVALID");
         }
         if (!username.matches("^[a-zA-Z0-9_]+$")) {
             return ServiceResult.error("用户名只能包含字母、数字和下划线", "USERNAME_FORMAT_INVALID");
@@ -99,10 +103,14 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public ServiceResult<LoginResultDTO> login(String username, String password) {
+    public ServiceResult<LoginResultDTO> login(String username, String password, jakarta.servlet.http.HttpServletRequest request) {
         try {
+            // 获取真实的客户端信息
+            String clientIP = getClientIP(request);
+            String userAgent = getUserAgent(request);
+            
             // 1. 检查登录频率限制
-            ServiceResult<Boolean> rateLimitResult = checkLoginRateLimit(username, "127.0.0.1");
+            ServiceResult<Boolean> rateLimitResult = checkLoginRateLimit(username, clientIP);
             if (rateLimitResult.isSuccess() && rateLimitResult.getData()) {
                 return ServiceResult.error("登录尝试过于频繁，请稍后再试", "RATE_LIMIT_EXCEEDED");
             }
@@ -115,27 +123,21 @@ public class AuthServiceImpl implements AuthService {
             }
             
             if (user == null) {
-                recordLoginAttempt(username, false, "127.0.0.1", "Unknown");
+                recordLoginAttempt(username, false, clientIP, userAgent);
                 return ServiceResult.error("用户名或密码错误", "INVALID_CREDENTIALS");
             }
             
             // 3. 验证密码
             if (!hashUtil.verifyPassword(password, user.getPasswordHash())) {
-                recordLoginAttempt(username, false, "127.0.0.1", "Unknown");
+                recordLoginAttempt(username, false, clientIP, userAgent);
                 return ServiceResult.error("用户名或密码错误", "INVALID_CREDENTIALS");
             }
             
-            // 4. 检查账户状态
-            ServiceResult<String> statusResult = checkAccountStatus(user.getUserId());
-            if (!statusResult.isSuccess() || !"ACTIVE".equals(statusResult.getData())) {
-                return ServiceResult.error("账户已被禁用", "ACCOUNT_DISABLED");
-            }
-            
-            // 5. 生成JWT token
+            // 4. 生成JWT token
             String token = jwtUtil.generateToken(user.getUserId().toString());
             
             // 6. 记录成功登录
-            recordLoginAttempt(username, true, "127.0.0.1", "Unknown");
+            recordLoginAttempt(username, true, clientIP, userAgent);
             
             // 7. 更新最后登录时间
             user.setUpdatedAt(LocalDateTime.now());
@@ -155,12 +157,46 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public ServiceResult<Void> logout(String token) {
         try {
-            // 在实际应用中，这里应该将token加入黑名单
-            // 当前简化实现，直接返回成功
+            // 1. 验证 token 格式
+            if (token == null || token.trim().isEmpty()) {
+                return ServiceResult.error("Token不能为空", "INVALID_TOKEN");
+            }
+            
+            // 2. 验证 token 有效性
+            try {
+                var claims = jwtUtil.validateToken(token);
+                if (claims == null) {
+                    return ServiceResult.error("Token无效", "INVALID_TOKEN");
+                }
+            } catch (Exception e) {
+                return ServiceResult.error("Token验证失败", "TOKEN_VALIDATION_FAILED");
+            }
+            
+            // 3. 将 token 加入黑名单
+            blacklistedTokens.add(token);
+            
             return ServiceResult.success(null, "登出成功");
         } catch (Exception e) {
             return ServiceResult.error("登出失败: " + e.getMessage(), "LOGOUT_FAILED");
         }
+    }
+
+    /**
+     * 检查 token 是否在黑名单中
+     * @param token JWT token
+     * @return 如果在黑名单中返回 true
+     */
+    public boolean isTokenBlacklisted(String token) {
+        return blacklistedTokens.contains(token);
+    }
+
+    /**
+     * 清理过期的黑名单 token（可选，用于内存管理）
+     */
+    public void cleanupExpiredBlacklistedTokens() {
+        // 这里可以实现定期清理逻辑
+        // 由于 JWT 有过期时间，过期的 token 即使不在黑名单中也无效
+        // 所以这里主要是为了内存管理
     }
 
     @Override
@@ -188,24 +224,23 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public ServiceResult<UserDTO> validateToken(String token) {
         try {
-            // 1. 从token中提取用户ID
+            // 1. 检查 token 是否在黑名单中
+            if (isTokenBlacklisted(token)) {
+                return ServiceResult.error("Token已失效（已登出）", "TOKEN_BLACKLISTED");
+            }
+            
+            // 2. 从token中提取用户ID
             ServiceResult<Long> userIdResult = extractUserIdFromToken(token);
             if (!userIdResult.isSuccess()) {
                 return ServiceResult.error("Token无效", "INVALID_TOKEN");
             }
             
-            // 2. 查找用户
+            // 3. 查找用户
             Optional<User> userOpt = userRepository.findById(userIdResult.getData());
             if (userOpt.isEmpty()) {
                 return ServiceResult.error("用户不存在", "USER_NOT_FOUND");
             }
             User user = userOpt.get();
-            
-            // 3. 检查账户状态
-            ServiceResult<String> statusResult = checkAccountStatus(user.getUserId());
-            if (!statusResult.isSuccess() || !"ACTIVE".equals(statusResult.getData())) {
-                return ServiceResult.error("账户已被禁用", "ACCOUNT_DISABLED");
-            }
             
             // 4. 转换为DTO并返回
             UserDTO userDTO = convertToDTO(user);
@@ -307,8 +342,8 @@ public class AuthServiceImpl implements AuthService {
         if (password == null || password.length() < 6) {
             return ServiceResult.error("密码长度至少6位", "PASSWORD_TOO_SHORT");
         }
-        if (password.length() > 100) {
-            return ServiceResult.error("密码长度不能超过100位", "PASSWORD_TOO_LONG");
+        if (password.length() > 50) {
+            return ServiceResult.error("密码长度不能超过50位", "PASSWORD_TOO_LONG");
         }
         // 可以添加更多密码强度检查，如包含大小写字母、数字、特殊字符等
         return ServiceResult.success(null, "密码强度验证通过");
@@ -332,6 +367,49 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public ServiceResult<UserDTO> getCurrentUser(String token) {
         return validateToken(token);
+    }
+    
+    @Override
+    public ServiceResult<UserDTO> updateProfile(Long userId, String displayName, String email) {
+        try {
+            // 1. 查找用户
+            Optional<User> userOpt = userRepository.findById(userId);
+            if (userOpt.isEmpty()) {
+                return ServiceResult.error("用户不存在", "USER_NOT_FOUND");
+            }
+            
+            User user = userOpt.get();
+            
+            // 2. 更新字段
+            if (displayName != null && !displayName.trim().isEmpty()) {
+                // 检查用户名是否已被其他用户使用
+                User existingUser = userRepository.findByUsername(displayName);
+                if (existingUser != null && !existingUser.getUserId().equals(userId)) {
+                    return ServiceResult.error("用户名已被使用", "USERNAME_EXISTS");
+                }
+                user.setUsername(displayName);
+            }
+            
+            if (email != null && !email.trim().isEmpty()) {
+                // 检查邮箱是否已被其他用户使用
+                User existingUser = userRepository.findByEmail(email);
+                if (existingUser != null && !existingUser.getUserId().equals(userId)) {
+                    return ServiceResult.error("邮箱已被使用", "EMAIL_EXISTS");
+                }
+                user.setEmail(email);
+            }
+            
+            // 3. 保存更新
+            user.setUpdatedAt(LocalDateTime.now());
+            User updatedUser = userRepository.save(user);
+            
+            // 4. 转换为DTO并返回
+            UserDTO userDTO = convertToDTO(updatedUser);
+            return ServiceResult.success(userDTO, "用户信息更新成功");
+            
+        } catch (Exception e) {
+            return ServiceResult.error("更新用户信息失败: " + e.getMessage(), "UPDATE_PROFILE_FAILED");
+        }
     }
 
     @Override
@@ -367,7 +445,7 @@ public class AuthServiceImpl implements AuthService {
             if (lastAttempt != null && currentTime - lastAttempt < 300000) { // 5分钟内
                 int attempts = loginAttempts.getOrDefault(key, 0);
                 if (attempts >= 5) { // 5次失败后限制
-                    return ServiceResult.success(true, "登录频率超限");
+                    return ServiceResult.success(true, "Login rate limit exceeded");
                 }
             } else {
                 // 超过限制时间，清除记录
@@ -385,14 +463,55 @@ public class AuthServiceImpl implements AuthService {
      * 将User实体转换为UserDTO
      */
     private UserDTO convertToDTO(User user) {
-        return UserDTO.builder()
-                .userId(user.getUserId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .storageLimit(user.getStorageLimit())
-                .storageUsed(user.getStorageUsed())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .build();
+        UserDTO dto = new UserDTO(user.getUserId(), user.getUsername(), user.getEmail());
+        dto.setStorageLimit(user.getStorageLimit());
+        dto.setStorageUsed(user.getStorageUsed());
+        dto.setCreatedAt(user.getCreatedAt());
+        dto.setUpdatedAt(user.getUpdatedAt());
+        return dto;
+    }
+
+    /**
+     * 获取客户端真实IP地址
+     * @param request HTTP请求对象
+     * @return 客户端IP地址
+     */
+    private String getClientIP(jakarta.servlet.http.HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("X-Real-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("HTTP_CLIENT_IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("HTTP_X_FORWARDED_FOR");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        
+        // 如果是多个IP，取第一个
+        if (ip != null && ip.contains(",")) {
+            ip = ip.split(",")[0].trim();
+        }
+        
+        return ip != null ? ip : "unknown";
+    }
+
+    /**
+     * 获取客户端User-Agent
+     * @param request HTTP请求对象
+     * @return User-Agent字符串
+     */
+    private String getUserAgent(jakarta.servlet.http.HttpServletRequest request) {
+        String userAgent = request.getHeader("User-Agent");
+        return userAgent != null ? userAgent : "Unknown";
     }
 } 

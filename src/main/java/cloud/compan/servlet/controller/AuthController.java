@@ -14,33 +14,34 @@ import cloud.compan.servlet.dto.SearchCriteria;
 import cloud.compan.servlet.dto.ServiceResult;
 import cloud.compan.servlet.dto.UserDTO;
 import cloud.compan.servlet.service.AuthService;
+import cloud.compan.servlet.utils.ControllerUtils;
 import cloud.compan.servlet.web.response.ApiResponseWrapper;
 
 /**
  * Authentication Controller
- * Inherits BaseController, handles HTTP requests related to user authentication
+ * Handles HTTP requests related to user authentication
  * 
  * Implements authentication routes from API 1.3 documentation:
- * - POST /api/auth/register - User registration
- * - POST /api/auth/login - User login  
- * - POST /api/auth/logout - User logout
- * - GET /api/me/profile - Get user information
- * - PUT /api/me/update-profile - Update user information
- * - PUT /api/me/password - Change password
- * - GET /api/me/storage-stats - Get storage statistics
+ * - POST /api/v1/auth/register - User registration
+ * - POST /api/v1/auth/login - User login  
+ * - POST /api/v1/auth/logout - User logout
+ * - GET /api/v1/me/profile - Get user information
+ * - PUT /api/v1/me/update-profile - Update user information
+ * - PUT /api/v1/me/password - Change password
+ * - GET /api/v1/me/storage-stats - Get storage statistics
  */
 @RestController
 @Singleton
-public class AuthController extends BaseController {
+public class AuthController {
     
     @Inject
     private AuthService authService;
     
-    // ============ Authentication Routes /api/auth/* ============
+    // ============ Authentication Routes /api/v1/auth/* ============
     
     /**
      * User registration
-     * POST /api/auth/register
+     * POST /api/v1/auth/register
      * 
      * Request body example:
      * {
@@ -49,7 +50,7 @@ public class AuthController extends BaseController {
      *   "password": "password123"
      * }
      */
-    @PostMapping(path = "/api/auth/register")
+    @PostMapping(path = "/api/v1/auth/register")
     public ApiResponseWrapper register(@RequestBody Map<String, Object> requestData) {
         System.out.println("CALLED: " + this.getClass().getSimpleName() + "." +
                 Thread.currentThread().getStackTrace()[1].getMethodName() + "()");
@@ -60,27 +61,27 @@ public class AuthController extends BaseController {
         String password = (String) requestData.get("password");
         
         // Parameter validation
-        requireNonEmpty(username, "username");
-        requireNonEmpty(email, "email");
-        requireNonEmpty(password, "password");
+        ControllerUtils.requireNonEmpty(username, "username");
+        ControllerUtils.requireNonEmpty(email, "email");
+        ControllerUtils.requireNonEmpty(password, "password");
         
-        validateStringLength(username, "username", 3, 50);
-        validateStringLength(password, "password", 6, 100);
-        validateEmail(email, "email");
+        ControllerUtils.validateStringLength(username, "username", 3, 20);
+        ControllerUtils.validateStringLength(password, "password", 6, 20);
+        ControllerUtils.validateEmail(email, "email");
         
         // Call service layer for registration
         ServiceResult<UserDTO> result = authService.register(username, email, password);
         
         if (result.isSuccess()) {
-            return created("Registration successful", result.getData());
+            return ControllerUtils.created("Registration successful", result.getData());
         } else {
-            return handleServiceResult(result);
+            return ControllerUtils.handleServiceResult(result);
         }
     }
     
     /**
      * User login
-     * POST /api/auth/login
+     * POST /api/v1/auth/login
      * 
      * Request body example:
      * {
@@ -88,7 +89,7 @@ public class AuthController extends BaseController {
      *   "password": "password123"
      * }
      */
-    @PostMapping(path = "/api/auth/login")
+    @PostMapping(path = "/api/v1/auth/login")
     public ApiResponseWrapper login(@RequestBody Map<String, Object> requestData, 
                                    HttpServletRequest request) {
         System.out.println("CALLED: " + this.getClass().getSimpleName() + "." +
@@ -99,174 +100,64 @@ public class AuthController extends BaseController {
         String password = (String) requestData.get("password");
         
         // Parameter validation
-        requireNonEmpty(username, "username");
-        requireNonEmpty(password, "password");
-        
-        // Get client information (for security logs)
-        String ipAddress = getClientIP(request);
-        String userAgent = getUserAgent(request);
-        
-        // Check login rate limit
-        ServiceResult<Boolean> rateLimitResult = authService.checkLoginRateLimit(username, ipAddress);
-        if (rateLimitResult.isSuccess() && rateLimitResult.getData()) {
-            return error(429, "Login attempts too frequent, please try again later");
-        }
+        ControllerUtils.requireNonEmpty(username, "username");
+        ControllerUtils.requireNonEmpty(password, "password");
         
         // Call service layer for login
-        ServiceResult<LoginResultDTO> result = authService.login(username, password);
+        ServiceResult<LoginResultDTO> result = authService.login(username, password, request);
         
-        // Record login attempt
-        authService.recordLoginAttempt(username, result.isSuccess(), ipAddress, userAgent);
-        
-        return handleServiceResult(result);
+        if (result.isSuccess()) {
+            return ControllerUtils.success("Login successful", result.getData());
+        } else {
+            return ControllerUtils.handleServiceResult(result);
+        }
     }
     
     /**
      * User logout
-     * POST /api/auth/logout
+     * POST /api/v1/auth/logout
      * Authorization: Bearer <token>
      */
-    @PostMapping(path = "/api/auth/logout")
+    @PostMapping(path = "/api/v1/auth/logout")
     public ApiResponseWrapper logout(HttpServletRequest request) {
         System.out.println("CALLED: " + this.getClass().getSimpleName() + "." +
                 Thread.currentThread().getStackTrace()[1].getMethodName() + "()");
         System.out.println("REQUEST_PARAMS: " + request.toString());
-        // Extract token from request header
-        String token = extractTokenFromRequest(request);
+        String token = ControllerUtils.extractTokenFromRequest(request);
         
         if (token == null) {
-            return error(401, "No authentication token provided");
+            return ControllerUtils.error(401, "No authentication token provided");
         }
         
-        // Call service layer for logout
         ServiceResult<Void> result = authService.logout(token);
-        
-        if (result.isSuccess()) {
-            return success("Successfully logged out");
-        } else {
-            return handleServiceResult(result);
-        }
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
      * Refresh token
-     * POST /api/auth/refresh
+     * POST /api/v1/auth/refresh
      * Authorization: Bearer <token>
      */
-    @PostMapping(path = "/api/auth/refresh")
+    @PostMapping(path = "/api/v1/auth/refresh")
     public ApiResponseWrapper refreshToken(HttpServletRequest request) {
         System.out.println("CALLED: " + this.getClass().getSimpleName() + "." +
                 Thread.currentThread().getStackTrace()[1].getMethodName() + "()");
         System.out.println("REQUEST_PARAMS: " + request.toString());
-        String token = extractTokenFromRequest(request);
+        String token = ControllerUtils.extractTokenFromRequest(request);
         
         if (token == null) {
-            return error(401, "No authentication token provided");
+            return ControllerUtils.error(401, "No authentication token provided");
         }
         
-        // Call service layer to refresh token
         ServiceResult<LoginResultDTO> result = authService.refreshToken(token);
-        
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
-    // ============ Personal Information Routes /api/me/* ============
-    
-    /**
-     * Get user profile
-     * GET /api/me/profile
-     * Authorization: Bearer <token>
-     */
-    @GetMapping(path = "/api/me/profile")
-    public ApiResponseWrapper getProfile(HttpServletRequest request) {
-        System.out.println("CALLED: " + this.getClass().getSimpleName() + "." +
-                Thread.currentThread().getStackTrace()[1].getMethodName() + "()");
-        System.out.println("REQUEST_PARAMS: " + request);
-        String token = extractTokenFromRequest(request);
-        
-        if (token == null) {
-            return error(401, "No authentication token provided");
-        }
-        
-        // Get current user ID
-        ServiceResult<Long> userIdResult = authService.extractUserIdFromToken(token);
-        if (!userIdResult.isSuccess()) {
-            return handleServiceResult(userIdResult);
-        }
-        
-        Long userId = userIdResult.getData();
-        
-        // Call service layer to get user information
-        ServiceResult<UserDTO> result = authService.getCurrentUser(token);
-        
-        if (result.isSuccess()) {
-            return success("Get user information successful", result.getData());
-        } else {
-            return handleServiceResult(result);
-        }
-    }
-    
-    /**
-     * Update user profile
-     * PUT /api/me/update-profile
-     * Authorization: Bearer <token>
-     * 
-     * Request body example:
-     * {
-     *   "displayName": "New Display Name",
-     *   "email": "newemail@example.com",
-     *   "avatar": "avatar_url"
-     * }
-     */
-    @PutMapping(path = "/api/me/update-profile")
-    public ApiResponseWrapper updateProfile(@RequestBody Map<String, Object> requestData,
-                                          HttpServletRequest request) {
-        System.out.println("CALLED: " + this.getClass().getSimpleName() + "." +
-                Thread.currentThread().getStackTrace()[1].getMethodName() + "()");
-        System.out.println("REQUEST_PARAMS: " + requestData);
-        String token = extractTokenFromRequest(request);
-        
-        if (token == null) {
-            return error(401, "No authentication token provided");
-        }
-        
-        // Get current user ID
-        ServiceResult<Long> userIdResult = authService.extractUserIdFromToken(token);
-        if (!userIdResult.isSuccess()) {
-            return handleServiceResult(userIdResult);
-        }
-        
-        Long userId = userIdResult.getData();
-        String displayName = (String) requestData.get("displayName");
-        String email = (String) requestData.get("email");
-        String avatar = (String) requestData.get("avatar");
-        
-        // Parameter validation
-        if (displayName != null) {
-            validateStringLength(displayName, "displayName", 1, 100);
-        }
-        if (email != null) {
-            validateEmail(email, "email");
-        }
-        if (avatar != null) {
-            validateStringLength(avatar, "avatar", 1, 500);
-        }
-        
-        // Call service layer to update user information (need to add corresponding method in AuthService, or call UserService)
-        // Temporarily return success, specific implementation adjusted according to actual needs
-        Map<String, Object> responseData = new java.util.HashMap<>();
-        responseData.put("userId", userId);
-        if (displayName != null) responseData.put("displayName", displayName);
-        if (email != null) responseData.put("email", email);
-        if (avatar != null) responseData.put("avatar", avatar);
-        responseData.put("updated_at", java.time.LocalDateTime.now());
-        
-        return success("User information updated successfully", responseData);
-    }
+    // ============ User Profile Routes /api/v1/me/* ============
     
     /**
      * Change password
-     * PUT /api/me/password
+     * PUT /api/v1/me/password
      * Authorization: Bearer <token>
      * 
      * Request body example:
@@ -274,91 +165,71 @@ public class AuthController extends BaseController {
      *   "old_password": "old_password123",
      *   "new_password": "new_password456"
      * }
-     * OR
-     * {
-     *   "currentPassword": "old_password123",
-     *   "newPassword": "new_password456"
-     * }
      */
-    @PutMapping(path = "/api/me/password")
+    @PutMapping(path = "/api/v1/me/password")
     public ApiResponseWrapper changePassword(@RequestBody Map<String, Object> requestData,
                                            HttpServletRequest request) {
         System.out.println("CALLED: " + this.getClass().getSimpleName() + "." +
                 Thread.currentThread().getStackTrace()[1].getMethodName() + "()");
         System.out.println("REQUEST_PARAMS: " + requestData);
-        String token = extractTokenFromRequest(request);
+        String token = ControllerUtils.extractTokenFromRequest(request);
         
         if (token == null) {
-            return error(401, "No authentication token provided");
+            return ControllerUtils.error(401, "No authentication token provided");
         }
         
         // Get current user ID
         ServiceResult<Long> userIdResult = authService.extractUserIdFromToken(token);
         if (!userIdResult.isSuccess()) {
-            return handleServiceResult(userIdResult);
+            return ControllerUtils.handleServiceResult(userIdResult);
         }
         
         Long userId = userIdResult.getData();
-        
-        // Support multiple parameter name formats
         String oldPassword = (String) requestData.get("old_password");
-        if (oldPassword == null) {
-            oldPassword = (String) requestData.get("currentPassword");
-        }
-        
         String newPassword = (String) requestData.get("new_password");
-        if (newPassword == null) {
-            newPassword = (String) requestData.get("newPassword");
-        }
         
         // Parameter validation
-        requireNonEmpty(oldPassword, "old_password/currentPassword");
-        requireNonEmpty(newPassword, "new_password/newPassword");
-        validateStringLength(newPassword, "new_password", 6, 100);
-        
-        // Validate new password strength
-        ServiceResult<Void> strengthResult = authService.validatePasswordStrength(newPassword);
-        if (!strengthResult.isSuccess()) {
-            return handleServiceResult(strengthResult);
-        }
+        ControllerUtils.requireNonEmpty(oldPassword, "old_password");
+        ControllerUtils.requireNonEmpty(newPassword, "new_password");
+        ControllerUtils.validateStringLength(newPassword, "new_password", 6, 100);
         
         // Call service layer to change password
         ServiceResult<Void> result = authService.changePassword(userId, oldPassword, newPassword);
         
         if (result.isSuccess()) {
-            return success("Password changed successfully");
+            return ControllerUtils.success("Password changed successfully");
         } else {
-            return handleServiceResult(result);
+            return ControllerUtils.handleServiceResult(result);
         }
     }
     
     /**
      * Get storage statistics
-     * GET /api/me/storage-stats
+     * GET /api/v1/me/storage-stats
      * Authorization: Bearer <token>
      */
-    @GetMapping(path = "/api/me/storage-stats")
+    @GetMapping(path = "/api/v1/me/storage-stats")
     public ApiResponseWrapper getStorageStats(HttpServletRequest request) {
         System.out.println("CALLED: " + this.getClass().getSimpleName() + "." +
                 Thread.currentThread().getStackTrace()[1].getMethodName() + "()");
         System.out.println("REQUEST_PARAMS: " + request.toString());
-        String token = extractTokenFromRequest(request);
+        String token = ControllerUtils.extractTokenFromRequest(request);
         
         if (token == null) {
-            return error(401, "No authentication token provided");
+            return ControllerUtils.error(401, "No authentication token provided");
         }
         
         // Get current user ID
         ServiceResult<Long> userIdResult = authService.extractUserIdFromToken(token);
         if (!userIdResult.isSuccess()) {
-            return handleServiceResult(userIdResult);
+            return ControllerUtils.handleServiceResult(userIdResult);
         }
         
         Long userId = userIdResult.getData();
         
         // Need to call storage service to get statistics
         // Temporarily return mock data
-        return success("Get storage statistics successful", Map.of(
+        return ControllerUtils.success("Get storage statistics successful", Map.of(
             "storage_limit", 10737418240L,      // 10GB
             "storage_used", 1073741824L,        // 1GB 
             "storage_available", 9663676416L,   // 9GB
@@ -376,22 +247,22 @@ public class AuthController extends BaseController {
     
     /**
      * Get user activity log
-     * GET /api/me/activity-log?page=1&per_page=20&operation=upload
+     * GET /api/v1/me/activity-log?page=1&per_page=20&operation=upload
      * Authorization: Bearer <token>
      */
-    @GetMapping(path = "/api/me/activity-log")
+    @GetMapping(path = "/api/v1/me/activity-log")
     public ApiResponseWrapper getActivityLog(HttpServletRequest request) {
         System.out.println("CALLED: " + this.getClass().getSimpleName() + "." +
                 Thread.currentThread().getStackTrace()[1].getMethodName() + "()");
         System.out.println("REQUEST_PARAMS: " + request.toString());
-        String token = extractTokenFromRequest(request);
+        String token = ControllerUtils.extractTokenFromRequest(request);
         
         if (token == null) {
-            return error(401, "No authentication token provided");
+            return ControllerUtils.error(401, "No authentication token provided");
         }
         
         // Get query parameters
-        SearchCriteria criteria = parseSearchCriteria(request);
+        SearchCriteria criteria = ControllerUtils.parseSearchCriteria(request);
         String operation = request.getParameter("operation");
         
         // Need to call log service to get activity logs
@@ -406,7 +277,7 @@ public class AuthController extends BaseController {
         details.put("folder_path", "/work_documents");
         activityItem.put("details", details);
         
-        activityItem.put("ip_address", getClientIP(request));
+        activityItem.put("ip_address", ControllerUtils.getClientIP(request));
         activityItem.put("performed_at", java.time.LocalDateTime.now());
         
         Map<String, Object> pagination = new java.util.HashMap<>();
@@ -421,19 +292,6 @@ public class AuthController extends BaseController {
         responseData.put("items", java.util.List.of(activityItem));
         responseData.put("pagination", pagination);
         
-        return success("Get activity log successful", responseData);
-    }
-    
-    // ============ Helper Methods ============
-    
-    /**
-     * Extract JWT token from request header
-     */
-    private String extractTokenFromRequest(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7); // Remove "Bearer " prefix
-        }
-        return null;
+        return ControllerUtils.success("Get activity log successful", responseData);
     }
 } 

@@ -272,12 +272,7 @@
       <scope>test</scope>
     </dependency> -->
 
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>javax.servlet-api</artifactId>
-      <version>4.0.1</version> <!-- 或者你使用的版本 -->
-      <scope>provided</scope>
-    </dependency>
+
 
     <dependency>
       <groupId>org.testng</groupId>

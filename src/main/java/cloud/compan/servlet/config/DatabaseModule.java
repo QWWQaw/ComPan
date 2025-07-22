@@ -1,14 +1,13 @@
 package cloud.compan.servlet.config;
 
+import javax.sql.DataSource;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
-
+import com.google.inject.name.Names;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-
-import javax.sql.DataSource;
 
 /**
  * Google Guice 模块，负责创建、配置和绑定数据源。
@@ -17,8 +16,12 @@ import javax.sql.DataSource;
 public class DatabaseModule extends AbstractModule {
 
     @Override  
-    protected void configure() {  
-
+    protected void configure() {  // 原本是空的，现在添加了绑定默认数据源
+        // 绑定默认数据源
+        bind(DataSource.class)
+        .annotatedWith(Names.named("default"))
+        .toProvider(DefaultDataSourceProvider.class)
+        .in(Singleton.class);
     }  
 
     /**

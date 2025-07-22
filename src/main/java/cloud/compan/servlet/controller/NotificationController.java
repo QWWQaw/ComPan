@@ -17,11 +17,12 @@ import cloud.compan.servlet.dto.ServiceResult;
 import cloud.compan.servlet.model.Notification;
 import cloud.compan.servlet.service.AuthService;
 import cloud.compan.servlet.service.NotificationService;
+import cloud.compan.servlet.utils.ControllerUtils;
 import cloud.compan.servlet.web.response.ApiResponseWrapper;
 
 /**
  * 通知控制器
- * 继承BaseController，处理通知管理相关的HTTP请求
+ * 处理通知管理相关的HTTP请求
  * 
  * 职责：
  * - 处理HTTP请求参数
@@ -35,9 +36,9 @@ import cloud.compan.servlet.web.response.ApiResponseWrapper;
  * - PATCH /api/notifications/read-all - 全部标记为已读
  * - DELETE /api/notifications/{id} - 删除通知
  */
-@RestController("/api/notifications")
+@RestController("/api/v1/notifications")
 @Singleton
-public class NotificationController extends BaseController {
+public class NotificationController {
     
     @Inject
     private NotificationService notificationService;
@@ -53,19 +54,19 @@ public class NotificationController extends BaseController {
     public ApiResponseWrapper getUserNotifications(HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         String type = request.getParameter("type");
         String status = request.getParameter("status");
         
-        int page = parseIntParam(request, "page", 1);
-        int size = parseIntParam(request, "per_page", 20);
+        int page = ControllerUtils.parseIntParam(request, "page", 1);
+        int size = ControllerUtils.parseIntParam(request, "size", 20);
         
         ServiceResult<PageResultDTO<Notification>> result = notificationService.getUserNotifications(
             userId, page, size, type, status);
             
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -76,11 +77,11 @@ public class NotificationController extends BaseController {
     public ApiResponseWrapper getUnreadNotificationCount(HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         ServiceResult<Long> result = notificationService.getUnreadNotificationCount(userId);
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -91,20 +92,15 @@ public class NotificationController extends BaseController {
     public ApiResponseWrapper markAsRead(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
-        if (id == null) {
-            return error(400, "通知ID不能为空");
-        }
-        
-        // 直接调用Service层标记通知为已读
         ServiceResult<Boolean> result = notificationService.markAsRead(id, userId);
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
-     * 批量标记为已读
+     * 批量标记通知为已读
      * PATCH /api/notifications/batch-read
      */
     @PatchMapping(path = "/batch-read")
@@ -112,22 +108,18 @@ public class NotificationController extends BaseController {
                                              HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         @SuppressWarnings("unchecked")
-        List<Number> notificationIdNumbers = (List<Number>) requestData.get("notification_ids");
+        List<Long> notificationIds = (List<Long>) requestData.get("notification_ids");
         
-        if (notificationIdNumbers == null || notificationIdNumbers.isEmpty()) {
-            return error(400, "通知ID列表不能为空");
+        if (notificationIds == null || notificationIds.isEmpty()) {
+            return ControllerUtils.error(400, "通知ID列表不能为空");
         }
         
-        List<Long> notificationIds = notificationIdNumbers.stream()
-            .map(Number::longValue)
-            .toList();
-            
         ServiceResult<Map<String, Object>> result = notificationService.markBatchAsRead(notificationIds, userId);
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -138,11 +130,11 @@ public class NotificationController extends BaseController {
     public ApiResponseWrapper markAllAsRead(HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         ServiceResult<Boolean> result = notificationService.markAllAsRead(userId);
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -153,40 +145,27 @@ public class NotificationController extends BaseController {
     public ApiResponseWrapper deleteNotification(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
-        }
-        
-        if (id == null) {
-            return error(400, "通知ID不能为空");
+            return ControllerUtils.error(401, "未认证");
         }
         
         ServiceResult<Boolean> result = notificationService.deleteNotification(id, userId);
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
-    // ============ 辅助方法 ============
-    
     /**
-     * 从请求中获取用户ID
+     * 从token中获取用户ID
      */
     private Long getUserIdFromToken(HttpServletRequest request) {
-        String token = extractTokenFromRequest(request);
+        String token = ControllerUtils.extractTokenFromRequest(request);
         if (token == null) {
             return null;
         }
         
         ServiceResult<Long> result = authService.extractUserIdFromToken(token);
-        return result.isSuccess() ? result.getData() : null;
-    }
-    
-    /**
-     * 从请求头中提取JWT token
-     */
-    private String extractTokenFromRequest(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7);
+        if (!result.isSuccess()) {
+            return null;
         }
-        return null;
+        
+        return result.getData();
     }
 } 

@@ -1,4 +1,4 @@
-package cloud.compan.servlet.controller;
+package cloud.compan.servlet.utils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,34 +11,19 @@ import cloud.compan.servlet.web.response.ApiResponseWrapper;
 import cloud.compan.servlet.web.response.ValidationError;
 
 /**
- * 控制器基类
+ * 控制器工具类
  * 提供通用的响应处理、分页、验证等功能
- * 控制器街垒接受 service 层返回的 ServiceResult 对象，并根据其状态码和错误码返回相应的 ApiResponseWrapper 对象
- * serviceResult 对象包含以下方法：
- * - isSuccess()：是否成功
- * - getErrorCode()：错误码
- * - getMessage()：错误消息
- * - getData()：数据
- * 
- * ApiResponseWrapper 对象包含以下方法：
- * - success(message, data)：成功响应
- * - error(code, message)：错误响应
- * - created(message, data)：创建成功响应
- * - validationError(message, errors)：验证错误响应
- * 
- * 
+ * 替代BaseController的继承方式，使用组合模式
  */
-
-public abstract class BaseController {
+public class ControllerUtils {
     
     /**
      * 处理ServiceResult并转换为ApiResponse
      */
-    protected ApiResponseWrapper handleServiceResult(ServiceResult<?> serviceResult) {
+    public static ApiResponseWrapper handleServiceResult(ServiceResult<?> serviceResult) {
         if (serviceResult.isSuccess()) {
             return ApiResponseWrapper.success(serviceResult.getMessage(), serviceResult.getData());
         } else {
-            // 根据错误码选择合适的HTTP状态码
             int httpStatus = mapErrorCodeToHttpStatus(serviceResult.getErrorCode());
             return ApiResponseWrapper.error(httpStatus, serviceResult.getMessage());
         }
@@ -47,7 +32,7 @@ public abstract class BaseController {
     /**
      * 处理创建操作的ServiceResult
      */
-    protected ApiResponseWrapper handleCreateResult(ServiceResult<?> serviceResult) {
+    public static ApiResponseWrapper handleCreateResult(ServiceResult<?> serviceResult) {
         if (serviceResult.isSuccess()) {
             return ApiResponseWrapper.created(serviceResult.getMessage(), serviceResult.getData());
         } else {
@@ -59,7 +44,7 @@ public abstract class BaseController {
     /**
      * 处理分页查询结果
      */
-    protected ApiResponseWrapper handlePageResult(ServiceResult<PageResultDTO<?>> serviceResult) {
+    public static ApiResponseWrapper handlePageResult(ServiceResult<PageResultDTO<?>> serviceResult) {
         if (serviceResult.isSuccess()) {
             PageResultDTO<?> pageResult = serviceResult.getData();
             return ApiResponseWrapper.success("查询成功", pageResult);
@@ -72,63 +57,63 @@ public abstract class BaseController {
     /**
      * 成功响应 - 无数据
      */
-    protected ApiResponseWrapper success() {
+    public static ApiResponseWrapper success() {
         return ApiResponseWrapper.success("操作成功");
     }
     
     /**
      * 成功响应 - 带数据
      */
-    protected ApiResponseWrapper success(Object data) {
+    public static ApiResponseWrapper success(Object data) {
         return ApiResponseWrapper.success(data);
     }
     
     /**
      * 成功响应 - 带消息和数据
      */
-    protected ApiResponseWrapper success(String message, Object data) {
+    public static ApiResponseWrapper success(String message, Object data) {
         return ApiResponseWrapper.success(message, data);
     }
     
     /**
      * 创建成功响应
      */
-    protected ApiResponseWrapper created(Object data) {
+    public static ApiResponseWrapper created(Object data) {
         return ApiResponseWrapper.created(data);
     }
     
     /**
      * 创建成功响应 - 带消息
      */
-    protected ApiResponseWrapper created(String message, Object data) {
+    public static ApiResponseWrapper created(String message, Object data) {
         return ApiResponseWrapper.created(message, data);
     }
     
     /**
      * 错误响应
      */
-    protected ApiResponseWrapper error(String message) {
+    public static ApiResponseWrapper error(String message) {
         return ApiResponseWrapper.error(400, message);
     }
     
     /**
      * 错误响应 - 带状态码
      */
-    protected ApiResponseWrapper error(int code, String message) {
+    public static ApiResponseWrapper error(int code, String message) {
         return ApiResponseWrapper.error(code, message);
     }
     
     /**
      * 验证错误响应
      */
-    protected ApiResponseWrapper validationError(String message, List<ValidationError> errors) {
+    public static ApiResponseWrapper validationError(String message, List<ValidationError> errors) {
         return ApiResponseWrapper.validationError(message, errors);
     }
     
     /**
      * 验证单个字段错误
      */
-    protected ApiResponseWrapper validationError(String field, String message) {
+    public static ApiResponseWrapper validationError(String field, String message) {
         List<ValidationError> errors = new ArrayList<>();
         errors.add(new ValidationError(field, message));
         return validationError("参数验证失败", errors);
@@ -137,7 +122,7 @@ public abstract class BaseController {
     /**
      * Parse pagination parameters
      */
-    protected SearchCriteria parseSearchCriteria(HttpServletRequest request) {
+    public static SearchCriteria parseSearchCriteria(HttpServletRequest request) {
         try {
             int page = parseIntParam(request, "page", 1);
             int size = parseIntParam(request, "size", 20);
@@ -167,7 +152,7 @@ public abstract class BaseController {
     /**
      * Parse integer parameter
      */
-    protected int parseIntParam(HttpServletRequest request, String paramName, int defaultValue) {
+    public static int parseIntParam(HttpServletRequest request, String paramName, int defaultValue) {
         String value = request.getParameter(paramName);
         if (value == null || value.trim().isEmpty()) {
             return defaultValue;
@@ -182,7 +167,7 @@ public abstract class BaseController {
     /**
      * Parse long integer parameter
      */
-    protected long parseLongParam(HttpServletRequest request, String paramName, long defaultValue) {
+    public static long parseLongParam(HttpServletRequest request, String paramName, long defaultValue) {
         String value = request.getParameter(paramName);
         if (value == null || value.trim().isEmpty()) {
             return defaultValue;
@@ -197,7 +182,7 @@ public abstract class BaseController {
     /**
      * Parse boolean parameter
      */
-    protected boolean parseBooleanParam(HttpServletRequest request, String paramName, boolean defaultValue) {
+    public static boolean parseBooleanParam(HttpServletRequest request, String paramName, boolean defaultValue) {
         String value = request.getParameter(paramName);
         if (value == null || value.trim().isEmpty()) {
             return defaultValue;
@@ -208,7 +193,7 @@ public abstract class BaseController {
     /**
      * Validate required parameter
      */
-    protected void requireNonNull(Object value, String paramName) {
+    public static void requireNonNull(Object value, String paramName) {
         if (value == null) {
             throw HttpExceptions.badRequest("Parameter '" + paramName + "' cannot be null");
         }
@@ -217,7 +202,7 @@ public abstract class BaseController {
     /**
      * Validate string parameter
      */
-    protected void requireNonEmpty(String value, String paramName) {
+    public static void requireNonEmpty(String value, String paramName) {
         if (value == null || value.trim().isEmpty()) {
             throw HttpExceptions.badRequest("Parameter '" + paramName + "' cannot be empty");
         }
@@ -226,7 +211,7 @@ public abstract class BaseController {
     /**
      * Validate string length
      */
-    protected void validateStringLength(String value, String paramName, int minLength, int maxLength) {
+    public static void validateStringLength(String value, String paramName, int minLength, int maxLength) {
         if (value == null) return;
         
         int length = value.length();
@@ -240,7 +225,7 @@ public abstract class BaseController {
     /**
      * Validate email format
      */
-    protected void validateEmail(String email, String paramName) {
+    public static void validateEmail(String email, String paramName) {
         if (email == null || email.trim().isEmpty()) return;
         
         String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
@@ -252,7 +237,7 @@ public abstract class BaseController {
     /**
      * Get client IP address
      */
-    protected String getClientIP(HttpServletRequest request) {
+    public static String getClientIP(HttpServletRequest request) {
         String[] headers = {
             "X-Forwarded-For", "X-Real-IP", "Proxy-Client-IP", 
             "WL-Proxy-Client-IP", "HTTP_CLIENT_IP", "HTTP_X_FORWARDED_FOR"
@@ -273,14 +258,25 @@ public abstract class BaseController {
     /**
      * Get User-Agent
      */
-    protected String getUserAgent(HttpServletRequest request) {
+    public static String getUserAgent(HttpServletRequest request) {
         return request.getHeader("User-Agent");
+    }
+    
+    /**
+     * Extract JWT token from request header
+     */
+    public static String extractTokenFromRequest(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7); // Remove "Bearer " prefix
+        }
+        return null;
     }
     
     /**
      * Map error code to HTTP status code
      */
-    private int mapErrorCodeToHttpStatus(String errorCode) {
+    private static int mapErrorCodeToHttpStatus(String errorCode) {
         if (errorCode == null) return 500;
         
         switch (errorCode) {
@@ -323,4 +319,4 @@ public abstract class BaseController {
                 return 500; // Internal Server Error
         }
     }
-}
+} 

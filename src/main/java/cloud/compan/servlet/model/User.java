@@ -1,16 +1,20 @@
 package cloud.compan.servlet.model;
 
-import cloud.compan.servlet.annotations.Entity;
-import cloud.compan.servlet.annotations.Table;
-import cloud.compan.servlet.annotations.Column;
-import cloud.compan.servlet.annotations.Id;
-import lombok.*;
-
 import java.time.LocalDateTime;
+import cloud.compan.servlet.annotations.Column;
+import cloud.compan.servlet.annotations.Entity;
+import cloud.compan.servlet.annotations.Id;
+import cloud.compan.servlet.annotations.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "user")
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -47,4 +51,78 @@ public class User {
     @Column(name = "role")
     @Builder.Default
     private String role = "USER";
+
+    // getters and setters
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public Long getStorageLimit() {
+        return storageLimit;
+    }
+
+    public void setStorageLimit(Long storageLimit) {
+        this.storageLimit = storageLimit;
+    }
+
+    public Long getStorageUsed() {
+        return storageUsed;
+    }
+
+    public void setStorageUsed(Long storageUsed) {
+        this.storageUsed = storageUsed;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
 }

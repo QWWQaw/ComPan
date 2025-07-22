@@ -19,8 +19,8 @@ import cloud.compan.servlet.dto.ServiceResult;
 import cloud.compan.servlet.model.Share;
 import cloud.compan.servlet.service.AuthService;
 import cloud.compan.servlet.service.ShareService;
+import cloud.compan.servlet.utils.ControllerUtils;
 import cloud.compan.servlet.web.response.ApiResponseWrapper;
-
 /**
  * 分享控制器
  * 继承BaseController，处理文件分享相关的HTTP请求
@@ -38,9 +38,9 @@ import cloud.compan.servlet.web.response.ApiResponseWrapper;
  * - DELETE /api/shares/{id} - 删除分享
  * - GET /s/{shareCode} - 访问分享链接
  */
-@RestController("/api/shares")
+@RestController("/api/v1/shares")
 @Singleton
-public class ShareController extends BaseController {
+public class ShareController {
     
     @Inject
     private ShareService shareService;
@@ -59,7 +59,7 @@ public class ShareController extends BaseController {
                                          HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         String resourceType = (String) requestData.get("resource_type"); // file or folder
@@ -71,7 +71,7 @@ public class ShareController extends BaseController {
         Boolean allowDownload = (Boolean) requestData.get("allow_download");
         
         if (resourceType == null || resourceIdObj == null || shareType == null) {
-            return error(400, "缺少必需参数: resource_type, resource_id, share_type");
+            return ControllerUtils.error(400, "缺少必需参数: resource_type, resource_id, share_type");
         }
         
         Long resourceId = resourceIdObj.longValue();
@@ -86,10 +86,10 @@ public class ShareController extends BaseController {
             result = shareService.createFolderShare(resourceId, shareType, password, 
                                                    expireTime, allowDownload, userId);
         } else {
-            return error(400, "无效的资源类型: " + resourceType);
+            return ControllerUtils.error(400, "无效的资源类型: " + resourceType);
         }
         
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -101,7 +101,7 @@ public class ShareController extends BaseController {
                                                HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         @SuppressWarnings("unchecked")
@@ -112,7 +112,7 @@ public class ShareController extends BaseController {
         
         if (resourceIdNumbers == null || resourceIdNumbers.isEmpty() || 
             resourceType == null || shareType == null) {
-            return error(400, "缺少必需参数");
+            return ControllerUtils.error(400, "缺少必需参数");
         }
         
         List<Long> resourceIds = resourceIdNumbers.stream()
@@ -124,7 +124,7 @@ public class ShareController extends BaseController {
         ServiceResult<List<Share>> result = shareService.createBatchShares(
             resourceIds, resourceType, shareType, expireTime, userId);
             
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     // ============ 分享查询相关 ============
@@ -137,19 +137,19 @@ public class ShareController extends BaseController {
     public ApiResponseWrapper getUserShares(HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         String shareType = request.getParameter("share_type");
         String status = request.getParameter("status");
         
-        int page = parseIntParam(request, "page", 1);
-        int size = parseIntParam(request, "per_page", 20);
+        int page = ControllerUtils.parseIntParam(request, "page", 1);
+        int size = ControllerUtils.parseIntParam(request, "per_page", 20);
         
         ServiceResult<PageResultDTO<Share>> result = shareService.getUserShares(
             userId, page, size, shareType, status);
             
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -160,15 +160,15 @@ public class ShareController extends BaseController {
     public ApiResponseWrapper getShareDetails(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         if (id == null) {
-            return error(400, "分享ID不能为空");
+            return ControllerUtils.error(400, "分享ID不能为空");
         }
         
         ServiceResult<Share> result = shareService.getShareDetails(id, userId);
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -179,19 +179,19 @@ public class ShareController extends BaseController {
     public ApiResponseWrapper searchShares(HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         String keyword = request.getParameter("keyword");
         if (keyword == null || keyword.trim().isEmpty()) {
-            return error(400, "搜索关键词不能为空");
+            return ControllerUtils.error(400, "搜索关键词不能为空");
         }
         
         int page = parseIntParam(request, "page", 1);
         int size = parseIntParam(request, "per_page", 20);
         
         ServiceResult<PageResultDTO<Share>> result = shareService.searchShares(keyword, userId, page, size);
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -202,11 +202,11 @@ public class ShareController extends BaseController {
     public ApiResponseWrapper getShareAccessLogs(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         if (id == null) {
-            return error(400, "分享ID不能为空");
+            return ControllerUtils.error(400, "分享ID不能为空");
         }
         
         int page = parseIntParam(request, "page", 1);
@@ -215,7 +215,7 @@ public class ShareController extends BaseController {
         ServiceResult<PageResultDTO<Map<String, Object>>> result = shareService.getShareAccessLogs(
             id, userId, page, size);
             
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     // ============ 分享操作相关 ============
@@ -230,11 +230,11 @@ public class ShareController extends BaseController {
                                                  HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         if (id == null) {
-            return error(400, "分享ID不能为空");
+            return ControllerUtils.error(400, "分享ID不能为空");
         }
         
         String shareType = (String) requestData.get("share_type");
@@ -248,7 +248,7 @@ public class ShareController extends BaseController {
         ServiceResult<Share> result = shareService.updateShareSettings(
             id, shareType, password, expireTime, maxDownloads, userId);
             
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -261,20 +261,20 @@ public class ShareController extends BaseController {
                                                HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         if (id == null) {
-            return error(400, "分享ID不能为空");
+            return ControllerUtils.error(400, "分享ID不能为空");
         }
         
         Boolean enabled = (Boolean) requestData.get("enabled");
         if (enabled == null) {
-            return error(400, "enabled参数不能为空");
+            return ControllerUtils.error(400, "enabled参数不能为空");
         }
         
         ServiceResult<Share> result = shareService.toggleShareStatus(id, enabled, userId);
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -285,15 +285,15 @@ public class ShareController extends BaseController {
     public ApiResponseWrapper deleteShare(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         if (id == null) {
-            return error(400, "分享ID不能为空");
+            return ControllerUtils.error(400, "分享ID不能为空");
         }
         
         ServiceResult<Boolean> result = shareService.deleteShare(id, userId);
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -305,14 +305,14 @@ public class ShareController extends BaseController {
                                                HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         @SuppressWarnings("unchecked")
         List<Number> shareIdNumbers = (List<Number>) requestData.get("share_ids");
         
         if (shareIdNumbers == null || shareIdNumbers.isEmpty()) {
-            return error(400, "分享ID列表不能为空");
+            return ControllerUtils.error(400, "分享ID列表不能为空");
         }
         
         List<Long> shareIds = shareIdNumbers.stream()
@@ -320,7 +320,7 @@ public class ShareController extends BaseController {
             .toList();
             
         ServiceResult<Map<String, Object>> result = shareService.deleteBatchShares(shareIds, userId);
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -331,15 +331,15 @@ public class ShareController extends BaseController {
     public ApiResponseWrapper regenerateShareCode(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         if (id == null) {
-            return error(400, "分享ID不能为空");
+            return ControllerUtils.error(400, "分享ID不能为空");
         }
         
         ServiceResult<Share> result = shareService.regenerateShareCode(id, userId);
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -350,15 +350,15 @@ public class ShareController extends BaseController {
     public ApiResponseWrapper getShareStatistics(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         if (id == null) {
-            return error(400, "分享ID不能为空");
+            return ControllerUtils.error(400, "分享ID不能为空");
         }
         
         ServiceResult<Map<String, Object>> result = shareService.getShareStatistics(id, userId);
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     // ============ 辅助方法 ============
@@ -408,7 +408,7 @@ public class ShareController extends BaseController {
  * 处理公开分享链接的访问（不需要认证）
  */
 @RestController("/s")
-class ShareAccessController extends BaseController {
+class ShareAccessController {
     
     @Inject
     private ShareService shareService;
@@ -421,13 +421,13 @@ class ShareAccessController extends BaseController {
     public ApiResponseWrapper accessShare(@PathVariable String shareCode,
                                          HttpServletRequest request) {
         if (shareCode == null || shareCode.trim().isEmpty()) {
-            return error(400, "分享码不能为空");
+            return ControllerUtils.error(400, "分享码不能为空");
         }
         
         String password = request.getParameter("password");
         
         ServiceResult<Map<String, Object>> result = shareService.accessShare(shareCode, password, request);
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -438,7 +438,7 @@ class ShareAccessController extends BaseController {
     public ApiResponseWrapper downloadSharedFile(@PathVariable String shareCode,
                                                 HttpServletRequest request) {
         if (shareCode == null || shareCode.trim().isEmpty()) {
-            return error(400, "分享码不能为空");
+            return ControllerUtils.error(400, "分享码不能为空");
         }
         
         String fileIdStr = request.getParameter("file_id");
@@ -449,7 +449,7 @@ class ShareAccessController extends BaseController {
         ServiceResult<Map<String, Object>> result = shareService.downloadSharedFile(
             shareCode, fileId, password, request);
             
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -460,20 +460,20 @@ class ShareAccessController extends BaseController {
     public ApiResponseWrapper getSharedFolderContents(@PathVariable String shareCode,
                                                      HttpServletRequest request) {
         if (shareCode == null || shareCode.trim().isEmpty()) {
-            return error(400, "分享码不能为空");
+            return ControllerUtils.error(400, "分享码不能为空");
         }
         
         String folderIdStr = request.getParameter("folder_id");
         String password = request.getParameter("password");
         
-        int page = parseIntParam(request, "page", 1);
-        int size = parseIntParam(request, "per_page", 20);
+        int page = ControllerUtils.parseIntParam(request, "page", 1);
+        int size = ControllerUtils.parseIntParam(request, "per_page", 20);
         
         Long folderId = folderIdStr != null ? Long.parseLong(folderIdStr) : null;
         
         ServiceResult<PageResultDTO<Map<String, Object>>> result = shareService.getSharedFolderContents(
             shareCode, folderId, password, page, size);
             
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
 } 

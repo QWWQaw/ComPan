@@ -50,9 +50,18 @@ public interface UserService  {
     // ============ 用户信息管理 ============
     
     /**
-     * 更新用户基本信息
+     * 更新用户基本信息（管理员操作）
      */
-    ServiceResult<User> updateProfile(Long userId, String username, String email);
+    ServiceResult<User> updateUserProfile(Long userId, String username, String email);
+    
+    /**
+     * 更新当前用户个人信息
+     * @param userId 用户ID
+     * @param displayName 显示名称
+     * @param email 邮箱
+     * @return 更新结果，包含更新后的用户信息
+     */
+    ServiceResult<UserDTO> updateProfile(Long userId, String displayName, String email);
     
     /**
      * 修改密码
@@ -83,10 +92,6 @@ public interface UserService  {
     
     // ============ 用户查询 ============
     
-    /**
-     * 获取活跃用户
-     */
-    ServiceResult<PageResultDTO<User>> getActiveUsers(int days, int page, int size);
 
     /**
      * 获取所有用户
@@ -149,4 +154,20 @@ public interface UserService  {
      * 获取用户活动日志
      */
     ServiceResult<PageResultDTO<Map<String, Object>>> getUserActivityLog(Long userId, int page, int size);
+    
+    // ============ 存储管理 ============
+    
+    /**
+     * 获取用户存储统计信息
+     */
+    ServiceResult<Map<String, Object>> getUserStorageStats(Long userId);
+    
+    // ============ 当前用户管理 ============
+    
+    /**
+     * 获取当前登录用户信息
+     * @param token JWT token
+     * @return 用户信息
+     */
+    ServiceResult<UserDTO> getCurrentUserProfile(String token);
 } 

@@ -15,6 +15,7 @@ import cloud.compan.servlet.dto.PageResultDTO;
 import cloud.compan.servlet.dto.ServiceResult;
 import cloud.compan.servlet.service.AuthService;
 import cloud.compan.servlet.service.RecycleBinService;
+import cloud.compan.servlet.utils.ControllerUtils;
 import cloud.compan.servlet.web.response.ApiResponseWrapper;
 
 /**
@@ -27,9 +28,9 @@ import cloud.compan.servlet.web.response.ApiResponseWrapper;
  * - DELETE /api/recycle-bin/permanent - 永久删除
  * - DELETE /api/recycle-bin/empty - 清空回收站
  */
-@RestController("/api/recycle-bin")
+@RestController("/api/v1/recycle-bin")
 @Singleton
-public class RecycleBinController extends BaseController {
+public class RecycleBinController  {
     
     @Inject
     private RecycleBinService recycleBinService;
@@ -45,20 +46,20 @@ public class RecycleBinController extends BaseController {
     public ApiResponseWrapper getRecycleBinContents(HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         String resourceType = request.getParameter("resource_type");
         String sortBy = request.getParameter("sort");
         String sortOrder = request.getParameter("order");
         
-        int page = parseIntParam(request, "page", 1);
-        int size = parseIntParam(request, "per_page", 20);
+        int page = ControllerUtils.parseIntParam(request, "page", 1);
+        int size = ControllerUtils.parseIntParam(request, "per_page", 20);
         
         ServiceResult<PageResultDTO<Map<String, Object>>> result = recycleBinService.getRecycleBinContents(
             userId, page, size, resourceType, sortBy, sortOrder);
             
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -69,21 +70,21 @@ public class RecycleBinController extends BaseController {
     public ApiResponseWrapper searchRecycleBin(HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         String keyword = request.getParameter("keyword");
         if (keyword == null || keyword.trim().isEmpty()) {
-            return error(400, "搜索关键词不能为空");
+            return ControllerUtils.error(400, "搜索关键词不能为空");
         }
         
-        int page = parseIntParam(request, "page", 1);
-        int size = parseIntParam(request, "per_page", 20);
+        int page = ControllerUtils.parseIntParam(request, "page", 1);
+        int size = ControllerUtils.parseIntParam(request, "per_page", 20);
         
         ServiceResult<PageResultDTO<Map<String, Object>>> result = recycleBinService.searchRecycleBin(
             userId, keyword, page, size);
             
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -94,11 +95,11 @@ public class RecycleBinController extends BaseController {
     public ApiResponseWrapper getRecycleBinStatistics(HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         ServiceResult<Map<String, Object>> result = recycleBinService.getRecycleBinStatistics(userId);
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -110,7 +111,7 @@ public class RecycleBinController extends BaseController {
                                                     HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         @SuppressWarnings("unchecked")
@@ -118,7 +119,7 @@ public class RecycleBinController extends BaseController {
         Number targetFolderIdObj = (Number) requestData.get("target_folder_id");
         
         if (items == null || items.isEmpty()) {
-            return error(400, "要恢复的项目列表不能为空");
+            return ControllerUtils.error(400, "要恢复的项目列表不能为空");
         }
         
         Long targetFolderId = targetFolderIdObj != null ? targetFolderIdObj.longValue() : null;
@@ -131,7 +132,7 @@ public class RecycleBinController extends BaseController {
             Number resourceIdObj = (Number) item.get("resource_id");
             
             if (resourceType == null || resourceIdObj == null) {
-                return error(400, "项目信息不完整");
+                return ControllerUtils.error(400, "项目信息不完整");
             }
             
             Long resourceId = resourceIdObj.longValue();
@@ -141,7 +142,7 @@ public class RecycleBinController extends BaseController {
             result = recycleBinService.batchRestoreFromRecycleBin(items, targetFolderId, userId);
         }
         
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -152,11 +153,11 @@ public class RecycleBinController extends BaseController {
     public ApiResponseWrapper permanentlyDeleteById(@PathVariable("id") Long id, HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         if (id == null) {
-            return error(400, "项目ID不能为空");
+            return ControllerUtils.error(400, "项目ID不能为空");
         }
         
         // 从查询参数获取资源类型，默认为FILE
@@ -167,7 +168,7 @@ public class RecycleBinController extends BaseController {
         
         // 直接调用Service层永久删除
         ServiceResult<Boolean> result = recycleBinService.permanentlyDelete(resourceType, id, userId);
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -179,14 +180,14 @@ public class RecycleBinController extends BaseController {
                                                HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> items = (List<Map<String, Object>>) requestData.get("items");
         
         if (items == null || items.isEmpty()) {
-            return error(400, "要删除的项目列表不能为空");
+            return ControllerUtils.error(400, "要删除的项目列表不能为空");
         }
         
         ServiceResult<Map<String, Object>> result;
@@ -197,16 +198,16 @@ public class RecycleBinController extends BaseController {
             Number resourceIdObj = (Number) item.get("resource_id");
             
             if (resourceType == null || resourceIdObj == null) {
-                return error(400, "项目信息不完整");
+                return ControllerUtils.error(400, "项目信息不完整");
             }
             
             Long resourceId = resourceIdObj.longValue();
             ServiceResult<Boolean> singleResult = recycleBinService.permanentlyDelete(resourceType, resourceId, userId);
-            return handleServiceResult(singleResult);
+            return ControllerUtils.handleServiceResult(singleResult);
         } else {
             // 批量删除
             result = recycleBinService.batchPermanentlyDelete(items, userId);
-            return handleServiceResult(result);
+            return ControllerUtils.handleServiceResult(result);
         }
     }
     
@@ -218,13 +219,13 @@ public class RecycleBinController extends BaseController {
     public ApiResponseWrapper emptyRecycleBin(HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         String resourceType = request.getParameter("resource_type");
         
         ServiceResult<Map<String, Object>> result = recycleBinService.emptyRecycleBin(userId, resourceType);
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -236,20 +237,20 @@ public class RecycleBinController extends BaseController {
                                                  HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         Number retentionDaysObj = (Number) requestData.get("retention_days");
         Boolean autoCleanEnabled = (Boolean) requestData.get("auto_clean_enabled");
         
         if (retentionDaysObj == null || autoCleanEnabled == null) {
-            return error(400, "缺少必需参数: retention_days, auto_clean_enabled");
+            return ControllerUtils.error(400, "缺少必需参数: retention_days, auto_clean_enabled");
         }
         
         int retentionDays = retentionDaysObj.intValue();
         
         ServiceResult<Boolean> result = recycleBinService.setAutoCleanPolicy(userId, retentionDays, autoCleanEnabled);
-        return handleServiceResult(result);
+        return ControllerUtils.handleServiceResult(result);
     }
     
     /**
@@ -260,11 +261,11 @@ public class RecycleBinController extends BaseController {
     public ApiResponseWrapper getAutoCleanPolicy(HttpServletRequest request) {
         Long userId = getUserIdFromToken(request);
         if (userId == null) {
-            return error(401, "未认证");
+            return ControllerUtils.error(401, "未认证");
         }
         
         ServiceResult<Map<String, Object>> result = recycleBinService.getAutoCleanPolicy(userId);
-        return handleServiceResult(result);
+        return ControllerUtils. handleServiceResult(result);
     }
     
     // ============ 辅助方法 ============

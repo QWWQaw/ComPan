@@ -1,8 +1,8 @@
 package cloud.compan.servlet.service;
 
-import cloud.compan.servlet.dto.ServiceResult;
-import java.util.Map;
 import java.util.List;
+import java.util.Map;
+import cloud.compan.servlet.dto.ServiceResult;
 
 /**
  * 存储服务接口
